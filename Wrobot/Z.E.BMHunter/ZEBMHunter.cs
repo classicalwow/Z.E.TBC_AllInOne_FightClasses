@@ -11,6 +11,7 @@ using wManager.Wow.ObjectManager;
 public class ZEBMHunter : ICustomClass
 {
     private HunterFoodManager _foodManager = new HunterFoodManager();
+    internal static ZEBMHunterSettings _settings;
     private bool _isLaunched;
     public bool _autoshotRepeating;
     public bool RangeCheck;
@@ -33,9 +34,12 @@ public class ZEBMHunter : ICustomClass
         _isLaunched = true;
         Log("Initialized");
         ZEBMHunterSettings.Load();
-        if (ZEBMHunterSettings.CurrentSetting.RangedWeaponSpeed > 2000)
+        _settings = ZEBMHunterSettings.CurrentSetting;
+
+        // Set Steady Shot delay
+        if (_settings.RangedWeaponSpeed > 2000)
         {
-            _steadyShotSleep = ZEBMHunterSettings.CurrentSetting.RangedWeaponSpeed - 1600;
+            _steadyShotSleep = _settings.RangedWeaponSpeed - 1600;
         }
         else
         {
@@ -46,13 +50,9 @@ public class ZEBMHunter : ICustomClass
         FightEvents.OnFightStart += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
             if (ObjectManager.Target.GetDistance >= 13f && !AutoShot.IsSpellUsable && !_isBackingUp)
-            {
                 _canOnlyMelee = true;
-            }
             else
-            {
                 _canOnlyMelee = false;
-            }
         };
 
         FightEvents.OnFightEnd += (ulong guid) =>
@@ -65,9 +65,9 @@ public class ZEBMHunter : ICustomClass
 
         FightEvents.OnFightLoop += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
-            if (ObjectManager.Target.GetDistance < 13f && ObjectManager.Target.IsTargetingMyPet && _backupAttempts < ZEBMHunterSettings.CurrentSetting.MaxBackupAttempts
+            if (ObjectManager.Target.GetDistance < 13f && ObjectManager.Target.IsTargetingMyPet && _backupAttempts < _settings.MaxBackupAttempts
             && !MovementManager.InMovement && ObjectManager.Me.IsAlive && !ObjectManager.Pet.HaveBuff("Pacifying Dust") && !_canOnlyMelee
-            && !ObjectManager.Pet.IsStunned && !_isBackingUp && !ObjectManager.Me.IsCast && ZEBMHunterSettings.CurrentSetting.BackupFromMelee)
+            && !ObjectManager.Pet.IsStunned && !_isBackingUp && !ObjectManager.Me.IsCast && _settings.BackupFromMelee)
             {
                 _isBackingUp = true;
                 Move.Backward(Move.MoveAction.DownKey, 700);
@@ -82,7 +82,7 @@ public class ZEBMHunter : ICustomClass
                     AutoShot.Launch();
                 }
                 Log("Backup attempt : " + _backupAttempts);
-                if (_backupAttempts >= ZEBMHunterSettings.CurrentSetting.MaxBackupAttempts)
+                if (_backupAttempts >= _settings.MaxBackupAttempts)
                 {
                     _canOnlyMelee = true;
                 }
@@ -108,9 +108,10 @@ public class ZEBMHunter : ICustomClass
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
 				{
+                    Log(Range.ToString());
                     PetManager();
 					if (Lua.LuaDoString<int>("happiness, damagePercentage, loyaltyRate = GetPetHappiness() return happiness", "") < 3 
-                        && !Fight.InFight && ZEBMHunterSettings.CurrentSetting.FeedPet)
+                        && !Fight.InFight && _settings.FeedPet)
 						Feed();
 
 					if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable 
@@ -144,107 +145,120 @@ public class ZEBMHunter : ICustomClass
 			{
 				Logging.WriteError("ERROR: " + arg, true);
 			}
-			Thread.Sleep(10);
+			Thread.Sleep(10 + Usefuls.Latency);
 		}
         Log("Stopped.");
 	}
     
-	internal void PetManager()
-	{
-		if (!ObjectManager.Me.IsDeadMe || !ObjectManager.Me.IsMounted)
-		{
-			if (!ObjectManager.Pet.IsValid && CallPet.KnownSpell && !ObjectManager.Me.IsMounted && CallPet.IsSpellUsable)
-			{
-				CallPet.Launch();
-				Thread.Sleep(Usefuls.Latency + 1000);
-			}
-
-			if (ObjectManager.Pet.IsDead && RevivePet.KnownSpell && !ObjectManager.Me.IsMounted && RevivePet.IsSpellUsable)
-			{
-				RevivePet.Launch();
-				Thread.Sleep(Usefuls.Latency + 1000);
-				Usefuls.WaitIsCasting();
-			}
-
-			if (ObjectManager.Pet.IsAlive && ObjectManager.Pet.IsValid && !ObjectManager.Pet.HaveBuff("Mend Pet") 
-                && ObjectManager.Me.IsAlive && MendPet.KnownSpell && MendPet.IsDistanceGood && ObjectManager.Pet.HealthPercent <= 60.0 
-                && MendPet.IsSpellUsable)
-			{
-				MendPet.Launch();
-                Thread.Sleep(Usefuls.Latency + 1000);
-            }
-		}
-	}
-    
-	public void Feed()
-	{
-		if (ObjectManager.Pet.IsAlive && !ObjectManager.Me.IsCast && !ObjectManager.Pet.HaveBuff("Feed Pet Effect"))
-		{
-            _foodManager.FeedPet();
-			Thread.Sleep(400);
-		}
-	}
-    
 	internal void CombatRotation()
     {
+        // Bestial Wrath
         if (BestialWrath.KnownSpell && BestialWrath.IsSpellUsable && ObjectManager.Target.GetDistance < 34f
             && ObjectManager.Target.HealthPercent >= 60.0 && ObjectManager.Me.ManaPercentage > 10u && BestialWrath.IsSpellUsable
-            && ((ZEBMHunterSettings.CurrentSetting.BestialWrathOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !ZEBMHunterSettings.CurrentSetting.BestialWrathOnMulti))
+            && ((_settings.BestialWrathOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !_settings.BestialWrathOnMulti))
             BestialWrath.Launch();
 
+        // Rapid Fire
         if (RapidFire.KnownSpell && RapidFire.IsSpellUsable && ObjectManager.Target.GetDistance < 34f
             && ObjectManager.Target.HealthPercent >= 80.0
-            && ((ZEBMHunterSettings.CurrentSetting.RapidFireOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !ZEBMHunterSettings.CurrentSetting.RapidFireOnMulti))
+            && ((_settings.RapidFireOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !_settings.RapidFireOnMulti))
             RapidFire.Launch();
 
+        // Kill Command
         if (KillCommand.KnownSpell && KillCommand.IsSpellUsable)
             KillCommand.Launch();
         
+        // Raptor Strike
         if (RaptorStrike.KnownSpell && RaptorStrike.IsSpellUsable && ObjectManager.Target.GetDistance < 6u && !RaptorStrikeOn())
             RaptorStrike.Launch();
         
+        // Mongoose Bite
         if (MongooseBite.KnownSpell && MongooseBite.IsSpellUsable && ObjectManager.Target.GetDistance < 6u)
             MongooseBite.Launch();
         
+        // Feign Death
         if (FeignDeath.KnownSpell && FeignDeath.IsSpellUsable && ObjectManager.Me.HealthPercent < 20u)
         {
             FeignDeath.Launch();
             Fight.StopFight();
         }
 
+        // Freezing Trap
         if (FreezingTrap.KnownSpell && FreezingTrap.IsSpellUsable && ObjectManager.Pet.HaveBuff("Mend Pet")
-            && ObjectManager.GetUnitAttackPlayer().Count > 1 && ZEBMHunterSettings.CurrentSetting.UseFreezingTrap)
+            && ObjectManager.GetUnitAttackPlayer().Count > 1 && _settings.UseFreezingTrap)
             FreezingTrap.Launch();
         
+        // Mend Pet
         if (ObjectManager.Pet.IsValid && MendPet.KnownSpell && MendPet.IsSpellUsable && ObjectManager.Pet.HealthPercent <= 30.0 
             && !ObjectManager.Pet.HaveBuff("Mend Pet"))
 			MendPet.Launch();
 		
+        // Hunter's Mark
 		if (HuntersMark.KnownSpell && HuntersMark.IsSpellUsable && ObjectManager.Pet.IsValid && !HuntersMark.TargetHaveBuff 
             && ObjectManager.Target.GetDistance > 13f && ObjectManager.Target.IsAlive)
 			HuntersMark.Launch();
         
+        // Steady Shot
         if (SteadyShot.KnownSpell && SteadyShot.IsSpellUsable && ObjectManager.Me.ManaPercentage > 30 && SteadyShot.IsDistanceGood && !_isBackingUp)
         {
             SteadyShot.Launch();
             Thread.Sleep(_steadyShotSleep);
         }
 
+        // Serpent Sting
         if (SerpentSting.KnownSpell && SerpentSting.IsSpellUsable && !ObjectManager.Target.HaveBuff("Serpent Sting") 
             && ObjectManager.Target.GetDistance < 34f && Canpoison(ObjectManager.Me.TargetObject) 
             && ObjectManager.Target.HealthPercent >= 80.0 && ObjectManager.Me.ManaPercentage > 50u && !SteadyShot.KnownSpell
             && ObjectManager.Target.GetDistance > 13f)
 			SerpentSting.Launch();
 		
+        // Intimidation
 		if (Intimidation.KnownSpell && Intimidation.IsSpellUsable && ObjectManager.Target.GetDistance < 34f 
             && ObjectManager.Target.GetDistance > 10f && ObjectManager.Target.HealthPercent >= 20.0 && ObjectManager.Me.ManaPercentage > 10u 
             && Intimidation.IsSpellUsable)
 			Intimidation.Launch();
 		
+        // Arcane Shot
 		if (ArcaneShot.KnownSpell && ArcaneShot.IsSpellUsable && ObjectManager.Target.GetDistance < 34f 
             && ObjectManager.Target.HealthPercent >= 30.0 && ObjectManager.Me.ManaPercentage > 80u
             && !SteadyShot.KnownSpell)
 			ArcaneShot.Launch();
+    }
+
+    public void Feed()
+    {
+        if (ObjectManager.Pet.IsAlive && !ObjectManager.Me.IsCast && !ObjectManager.Pet.HaveBuff("Feed Pet Effect"))
+        {
+            _foodManager.FeedPet();
+            Thread.Sleep(400);
+        }
+    }
+
+    internal void PetManager()
+    {
+        if (!ObjectManager.Me.IsDeadMe || !ObjectManager.Me.IsMounted)
+        {
+            if (!ObjectManager.Pet.IsValid && CallPet.KnownSpell && !ObjectManager.Me.IsMounted && CallPet.IsSpellUsable)
+            {
+                CallPet.Launch();
+                Thread.Sleep(Usefuls.Latency + 1000);
+            }
+
+            if (ObjectManager.Pet.IsDead && RevivePet.KnownSpell && !ObjectManager.Me.IsMounted && RevivePet.IsSpellUsable)
+            {
+                RevivePet.Launch();
+                Thread.Sleep(Usefuls.Latency + 1000);
+                Usefuls.WaitIsCasting();
+            }
+
+            if (ObjectManager.Pet.IsAlive && ObjectManager.Pet.IsValid && !ObjectManager.Pet.HaveBuff("Mend Pet")
+                && ObjectManager.Me.IsAlive && MendPet.KnownSpell && MendPet.IsDistanceGood && ObjectManager.Pet.HealthPercent <= 60.0
+                && MendPet.IsSpellUsable)
+            {
+                MendPet.Launch();
+                Thread.Sleep(Usefuls.Latency + 1000);
+            }
+        }
     }
 
     private bool Canpoison(WoWUnit unit)
