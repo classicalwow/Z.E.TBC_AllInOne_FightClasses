@@ -8,31 +8,22 @@ using wManager.Wow.Class;
 using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
 
-public class ZEBMHunter : ICustomClass
+public static class Hunter
 {
-    private HunterFoodManager _foodManager = new HunterFoodManager();
+    private static HunterFoodManager _foodManager = new HunterFoodManager();
     internal static ZEBMHunterSettings _settings;
-    private bool _isLaunched;
-    public bool _autoshotRepeating;
-    public bool RangeCheck;
-    private bool _isBackingUp = false;
-    private int _backupAttempts = 0;
-    int _steadyShotSleep = 0;
-    private bool _canOnlyMelee = false;
+    private static bool _isLaunched;
+    public static bool _autoshotRepeating;
+    public static bool RangeCheck;
+    private static bool _isBackingUp = false;
+    private static int _backupAttempts = 0;
+    private static int _steadyShotSleep = 0;
+    private static bool _canOnlyMelee = false;
 
-    public float Range
-	{
-		get
-		{
-			float result = _canOnlyMelee ? 4.5f : 33f;
-            return result;
-		}
-    }
-
-    public void Initialize()
+    public static void Initialize()
     {
         _isLaunched = true;
-        Log("Initialized");
+        Main.Log("Initialized");
         ZEBMHunterSettings.Load();
         _settings = ZEBMHunterSettings.CurrentSetting;
 
@@ -45,7 +36,7 @@ public class ZEBMHunter : ICustomClass
         {
             _steadyShotSleep = 500;
         }
-        Log("Steady Shot delay set to : " + _steadyShotSleep.ToString() + "ms");
+        Main.Log("Steady Shot delay set to : " + _steadyShotSleep.ToString() + "ms");
 
         FightEvents.OnFightStart += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
@@ -78,10 +69,10 @@ public class ZEBMHunter : ICustomClass
                        "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
                 if (!_autoshotRepeating)
                 {
-                    Log("Re-enabling auto shot");
+                    Main.LogFight("Re-enabling auto shot");
                     AutoShot.Launch();
                 }
-                Log("Backup attempt : " + _backupAttempts);
+                Main.LogFight("Backup attempt : " + _backupAttempts);
                 if (_backupAttempts >= _settings.MaxBackupAttempts)
                 {
                     _canOnlyMelee = true;
@@ -93,52 +84,42 @@ public class ZEBMHunter : ICustomClass
     }
 
 
-    public void Dispose()
+    public static void Dispose()
     {
         _isLaunched = false;
-        Log("Stop in progress.");
+        Main.Log("Stop in progress.");
     }
-    
-	internal void Rotation()
+
+    internal static void Rotation()
 	{
-        Log("Started");
+        Main.Log("Started");
 		while (_isLaunched)
 		{
 			try
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
 				{
-                    Log(Range.ToString());
+                    Main.settingRange = _canOnlyMelee ? 4.5f : 33f;
                     PetManager();
+
+                    // Feed
 					if (Lua.LuaDoString<int>("happiness, damagePercentage, loyaltyRate = GetPetHappiness() return happiness", "") < 3 
                         && !Fight.InFight && _settings.FeedPet)
 						Feed();
 
+                    // Pet attack
 					if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable 
                         && !ObjectManager.Pet.HaveBuff("Feed Pet Effect"))
 						Lua.LuaDoString("PetAttack();", false);
 
+                    // Aspect of the Cheetah
                     if (!ObjectManager.Me.IsMounted && !Fight.InFight && !ObjectManager.Me.HaveBuff("Aspect of the Cheetah") 
                         && MovementManager.InMoveTo && AspectCheetah.IsSpellUsable && AspectCheetah.KnownSpell 
                         && ObjectManager.Me.ManaPercentage > 60f)
                         AspectCheetah.Launch();
 
 					if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable)
-                    {
-                        if (AspectViper.KnownSpell && AspectViper.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Viper")
-                            && ObjectManager.Me.ManaPercentage < 30)
-                            AspectViper.Launch();
-
-                        if (AspectHawk.KnownSpell && AspectHawk.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Hawk")
-                            && (ObjectManager.Me.ManaPercentage > 90 || ObjectManager.Me.HaveBuff("Aspect of the Cheetah")))
-							AspectHawk.Launch();
-
-						if (AspectMonkey.KnownSpell && AspectMonkey.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Monkey") 
-                            && !AspectHawk.KnownSpell)
-							AspectMonkey.Launch();
-                        
 						CombatRotation();
-					}
 				}
 			}
 			catch (Exception arg)
@@ -147,11 +128,26 @@ public class ZEBMHunter : ICustomClass
 			}
 			Thread.Sleep(10 + Usefuls.Latency);
 		}
-        Log("Stopped.");
+        Main.Log("Stopped.");
 	}
-    
-	internal void CombatRotation()
+
+    internal static void CombatRotation()
     {
+        // Aspect of the viper
+        if (AspectViper.KnownSpell && AspectViper.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Viper")
+            && ObjectManager.Me.ManaPercentage < 30)
+            AspectViper.Launch();
+
+        // Aspect of the Hawk
+        if (AspectHawk.KnownSpell && AspectHawk.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Hawk")
+            && (ObjectManager.Me.ManaPercentage > 90 || ObjectManager.Me.HaveBuff("Aspect of the Cheetah")))
+            AspectHawk.Launch();
+
+        // Aspect of the Monkey
+        if (AspectMonkey.KnownSpell && AspectMonkey.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Monkey")
+            && !AspectHawk.KnownSpell)
+            AspectMonkey.Launch();
+
         // Bestial Wrath
         if (BestialWrath.KnownSpell && BestialWrath.IsSpellUsable && ObjectManager.Target.GetDistance < 34f
             && ObjectManager.Target.HealthPercent >= 60.0 && ObjectManager.Me.ManaPercentage > 10u && BestialWrath.IsSpellUsable
@@ -225,7 +221,7 @@ public class ZEBMHunter : ICustomClass
 			ArcaneShot.Launch();
     }
 
-    public void Feed()
+    public static void Feed()
     {
         if (ObjectManager.Pet.IsAlive && !ObjectManager.Me.IsCast && !ObjectManager.Pet.HaveBuff("Feed Pet Effect"))
         {
@@ -234,7 +230,7 @@ public class ZEBMHunter : ICustomClass
         }
     }
 
-    internal void PetManager()
+    internal static void PetManager()
     {
         if (!ObjectManager.Me.IsDeadMe || !ObjectManager.Me.IsMounted)
         {
@@ -261,48 +257,43 @@ public class ZEBMHunter : ICustomClass
         }
     }
 
-    private bool Canpoison(WoWUnit unit)
+    private static bool Canpoison(WoWUnit unit)
     {
         return unit.CreatureTypeTarget != "Elemental" && unit.CreatureTypeTarget != "Mechanical";
     }
 
-    private bool RaptorStrikeOn()
+    private static bool RaptorStrikeOn()
     {
         return Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Raptor Strike') then isAutoRepeat = true end", "isAutoRepeat");
     }
 
-    public void ShowConfiguration()
+    public static void ShowConfiguration()
     {
         ZEBMHunterSettings.Load();
         ZEBMHunterSettings.CurrentSetting.ToForm();
         ZEBMHunterSettings.CurrentSetting.Save();
     }
 
-    private Spell RevivePet = new Spell("Revive Pet");
-	private Spell CallPet = new Spell("Call Pet");
-	public Spell MendPet = new Spell("Mend Pet");
-	public Spell AspectHawk = new Spell("Aspect of the Hawk");
-	public Spell AspectCheetah = new Spell("Aspect of the Cheetah");
-	public Spell AspectMonkey = new Spell("Aspect of the Monkey");
-    public Spell AspectViper = new Spell("Aspect of the Viper");
-    public Spell HuntersMark = new Spell("Hunter's Mark");
-	public Spell ConcussiveShot = new Spell("Concussive Shot");
-	public Spell RaptorStrike = new Spell("Raptor Strike");
-    public Spell MongooseBite = new Spell("Mongoose Bite");
-    public Spell WingClip = new Spell("Wing Clip");
-	public Spell SerpentSting = new Spell("Serpent Sting");
-	public Spell ArcaneShot = new Spell("Arcane Shot");
-	public Spell AutoShot = new Spell("Auto Shot");
-	public Spell RapidFire = new Spell("Rapid Fire");
-	public Spell Intimidation = new Spell("Intimidation");
-	public Spell BestialWrath = new Spell("Bestial Wrath");
-    public Spell FeignDeath = new Spell("Feign Death");
-    public Spell FreezingTrap = new Spell("Freezing Trap");
-    public Spell SteadyShot = new Spell("Steady Shot");
-    public Spell KillCommand = new Spell("Kill Command");
-
-    public void Log(string s)
-    {
-        Logging.WriteDebug("[Z.E.Hunter] " + s);
-    }
+    private static Spell RevivePet = new Spell("Revive Pet");
+    private static Spell CallPet = new Spell("Call Pet");
+    private static Spell MendPet = new Spell("Mend Pet");
+    private static Spell AspectHawk = new Spell("Aspect of the Hawk");
+    private static Spell AspectCheetah = new Spell("Aspect of the Cheetah");
+    private static Spell AspectMonkey = new Spell("Aspect of the Monkey");
+    private static Spell AspectViper = new Spell("Aspect of the Viper");
+    private static Spell HuntersMark = new Spell("Hunter's Mark");
+    private static Spell ConcussiveShot = new Spell("Concussive Shot");
+    private static Spell RaptorStrike = new Spell("Raptor Strike");
+    private static Spell MongooseBite = new Spell("Mongoose Bite");
+    private static Spell WingClip = new Spell("Wing Clip");
+    private static Spell SerpentSting = new Spell("Serpent Sting");
+    private static Spell ArcaneShot = new Spell("Arcane Shot");
+    private static Spell AutoShot = new Spell("Auto Shot");
+    private static Spell RapidFire = new Spell("Rapid Fire");
+    private static Spell Intimidation = new Spell("Intimidation");
+    private static Spell BestialWrath = new Spell("Bestial Wrath");
+    private static Spell FeignDeath = new Spell("Feign Death");
+    private static Spell FreezingTrap = new Spell("Freezing Trap");
+    private static Spell SteadyShot = new Spell("Steady Shot");
+    private static Spell KillCommand = new Spell("Kill Command");
 }

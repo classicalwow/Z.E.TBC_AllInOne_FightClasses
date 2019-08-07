@@ -5,84 +5,52 @@ using robotManager.Products;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Drawing;
 using System.Threading;
 
 public class Main : ICustomClass
 {
-    string wowClass = ObjectManager.Me.WowClass.ToString();
-    private ZEBMHunter _hunterclass = new ZEBMHunter();
-    private ZEFuryWarrior _warriorclass = new ZEFuryWarrior();
+    private static string wowClass = ObjectManager.Me.WowClass.ToString();
+    public static float settingRange = 5f;
 
     public float Range
 	{
 		get
         {
-            switch (wowClass)
-            {
-                case "Hunter":
-                    return _hunterclass.Range;
-
-                case "Warrior":
-                    return _warriorclass.Range;
-
-                default:
-                    return 5f;
-            }
+            return settingRange;
         }
     }
 
     public void Initialize()
     {
-        switch (wowClass)
+        Log("Started. Discovering class and finding rotation...");
+        var type = Type.GetType(wowClass);
+
+        if (type != null)
+            type.GetMethod("Initialize").Invoke(null, null);
+        else
         {
-            case "Hunter":
-                _hunterclass.Initialize();
-                break;
-
-            case "Warrior":
-                _warriorclass.Initialize();
-                break;
-
-            default:
-                Logging.WriteError("Your class is not supported by TBC_ZE_AllInOne-FightClasses");
-                new Thread(() => { Products.ProductStop(); }).Start();
-                return;
+            LogError("Class not supported.");
+            new Thread(() =>{ Products.ProductStop(); }).Start();
         }
     }
 
 
     public void Dispose()
     {
-        switch (wowClass)
-        {
-            case "Hunter":
-                _hunterclass.Dispose();
-                break;
-
-            case "Warrior":
-                _warriorclass.Dispose();
-                break;
-
-            default:
-                return;
-        }
+        var type = Type.GetType(wowClass);
+        if (type != null)
+            type.GetMethod("Dispose").Invoke(null, null);
     }
 
     public void ShowConfiguration()
     {
-        switch (wowClass)
-        {
-            case "Hunter":
-                _hunterclass.ShowConfiguration();
-                break;
+        var type = Type.GetType(wowClass);
 
-            case "Warrior":
-                _warriorclass.ShowConfiguration();
-                break;
-
-            default:
-                return;
-        }
+        if (type != null)
+            type.GetMethod("ShowConfiguration").Invoke(null, null);
+        else
+            LogError("Class not supported.");
     }
 
     private string GetSpec()
@@ -97,5 +65,18 @@ public class Main : ICustomClass
         }
         var highestTalents = Talents.Max(x => x.Value);
         return Talents.Where(t => t.Value == highestTalents).FirstOrDefault().Key;
+    }
+
+    public static void LogFight(string message)
+    {
+        Logging.Write($"[WholesomeFCTBC - {wowClass}]: { message}", Logging.LogType.Fight, Color.ForestGreen);
+    }
+    public static void LogError(string message)
+    {
+        Logging.Write($"[WholesomeFCTBC - {wowClass}]: {message}", Logging.LogType.Error, Color.DarkRed);
+    }
+    public static void Log(string message)
+    {
+        Logging.Write($"[WholesomeFCTBC - {wowClass}]: {message}");
     }
 }

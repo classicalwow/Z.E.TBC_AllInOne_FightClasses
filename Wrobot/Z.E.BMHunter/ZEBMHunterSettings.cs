@@ -78,7 +78,7 @@ public class ZEBMHunterSettings : Settings
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEBMHunter > Save(): " + e);
+            Main.LogError("ZEBMHunter > Save(): " + e);
             return false;
         }
     }
@@ -99,7 +99,7 @@ public class ZEBMHunterSettings : Settings
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEBMHunter > Load(): " + e);
+            Main.LogError("ZEBMHunter > Load(): " + e);
         }
         return false;
     }
