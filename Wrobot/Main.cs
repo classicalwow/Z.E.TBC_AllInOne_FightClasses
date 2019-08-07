@@ -5,6 +5,7 @@ using robotManager.Products;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Threading;
 
 public class Main : ICustomClass
 {
@@ -44,7 +45,7 @@ public class Main : ICustomClass
 
             default:
                 Logging.WriteError("Your class is not supported by TBC_ZE_AllInOne-FightClasses");
-                Products.ProductStop();
+                new Thread(() => { Products.ProductStop(); }).Start();
                 return;
         }
     }
@@ -84,7 +85,7 @@ public class Main : ICustomClass
         }
     }
 
-    public static string GetSpec()
+    private string GetSpec()
     {
         var Talents = new Dictionary<string, int>();
         for (int i = 1; i <= 3; i++)
