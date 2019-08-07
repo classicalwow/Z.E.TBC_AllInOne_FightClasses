@@ -29,7 +29,7 @@ public class ZEShamanSettings : Settings
         UseWaterShield = true;
 
         ConfigWinForm(
-            new System.Drawing.Point(400, 400), "Z.E.Shaman "
+            new System.Drawing.Point(400, 400), "WholesomeTBCShaman "
             + Translate.Get("Settings")
         );
     }
@@ -122,12 +122,12 @@ public class ZEShamanSettings : Settings
     {
         try
         {
-            return Save(AdviserFilePathAndName("ZEShaman",
+            return Save(AdviserFilePathAndName("WholesomeTBCShaman",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName));
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEShaman > Save(): " + e);
+            Logging.WriteError("WholesomeTBCShaman > Save(): " + e);
             return false;
         }
     }
@@ -136,11 +136,11 @@ public class ZEShamanSettings : Settings
     {
         try
         {
-            if (File.Exists(AdviserFilePathAndName("ZEShaman",
+            if (File.Exists(AdviserFilePathAndName("WholesomeTBCShaman",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName)))
             {
                 CurrentSetting = Load<ZEShamanSettings>(
-                    AdviserFilePathAndName("ZEShaman",
+                    AdviserFilePathAndName("WholesomeTBCShaman",
                     ObjectManager.Me.Name + "." + Usefuls.RealmName));
                 return true;
             }
@@ -148,7 +148,7 @@ public class ZEShamanSettings : Settings
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEShaman > Load(): " + e);
+            Logging.WriteError("WholesomeTBCShaman > Load(): " + e);
         }
         return false;
     }

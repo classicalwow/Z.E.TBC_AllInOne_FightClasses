@@ -21,7 +21,7 @@ public class ZEPriestSettings : Settings
         UseShadowWordDeath = true;
 
         ConfigWinForm(
-            new System.Drawing.Point(400, 400), "Z.E.Priest "
+            new System.Drawing.Point(400, 400), "WholesomeTBCPriest "
             + Translate.Get("Settings")
         );
     }
@@ -66,12 +66,12 @@ public class ZEPriestSettings : Settings
     {
         try
         {
-            return Save(AdviserFilePathAndName("ZEPriest",
+            return Save(AdviserFilePathAndName("WholesomeTBCPriest",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName));
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEPriest > Save(): " + e);
+            Logging.WriteError("WholesomeTBCPriest > Save(): " + e);
             return false;
         }
     }
@@ -80,11 +80,11 @@ public class ZEPriestSettings : Settings
     {
         try
         {
-            if (File.Exists(AdviserFilePathAndName("ZEPriest",
+            if (File.Exists(AdviserFilePathAndName("WholesomeTBCPriest",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName)))
             {
                 CurrentSetting = Load<ZEPriestSettings>(
-                    AdviserFilePathAndName("ZEPriest",
+                    AdviserFilePathAndName("WholesomeTBCPriest",
                     ObjectManager.Me.Name + "." + Usefuls.RealmName));
                 return true;
             }
@@ -92,7 +92,7 @@ public class ZEPriestSettings : Settings
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEPriest > Load(): " + e);
+            Logging.WriteError("WholesomeTBCPriest > Load(): " + e);
         }
         return false;
     }

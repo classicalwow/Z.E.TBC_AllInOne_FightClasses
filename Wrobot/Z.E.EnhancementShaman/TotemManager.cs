@@ -1,5 +1,4 @@
 ﻿using robotManager.Helpful;
-using System.Linq;
 using wManager.Wow.Class;
 using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
@@ -34,7 +33,7 @@ class TotemManager
 
     internal void CheckForTotemicCall()
     {
-        if (ZEEnhancementShaman._settings.UseTotemicCall)
+        if (Shaman._settings.UseTotemicCall)
         {
             bool haveEarthTotem = Lua.LuaDoString<string>(@"local _, totemName, _, _ = GetTotemInfo(2); return totemName;").Contains("Totem");
             bool haveFireTotem = Lua.LuaDoString<string>(@"local _, totemName, _, _ = GetTotemInfo(1); return totemName;").Contains("Totem");
@@ -50,7 +49,7 @@ class TotemManager
 
     internal bool CastEarthTotem()
     {
-        if (ZEEnhancementShaman._settings.UseEarthTotems)
+        if (Shaman._settings.UseEarthTotems)
         {
             string currentEarthTotem = Lua.LuaDoString<string>
                 (@"local haveTotem, totemName, startTime, duration = GetTotemInfo(2); return totemName;");
@@ -76,7 +75,7 @@ class TotemManager
             }
 
             // Strenght of Earth totem
-            if (!ZEEnhancementShaman._settings.UseStoneSkinTotem && !Me.HaveBuff("Strength of Earth")
+            if (!Shaman._settings.UseStoneSkinTotem && !Me.HaveBuff("Strength of Earth")
                 && !currentEarthTotem.Contains("Stoneclaw Totem") && !currentEarthTotem.Contains("Earth Elemental Totem"))
             {
                 {
@@ -86,7 +85,7 @@ class TotemManager
             }
 
             // Stoneskin Totem
-            if (ZEEnhancementShaman._settings.UseStoneSkinTotem && !Me.HaveBuff("Stoneskin")
+            if (Shaman._settings.UseStoneSkinTotem && !Me.HaveBuff("Stoneskin")
                 && !currentEarthTotem.Contains("Stoneclaw Totem") && !currentEarthTotem.Contains("Earth Elemental Totem"))
             {
                 {
@@ -100,26 +99,26 @@ class TotemManager
 
     internal bool CastFireTotem()
     {
-        if (ZEEnhancementShaman._settings.UseFireTotems)
+        if (Shaman._settings.UseFireTotems)
         {
             string currentFireTotem = Lua.LuaDoString<string>
                 (@"local haveTotem, totemName, startTime, duration = GetTotemInfo(1); return totemName;");
 
             // Magma Totem
-            if (ObjectManager.GetNumberAttackPlayer() > 1 && Me.ManaPercentage > ZEEnhancementShaman._mediumManaThreshold && ObjectManager.Target.GetDistance < 10
-                && !currentFireTotem.Contains("Magma Totem") && ZEEnhancementShaman._settings.UseMagmaTotem)
+            if (ObjectManager.GetNumberAttackPlayer() > 1 && Me.ManaPercentage > Shaman._mediumManaThreshold && ObjectManager.Target.GetDistance < 10
+                && !currentFireTotem.Contains("Magma Totem") && Shaman._settings.UseMagmaTotem)
             {
                 if (Cast(MagmaTotem))
                     return true;
             }
 
             // Searing Totem
-            if ((!currentFireTotem.Contains("Searing Totem") || ZEEnhancementShaman._fireTotemPosition == null || Me.Position.DistanceTo(ZEEnhancementShaman._fireTotemPosition) > 15f)
+            if ((!currentFireTotem.Contains("Searing Totem") || Shaman._fireTotemPosition == null || Me.Position.DistanceTo(Shaman._fireTotemPosition) > 15f)
                 && ObjectManager.Target.GetDistance < 10 && !currentFireTotem.Contains("Magma Totem"))
             {
                 if (Cast(SearingTotem))
                 {
-                    ZEEnhancementShaman._fireTotemPosition = Me.Position;
+                    Shaman._fireTotemPosition = Me.Position;
                     return true;
                 }
             }
@@ -129,7 +128,7 @@ class TotemManager
 
     internal bool CastAirTotem()
     {
-        if (ZEEnhancementShaman._settings.UseAirTotems)
+        if (Shaman._settings.UseAirTotems)
         {
             string currentAirTotem = Lua.LuaDoString<string>
                 (@"local _, totemName, _, _ = GetTotemInfo(4); return totemName;");
@@ -146,7 +145,7 @@ class TotemManager
 
     internal bool CastWaterTotem()
     {
-        if (ZEEnhancementShaman._settings.UseWaterTotems)
+        if (Shaman._settings.UseWaterTotems)
         {
             string currentWaterTotem = Lua.LuaDoString<string>
                 (@"local _, totemName, _, _ = GetTotemInfo(3); return totemName;");
@@ -163,7 +162,7 @@ class TotemManager
 
     internal bool Cast(Spell s)
     {
-        ZEEnhancementShaman.Debug("Into Totem Cast() for " + s.Name);
+        Main.LogDebug("Into Totem Cast() for " + s.Name);
 
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;

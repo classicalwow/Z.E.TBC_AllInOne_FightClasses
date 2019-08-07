@@ -12,6 +12,8 @@ public class Main : ICustomClass
 {
     private static string wowClass = ObjectManager.Me.WowClass.ToString();
     public static float settingRange = 5f;
+    public static bool _isLaunched;
+    private static bool _debug = true;
 
     public float Range
 	{
@@ -27,7 +29,10 @@ public class Main : ICustomClass
         var type = Type.GetType(wowClass);
 
         if (type != null)
+        {
+            _isLaunched = true;
             type.GetMethod("Initialize").Invoke(null, null);
+        }
         else
         {
             LogError("Class not supported.");
@@ -35,12 +40,12 @@ public class Main : ICustomClass
         }
     }
 
-
     public void Dispose()
     {
         var type = Type.GetType(wowClass);
         if (type != null)
             type.GetMethod("Dispose").Invoke(null, null);
+        _isLaunched = false;
     }
 
     public void ShowConfiguration()
@@ -51,6 +56,27 @@ public class Main : ICustomClass
             type.GetMethod("ShowConfiguration").Invoke(null, null);
         else
             LogError("Class not supported.");
+    }
+
+    public static void LogFight(string message)
+    {
+        Logging.Write($"[WholesomeFCTBC - {wowClass}]: { message}", Logging.LogType.Fight, Color.ForestGreen);
+    }
+
+    public static void LogError(string message)
+    {
+        Logging.Write($"[WholesomeFCTBC - {wowClass}]: {message}", Logging.LogType.Error, Color.DarkRed);
+    }
+
+    public static void Log(string message)
+    {
+        Logging.Write($"[WholesomeFCTBC - {wowClass}]: {message}");
+    }
+
+    public static void LogDebug(string message)
+    {
+        if (_debug)
+            Logging.WriteDebug($"[WholesomeFCTBC - {wowClass}]: { message}");
     }
 
     private string GetSpec()
@@ -65,18 +91,5 @@ public class Main : ICustomClass
         }
         var highestTalents = Talents.Max(x => x.Value);
         return Talents.Where(t => t.Value == highestTalents).FirstOrDefault().Key;
-    }
-
-    public static void LogFight(string message)
-    {
-        Logging.Write($"[WholesomeFCTBC - {wowClass}]: { message}", Logging.LogType.Fight, Color.ForestGreen);
-    }
-    public static void LogError(string message)
-    {
-        Logging.Write($"[WholesomeFCTBC - {wowClass}]: {message}", Logging.LogType.Error, Color.DarkRed);
-    }
-    public static void Log(string message)
-    {
-        Logging.Write($"[WholesomeFCTBC - {wowClass}]: {message}");
     }
 }

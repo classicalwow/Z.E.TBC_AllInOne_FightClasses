@@ -9,28 +9,19 @@ using wManager.Wow.ObjectManager;
 using System.ComponentModel;
 using System.Collections.Generic;
 
-public class ZEFrostMage : ICustomClass
+public static class Mage
 {
-    private bool _isLaunched;
-    private MageFoodManager _foodManager = new MageFoodManager();
-    private int _meleeRange = 5;
-    private bool _usingWand = false;
-    private bool _isBackingUp = false;
+    private static MageFoodManager _foodManager = new MageFoodManager();
+    private static int _meleeRange = 5;
+    private static bool _usingWand = false;
+    private static bool _isBackingUp = false;
     //private List<WoWUnit> _listUnitsAttackingMe;
 
-    public float Range
-	{
-		get
-		{
-			return 29;
-		}
-	}
-    
-	public void Initialize()
+    public static void Initialize()
     {
-        Logging.Write("[Z.E.Mage] initialized.");
+        Main.settingRange = 29f;
+        Main.Log("Initialized.");
         ZEMageSettings.Load();
-        _isLaunched = true;
 
         FightEvents.OnFightEnd += (ulong guid) =>
         {
@@ -53,27 +44,26 @@ public class ZEFrostMage : ICustomClass
 
         Rotation();
 	}
-    
-	public void Dispose()
+
+    public static void Dispose()
 	{
-		_isLaunched = false;
         _usingWand = false;
         _isBackingUp = false;
-        Logging.Write("[Z.E.Mage] Stopped in progress.");
+        Main.Log("Stopped in progress.");
 	}
-    
-	public void ShowConfiguration()
+
+    public static void ShowConfiguration()
     {
         ZEMageSettings.Load();
         ZEMageSettings.CurrentSetting.ToForm();
         ZEMageSettings.CurrentSetting.Save();
     }
-    
-	internal void Rotation()
-	{
-		Logging.Write("[Z.E.Mage] Started");
 
-        while (_isLaunched)
+    internal static void Rotation()
+	{
+		Main.Log("Started");
+
+        while (Main._isLaunched)
 		{
 			try
 			{
@@ -105,10 +95,10 @@ public class ZEFrostMage : ICustomClass
 			}
 			Thread.Sleep(50);
 		}
-		Logging.Write("[Z.E.Mage] Stopped.");
+		Main.Log("Stopped.");
 	}
     
-	internal void CombatRotation()
+	internal static void CombatRotation()
     {/*
         if (ObjectManager.GetNumberAttackPlayer() > 1)
         {
@@ -187,31 +177,31 @@ public class ZEFrostMage : ICustomClass
             Cast(Fireball);
     }
 
-    private void Cast(Spell s)
+    private static void Cast(Spell s)
     {
         if (s.IsSpellUsable && s.KnownSpell && !_usingWand && !_isBackingUp)
             s.Launch();
     }
 
-    private Spell FrostArmor = new Spell("Frost Armor");
-    private Spell Fireball = new Spell("Fireball");
-    private Spell Frostbolt = new Spell("Frostbolt");
-    private Spell FireBlast = new Spell("Fire Blast");
-    private Spell ArcaneIntellect = new Spell("Arcane Intellect");
-    private Spell FrostNova = new Spell("Frost Nova");
-    private Spell UseWand = new Spell("Shoot");
-    private Spell IcyVeins = new Spell("Icy Veins");
-    private Spell CounterSpell = new Spell("Counterspell");
-    private Spell ConeOfCold = new Spell("Cone of Cold");
-    private Spell Evocation = new Spell("Evocation");
-    private Spell ColdSnap = new Spell("Cold Snap");
-    private Spell Polymorph = new Spell("Polymorph");
-    private Spell IceBarrier = new Spell("Ice Barrier");
-    private Spell SummonWaterElemental = new Spell("Summon Water Elemental");
-    private Spell IceLance = new Spell("Ice Lance");
-    private Spell RemoveCurse = new Spell("Remove Curse");
+    private static Spell FrostArmor = new Spell("Frost Armor");
+    private static Spell Fireball = new Spell("Fireball");
+    private static Spell Frostbolt = new Spell("Frostbolt");
+    private static Spell FireBlast = new Spell("Fire Blast");
+    private static Spell ArcaneIntellect = new Spell("Arcane Intellect");
+    private static Spell FrostNova = new Spell("Frost Nova");
+    private static Spell UseWand = new Spell("Shoot");
+    private static Spell IcyVeins = new Spell("Icy Veins");
+    private static Spell CounterSpell = new Spell("Counterspell");
+    private static Spell ConeOfCold = new Spell("Cone of Cold");
+    private static Spell Evocation = new Spell("Evocation");
+    private static Spell ColdSnap = new Spell("Cold Snap");
+    private static Spell Polymorph = new Spell("Polymorph");
+    private static Spell IceBarrier = new Spell("Ice Barrier");
+    private static Spell SummonWaterElemental = new Spell("Summon Water Elemental");
+    private static Spell IceLance = new Spell("Ice Lance");
+    private static Spell RemoveCurse = new Spell("Remove Curse");
 
-    private string GetDebuffType()
+    private static string GetDebuffType()
     {
         string debuffType = Lua.LuaDoString<string>
             (@"for i=1,25 do 

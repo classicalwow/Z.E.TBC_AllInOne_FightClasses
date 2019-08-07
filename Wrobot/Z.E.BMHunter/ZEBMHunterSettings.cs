@@ -22,7 +22,7 @@ public class ZEBMHunterSettings : Settings
         RapidFireOnMulti = false;
 
         ConfigWinForm(
-            new System.Drawing.Point(400, 400), "Z.E.BMHunter "
+            new System.Drawing.Point(400, 400), "WholesomeTBCHunter "
             + Translate.Get("Settings")
         );
     }
@@ -73,12 +73,12 @@ public class ZEBMHunterSettings : Settings
     {
         try
         {
-            return Save(AdviserFilePathAndName("ZEBMHunter",
+            return Save(AdviserFilePathAndName("WholesomeTBCHunter",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName));
         }
         catch (Exception e)
         {
-            Main.LogError("ZEBMHunter > Save(): " + e);
+            Main.LogError("WholesomeTBCHunter > Save(): " + e);
             return false;
         }
     }
@@ -87,11 +87,11 @@ public class ZEBMHunterSettings : Settings
     {
         try
         {
-            if (File.Exists(AdviserFilePathAndName("ZEBMHunter",
+            if (File.Exists(AdviserFilePathAndName("WholesomeTBCHunter",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName)))
             {
                 CurrentSetting = Load<ZEBMHunterSettings>(
-                    AdviserFilePathAndName("ZEBMHunter",
+                    AdviserFilePathAndName("WholesomeTBCHunter",
                     ObjectManager.Me.Name + "." + Usefuls.RealmName));
                 return true;
             }
@@ -99,7 +99,7 @@ public class ZEBMHunterSettings : Settings
         }
         catch (Exception e)
         {
-            Main.LogError("ZEBMHunter > Load(): " + e);
+            Main.LogError("WholesomeTBCHunter > Load(): " + e);
         }
         return false;
     }

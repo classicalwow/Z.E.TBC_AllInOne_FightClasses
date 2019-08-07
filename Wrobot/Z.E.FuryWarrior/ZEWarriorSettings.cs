@@ -17,7 +17,7 @@ public class ZEWarriorSettings : Settings
         UseBloodRage = false;
 
         ConfigWinForm(
-            new System.Drawing.Point(400, 400), "Z.E.Warrior "
+            new System.Drawing.Point(400, 400), "WholesomeTBCWarrior "
             + Translate.Get("Settings")
         );
     }
@@ -38,12 +38,12 @@ public class ZEWarriorSettings : Settings
     {
         try
         {
-            return Save(AdviserFilePathAndName("ZEWarrior",
+            return Save(AdviserFilePathAndName("WholesomeTBCWarrior",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName));
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEWarrior > Save(): " + e);
+            Logging.WriteError("WholesomeTBCWarrior > Save(): " + e);
             return false;
         }
     }
@@ -52,11 +52,11 @@ public class ZEWarriorSettings : Settings
     {
         try
         {
-            if (File.Exists(AdviserFilePathAndName("ZEWarrior",
+            if (File.Exists(AdviserFilePathAndName("WholesomeTBCWarrior",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName)))
             {
                 CurrentSetting = Load<ZEWarriorSettings>(
-                    AdviserFilePathAndName("ZEWarrior",
+                    AdviserFilePathAndName("WholesomeTBCWarrior",
                     ObjectManager.Me.Name + "." + Usefuls.RealmName));
                 return true;
             }
@@ -64,7 +64,7 @@ public class ZEWarriorSettings : Settings
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEWarrior > Load(): " + e);
+            Logging.WriteError("WholesomeTBCWarrior > Load(): " + e);
         }
         return false;
     }

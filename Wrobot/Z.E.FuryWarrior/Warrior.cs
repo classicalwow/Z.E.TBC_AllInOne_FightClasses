@@ -11,34 +11,21 @@ using robotManager.FiniteStateMachine;
 using System.ComponentModel;
 using System.Collections.Generic;
 
-public class ZEFuryWarrior : ICustomClass
+public static class Warrior
 {
-    private static bool _debug = true;
-    
     internal static Stopwatch _pullMeleeTimer = new Stopwatch();
     internal static Stopwatch _meleeTimer = new Stopwatch();
     internal static Vector3 _fireTotemPosition = null;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     internal static ZEWarriorSettings _settings;
-    private bool _isLaunched;
-    private bool _goInMelee = false;
-    private bool _fightingACaster = false;
-    private float _pullRange = 28f;
-    List<string> _casterEnemies = new List<string>();
+    private static bool _goInMelee = false;
+    private static bool _fightingACaster = false;
+    private static float _pullRange = 28f;
+    private static List<string> _casterEnemies = new List<string>();
 
-    public float Range
-	{
-		get
-        {
-            //return _goInMelee ? 5f : _pullRange;
-            return 5f;
-        }
-    }
-
-    public void Initialize()
+    public static void Initialize()
     {
-        _isLaunched = true;
-        Log("Initialized");
+        Main.Log("Initialized");
         ZEWarriorSettings.Load();
         _settings = ZEWarriorSettings.CurrentSetting;
 
@@ -54,16 +41,15 @@ public class ZEFuryWarrior : ICustomClass
     }
 
 
-    public void Dispose()
+    public static void Dispose()
     {
-        _isLaunched = false;
-        Log("Stop in progress.");
+        Main.Log("Stop in progress.");
     }
-    
-	internal void Rotation()
+
+    internal static void Rotation()
 	{
-        Log("Started");
-		while (_isLaunched)
+        Main.Log("Started");
+		while (Main._isLaunched)
 		{
 			try
 			{
@@ -91,10 +77,10 @@ public class ZEFuryWarrior : ICustomClass
 			}
 			Thread.Sleep(Usefuls.Latency + 10);
 		}
-        Log("Stopped.");
+        Main.Log("Stopped.");
     }
 
-    internal void BuffRotation()
+    internal static void BuffRotation()
     {
         if (!Me.IsMounted && !Me.IsCast)
         {
@@ -105,7 +91,7 @@ public class ZEFuryWarrior : ICustomClass
         }
     }
 
-    internal void Pull()
+    internal static void Pull()
     {
         // Melee ?
         if (_pullMeleeTimer.ElapsedMilliseconds <= 0 && ObjectManager.Target.GetDistance <= _pullRange + 3)
@@ -149,8 +135,9 @@ public class ZEFuryWarrior : ICustomClass
         }*/
     }
 
-    internal void CombatRotation()
+    internal static void CombatRotation()
     {
+        Main.settingRange = 5f;
         bool _shouldBeInterrupted = false;
         bool _inMeleeRange = ObjectManager.Target.GetDistance < 6f;
 
@@ -175,12 +162,18 @@ public class ZEFuryWarrior : ICustomClass
 
         if ((_shouldBeInterrupted || _meleeTimer.ElapsedMilliseconds > 5000) && !_goInMelee)
         {
-            Debug("Going in melee range");
+            Main.LogDebug("Going in melee range");
             if (!_casterEnemies.Contains(ObjectManager.Target.Name))
                 _casterEnemies.Add(ObjectManager.Target.Name);
             _fightingACaster = true;
             _goInMelee = true;
             _meleeTimer.Stop();
+        }
+
+        // Interrupt?
+        if (_fightingACaster)
+        {
+
         }
 
         // Blood Rage
@@ -210,24 +203,24 @@ public class ZEFuryWarrior : ICustomClass
                 return;
     }
 
-    public void ShowConfiguration()
+    public static void ShowConfiguration()
     {
         ZEWarriorSettings.Load();
         ZEWarriorSettings.CurrentSetting.ToForm();
         ZEWarriorSettings.CurrentSetting.Save();
     }
-    
-    private Spell Attack = new Spell("Attack");
-    private Spell HeroicStrike = new Spell("Heroic Strike");
-    private Spell BattleShout = new Spell("Battle Shout");
-    private Spell Charge = new Spell("Charge");
-    private Spell Rend = new Spell("Rend");
-    private Spell Hamstring = new Spell("Hamstring");
-    private Spell BloodRage = new Spell("Bloodrage");
+
+    private static Spell Attack = new Spell("Attack");
+    private static Spell HeroicStrike = new Spell("Heroic Strike");
+    private static Spell BattleShout = new Spell("Battle Shout");
+    private static Spell Charge = new Spell("Charge");
+    private static Spell Rend = new Spell("Rend");
+    private static Spell Hamstring = new Spell("Hamstring");
+    private static Spell BloodRage = new Spell("Bloodrage");
 
     internal static bool Cast(Spell s)
     {
-        Debug("In cast for " + s.Name);
+        Main.LogDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;
         
@@ -235,34 +228,23 @@ public class ZEFuryWarrior : ICustomClass
         return true;
     }
 
-    private void CheckAutoAttack()
+    private static void CheckAutoAttack()
     {
         bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') then isAutoRepeat = true end", "isAutoRepeat");
         if (!_autoAttacking && ObjectManager.GetNumberAttackPlayer() > 0)
         {
-            Log("Re-activating attack");
+            Main.LogDebug("Re-activating attack");
             Attack.Launch();
         }
     }
 
-    private bool CanBleed(WoWUnit unit)
+    private static bool CanBleed(WoWUnit unit)
     {
         return unit.CreatureTypeTarget != "Elemental" && unit.CreatureTypeTarget != "Mechanical";
     }
 
-    private bool HeroicStrikeOn()
+    private static bool HeroicStrikeOn()
     {
         return Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Heroic Strike') then isAutoRepeat = true end", "isAutoRepeat");
-    }
-
-    internal static void Log(string s)
-    {
-        Logging.WriteDebug("[Z.E.Warrior] " + s);
-    }
-
-    internal static void Debug(string s)
-    {
-        if (_debug)
-            Logging.WriteDebug("[Z.E.Warrior DEBUG] " + s);
     }
 }

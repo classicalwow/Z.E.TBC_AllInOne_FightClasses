@@ -7,29 +7,18 @@ using wManager.Wow.Class;
 using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
 
-public class ZEShadowPriest : ICustomClass
+public static class Priest
 {
-    private WoWLocalPlayer Me = ObjectManager.Me;
-    private bool _isLaunched;
-    private float _maxRange = 28f;
-    private bool _usingWand = false;
-    private int _innerManaSaveThreshold = 20;
-    private int _wandThreshold;
-    private bool _goInMFRange = false;
+    private static WoWLocalPlayer Me = ObjectManager.Me;
+    private static float _maxRange = 28f;
+    private static bool _usingWand = false;
+    private static int _innerManaSaveThreshold = 20;
+    private static int _wandThreshold;
+    private static bool _goInMFRange = false;
 
-    public float Range
-	{
-		get
-        {
-            float result = _goInMFRange ? 17f : _maxRange - 2;
-            return result;
-        }
-    }
-
-    public void Initialize()
+    public static void Initialize()
     {
-        _isLaunched = true;
-        Log("Initialized");
+        Main.Log("Initialized");
         ZEPriestSettings.Load();
         _wandThreshold = ZEPriestSettings.CurrentSetting.WandThreshold > 100 ? 50 : ZEPriestSettings.CurrentSetting.WandThreshold;
         
@@ -43,21 +32,21 @@ public class ZEShadowPriest : ICustomClass
     }
 
 
-    public void Dispose()
+    public static void Dispose()
     {
-        _isLaunched = false;
-        Log("Stop in progress.");
+        Main.Log("Stop in progress.");
     }
-    
-	internal void Rotation()
+
+    internal static void Rotation()
 	{
-        Log("Started");
-		while (_isLaunched)
+        Main.Log("Started");
+		while (Main._isLaunched)
 		{
 			try
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
+                    Main.settingRange = _goInMFRange ? 17f : _maxRange - 2;
                     if (!Fight.InFight)
                     {
                         BuffRotation();
@@ -78,10 +67,10 @@ public class ZEShadowPriest : ICustomClass
 			}
 			Thread.Sleep(Usefuls.Latency + 20);
 		}
-        Log("Stopped.");
+        Main.Log("Stopped.");
     }
 
-    internal void BuffRotation()
+    internal static void BuffRotation()
     {
         if (!Me.IsMounted)
         {
@@ -116,7 +105,7 @@ public class ZEShadowPriest : ICustomClass
         }
     }
 
-    internal void Pull()
+    internal static void Pull()
     {
         if (!HaskWeakenedSoul() && ZEPriestSettings.CurrentSetting.UseShieldOnPull && PowerWordShield.KnownSpell && PowerWordShield.IsSpellUsable
             && !Me.HaveBuff("Power Word: Shield"))
@@ -156,7 +145,7 @@ public class ZEShadowPriest : ICustomClass
         }
     }
 
-    internal void CombatRotation()
+    internal static void CombatRotation()
     {
         _usingWand = Lua.LuaDoString<bool>("isAutoRepeat = false; local name = GetSpellInfo(5019); " +
             "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
@@ -305,7 +294,7 @@ public class ZEShadowPriest : ICustomClass
 
         if (_inShadowForm && !MindFlay.IsDistanceGood && MindFlay.KnownSpell && Me.HaveBuff("Power Word: Shield"))
         {
-            Log("Approaching to be in Mind Flay range");
+            Main.LogDebug("Approaching to be in Mind Flay range");
             _goInMFRange = true;
             return;
         }
@@ -330,41 +319,41 @@ public class ZEShadowPriest : ICustomClass
         }
     }
 
-    public void ShowConfiguration()
+    public static void ShowConfiguration()
     {
         ZEPriestSettings.Load();
         ZEPriestSettings.CurrentSetting.ToForm();
         ZEPriestSettings.CurrentSetting.Save();
     }
 
-    private Spell Smite = new Spell("Smite");
-    private Spell LesserHeal = new Spell("Lesser Heal");
-    private Spell PowerWordFortitude = new Spell("Power Word: Fortitude");
-    private Spell PowerWordShield = new Spell("Power Word: Shield");
-    private Spell ShadowWordPain = new Spell("Shadow Word: Pain");
-    private Spell ShadowWordDeath = new Spell("Shadow Word: Death");
-    private Spell UseWand = new Spell("Shoot");
-    private Spell Renew = new Spell("Renew");
-    private Spell MindBlast = new Spell("Mind Blast");
-    private Spell InnerFire = new Spell("Inner Fire");
-    private Spell CureDisease = new Spell("Cure Disease");
-    private Spell PsychicScream = new Spell("Psychic Scream");
-    private Spell Heal = new Spell("Heal");
-    private Spell MindFlay = new Spell("Mind Flay");
-    private Spell HolyFire = new Spell("Holy Fire");
-    private Spell DispelMagic = new Spell("Dispel Magic");
-    private Spell FlashHeal = new Spell("Flash Heal");
-    private Spell VampiricEmbrace = new Spell("Vampiric Embrace");
-    private Spell Shadowguard = new Spell("Shadowguard");
-    private Spell ShadowProtection = new Spell("Shadow Protection");
-    private Spell Shadowform = new Spell("Shadowform");
-    private Spell VampiricTouch = new Spell("Vampiric Touch");
-    private Spell InnerFocus = new Spell("Inner Focus");
-    private Spell Shadowfiend = new Spell("Shadowfiend");
+    private static Spell Smite = new Spell("Smite");
+    private static Spell LesserHeal = new Spell("Lesser Heal");
+    private static Spell PowerWordFortitude = new Spell("Power Word: Fortitude");
+    private static Spell PowerWordShield = new Spell("Power Word: Shield");
+    private static Spell ShadowWordPain = new Spell("Shadow Word: Pain");
+    private static Spell ShadowWordDeath = new Spell("Shadow Word: Death");
+    private static Spell UseWand = new Spell("Shoot");
+    private static Spell Renew = new Spell("Renew");
+    private static Spell MindBlast = new Spell("Mind Blast");
+    private static Spell InnerFire = new Spell("Inner Fire");
+    private static Spell CureDisease = new Spell("Cure Disease");
+    private static Spell PsychicScream = new Spell("Psychic Scream");
+    private static Spell Heal = new Spell("Heal");
+    private static Spell MindFlay = new Spell("Mind Flay");
+    private static Spell HolyFire = new Spell("Holy Fire");
+    private static Spell DispelMagic = new Spell("Dispel Magic");
+    private static Spell FlashHeal = new Spell("Flash Heal");
+    private static Spell VampiricEmbrace = new Spell("Vampiric Embrace");
+    private static Spell Shadowguard = new Spell("Shadowguard");
+    private static Spell ShadowProtection = new Spell("Shadow Protection");
+    private static Spell Shadowform = new Spell("Shadowform");
+    private static Spell VampiricTouch = new Spell("Vampiric Touch");
+    private static Spell InnerFocus = new Spell("Inner Focus");
+    private static Spell Shadowfiend = new Spell("Shadowfiend");
 
-    private bool Cast(Spell s, bool castEvenIfWanding, bool waitGCD)
+    private static bool Cast(Spell s, bool castEvenIfWanding, bool waitGCD)
     {
-        Log("Into Cast for " + s.Name);
+        Main.Log("Into Cast for " + s.Name);
 
         if (_usingWand && !castEvenIfWanding)
             return false;
@@ -382,7 +371,7 @@ public class ZEShadowPriest : ICustomClass
         return true;
     }
 
-    private bool HaskWeakenedSoul()
+    private static bool HaskWeakenedSoul()
     {
         bool weakenedSoul = Lua.LuaDoString<bool>
             (@"for i=1,25 do 
@@ -394,7 +383,7 @@ public class ZEShadowPriest : ICustomClass
         return weakenedSoul;
     }
 
-    private bool HasDisease()
+    private static bool HasDisease()
     {
         bool hasDisease = Lua.LuaDoString<bool>
             (@"for i=1,25 do 
@@ -406,7 +395,7 @@ public class ZEShadowPriest : ICustomClass
         return hasDisease;
     }
 
-    private bool HasMagicDebuff()
+    private static bool HasMagicDebuff()
     {
         bool hasMagicDebuff = Lua.LuaDoString<bool>
             (@"for i=1,25 do 
@@ -418,7 +407,7 @@ public class ZEShadowPriest : ICustomClass
         return hasMagicDebuff;
     }
 
-    private void StopWandWaitGCD()
+    private static void StopWandWaitGCD()
     {
         if (Me.ManaPercentage > 15)
         {
@@ -431,13 +420,13 @@ public class ZEShadowPriest : ICustomClass
                 if (c >= 1500)
                     return;
             }
-            Log("Waited for GCD : " + c);
+            Main.LogDebug("Waited for GCD : " + c);
             if (c >= 1500)
                 UseWand.Launch();
         }
     }
 
-    private void WaitGlobalCoolDown()
+    private static void WaitGlobalCoolDown()
     {
         int c = 0;
         while (!Smite.IsSpellUsable)
@@ -447,11 +436,6 @@ public class ZEShadowPriest : ICustomClass
             if (c >= 2000)
                 return;
         }
-        Log("Waited for GCD : " + c);
-    }
-
-    public void Log(string s)
-    {
-        Logging.WriteDebug("[Z.E.Priest] " + s);
+        Main.LogDebug("Waited for GCD : " + c);
     }
 }

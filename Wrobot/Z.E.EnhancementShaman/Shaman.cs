@@ -11,38 +11,26 @@ using robotManager.FiniteStateMachine;
 using System.ComponentModel;
 using System.Collections.Generic;
 
-public class ZEEnhancementShaman : ICustomClass
+public static class Shaman
 {
-    private static bool _debug = false;
-
     internal static Stopwatch _ghostWolfTimer = new Stopwatch();
     internal static Stopwatch _pullMeleeTimer = new Stopwatch();
     internal static Stopwatch _meleeTimer = new Stopwatch();
     internal static Vector3 _fireTotemPosition = null;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     internal static ZEShamanSettings _settings;
-    private bool _isLaunched;
-    private bool _goInMelee = false;
-    private bool _fightingACaster = false;
-    private float _pullRange = 28f;
+    private static bool _goInMelee = false;
+    private static bool _fightingACaster = false;
+    private static float _pullRange = 28f;
     internal static int _lowManaThreshold = 20;
     internal static int _mediumManaThreshold = 50;
     internal static int _highManaThreshold = 80;
-    List<string> _casterEnemies = new List<string>();
-    TotemManager totemManager = new TotemManager();
+    static List<string> _casterEnemies = new List<string>();
+    static TotemManager totemManager = new TotemManager();
 
-    public float Range
-	{
-		get
-        {
-            return _goInMelee ? 5f : _pullRange;
-        }
-    }
-
-    public void Initialize()
+    public static void Initialize()
     {
-        _isLaunched = true;
-        Log("Initialized");
+        Main.Log("Initialized");
         ZEShamanSettings.Load();
         _settings = ZEShamanSettings.CurrentSetting;
         _ghostWolfTimer.Start();
@@ -77,21 +65,21 @@ public class ZEEnhancementShaman : ICustomClass
     }
 
 
-    public void Dispose()
+    public static void Dispose()
     {
-        _isLaunched = false;
-        Log("Stop in progress.");
+        Main.Log("Stop in progress.");
     }
     
-	internal void Rotation()
+	internal static void Rotation()
 	{
-        Log("Started");
-		while (_isLaunched)
+        Main.Log("Started");
+		while (Main._isLaunched)
 		{
 			try
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
+                    Main.settingRange = _goInMelee ? 5f : _pullRange;
                     CheckEnchantMainHand();
                     totemManager.CheckForTotemicCall();
 
@@ -131,10 +119,10 @@ public class ZEEnhancementShaman : ICustomClass
 			}
 			Thread.Sleep(Usefuls.Latency + 10);
 		}
-        Log("Stopped.");
+        Main.Log("Stopped.");
     }
 
-    internal void BuffRotation()
+    internal static void BuffRotation()
     {
         if (!Me.IsMounted && !Me.HaveBuff("Ghost Wolf") && !Me.IsCast)
         {
@@ -155,7 +143,7 @@ public class ZEEnhancementShaman : ICustomClass
         }
     }
 
-    internal void Pull()
+    internal static void Pull()
     {
         // Melee ?
         if (_pullMeleeTimer.ElapsedMilliseconds <= 0 && ObjectManager.Target.GetDistance <= _pullRange + 3)
@@ -210,7 +198,7 @@ public class ZEEnhancementShaman : ICustomClass
         }
     }
 
-    internal void CombatRotation()
+    internal static void CombatRotation()
     {
         bool _lowMana = Me.ManaPercentage <= _lowManaThreshold;
         bool _mediumMana = Me.ManaPercentage >= _mediumManaThreshold;
@@ -238,9 +226,9 @@ public class ZEEnhancementShaman : ICustomClass
         if (_meleeTimer.ElapsedMilliseconds <= 0 && !_goInMelee)
             _meleeTimer.Start();
 
-        if ((_shouldBeInterrupted || _meleeTimer.ElapsedMilliseconds > 5000) && !_goInMelee)
+        if ((_shouldBeInterrupted || _meleeTimer.ElapsedMilliseconds > 8000) && !_goInMelee)
         {
-            Debug("Going in melee range");
+            Main.LogDebug("Going in melee range");
             if (!_casterEnemies.Contains(ObjectManager.Target.Name))
                 _casterEnemies.Add(ObjectManager.Target.Name);
             _fightingACaster = true;
@@ -350,32 +338,32 @@ public class ZEEnhancementShaman : ICustomClass
         }
     }
 
-    public void ShowConfiguration()
+    public static void ShowConfiguration()
     {
         ZEShamanSettings.Load();
         ZEShamanSettings.CurrentSetting.ToForm();
         ZEShamanSettings.CurrentSetting.Save();
     }
 
-    private Spell LightningBolt = new Spell("Lightning Bolt");
-    private Spell HealingWave = new Spell("Healing Wave");
-    private Spell LesserHealingWave = new Spell("Lesser Healing Wave");
-    private Spell RockbiterWeapon = new Spell("Rockbiter Weapon");
-    private Spell EarthShock = new Spell("Earth Shock");
-    private Spell FlameShock = new Spell("Flame Shock");
-    private Spell LightningShield = new Spell("Lightning Shield");
-    private Spell WaterShield = new Spell("Water Shield");
-    private Spell GhostWolf = new Spell("Ghost Wolf");
-    private Spell CurePoison = new Spell("Cure Poison");
-    private Spell CureDisease = new Spell("Cure Disease");
-    private Spell WindfuryWeapon = new Spell("Windfury Weapon");
-    private Spell Stormstrike = new Spell("Stormstrike");
-    private Spell ShamanisticRage = new Spell("Shamanistic Rage");
-    private Spell Attack = new Spell("Attack");
+    private static Spell LightningBolt = new Spell("Lightning Bolt");
+    private static Spell HealingWave = new Spell("Healing Wave");
+    private static Spell LesserHealingWave = new Spell("Lesser Healing Wave");
+    private static Spell RockbiterWeapon = new Spell("Rockbiter Weapon");
+    private static Spell EarthShock = new Spell("Earth Shock");
+    private static Spell FlameShock = new Spell("Flame Shock");
+    private static Spell LightningShield = new Spell("Lightning Shield");
+    private static Spell WaterShield = new Spell("Water Shield");
+    private static Spell GhostWolf = new Spell("Ghost Wolf");
+    private static Spell CurePoison = new Spell("Cure Poison");
+    private static Spell CureDisease = new Spell("Cure Disease");
+    private static Spell WindfuryWeapon = new Spell("Windfury Weapon");
+    private static Spell Stormstrike = new Spell("Stormstrike");
+    private static Spell ShamanisticRage = new Spell("Shamanistic Rage");
+    private static Spell Attack = new Spell("Attack");
 
     internal static bool Cast(Spell s)
     {
-        Debug("In cast for " + s.Name);
+        Main.LogDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;
         
@@ -383,17 +371,17 @@ public class ZEEnhancementShaman : ICustomClass
         return true;
     }
 
-    private void CheckAutoAttack()
+    private static void CheckAutoAttack()
     {
         bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') then isAutoRepeat = true end", "isAutoRepeat");
         if (!_autoAttacking && ObjectManager.GetNumberAttackPlayer() > 0)
         {
-            Log("Re-activating attack");
+            Main.LogDebug("Re-activating attack");
             Attack.Launch();
         }
     }
 
-    private void CheckEnchantMainHand()
+    private static void CheckEnchantMainHand()
     {
         bool hasMainHandEnchant = Lua.LuaDoString<bool>
             (@"local hasMainHandEnchant, _, _, _, _, _, _, _, _ = GetWeaponEnchantInfo()
@@ -424,7 +412,7 @@ public class ZEEnhancementShaman : ICustomClass
         }
     }
 
-    private bool HasPoisonDebuff()
+    private static bool HasPoisonDebuff()
     {
         bool hasPoisonDebuff = Lua.LuaDoString<bool>
             (@"for i=1,25 do 
@@ -436,7 +424,7 @@ public class ZEEnhancementShaman : ICustomClass
         return hasPoisonDebuff;
     }
 
-    private bool HasDiseaseDebuff()
+    private static bool HasDiseaseDebuff()
     {
         bool hasDiseaseDebuff = Lua.LuaDoString<bool>
             (@"for i=1,25 do 
@@ -446,16 +434,5 @@ public class ZEEnhancementShaman : ICustomClass
                 end
             end");
         return hasDiseaseDebuff;
-    }
-
-    internal static void Log(string s)
-    {
-        Logging.WriteDebug("[Z.E.Shaman] " + s);
-    }
-
-    internal static void Debug(string s)
-    {
-        if (_debug)
-            Logging.WriteDebug("[Z.E.Shaman DEBUG] " + s);
     }
 }

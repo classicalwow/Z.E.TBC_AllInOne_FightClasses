@@ -12,7 +12,6 @@ public static class Hunter
 {
     private static HunterFoodManager _foodManager = new HunterFoodManager();
     internal static ZEBMHunterSettings _settings;
-    private static bool _isLaunched;
     public static bool _autoshotRepeating;
     public static bool RangeCheck;
     private static bool _isBackingUp = false;
@@ -22,7 +21,6 @@ public static class Hunter
 
     public static void Initialize()
     {
-        _isLaunched = true;
         Main.Log("Initialized");
         ZEBMHunterSettings.Load();
         _settings = ZEBMHunterSettings.CurrentSetting;
@@ -36,7 +34,7 @@ public static class Hunter
         {
             _steadyShotSleep = 500;
         }
-        Main.Log("Steady Shot delay set to : " + _steadyShotSleep.ToString() + "ms");
+        Main.LogDebug("Steady Shot delay set to : " + _steadyShotSleep.ToString() + "ms");
 
         FightEvents.OnFightStart += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
@@ -69,10 +67,10 @@ public static class Hunter
                        "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
                 if (!_autoshotRepeating)
                 {
-                    Main.LogFight("Re-enabling auto shot");
+                    Main.LogDebug("Re-enabling auto shot");
                     AutoShot.Launch();
                 }
-                Main.LogFight("Backup attempt : " + _backupAttempts);
+                Main.LogDebug("Backup attempt : " + _backupAttempts);
                 if (_backupAttempts >= _settings.MaxBackupAttempts)
                 {
                     _canOnlyMelee = true;
@@ -86,14 +84,13 @@ public static class Hunter
 
     public static void Dispose()
     {
-        _isLaunched = false;
         Main.Log("Stop in progress.");
     }
 
     internal static void Rotation()
 	{
         Main.Log("Started");
-		while (_isLaunched)
+		while (Main._isLaunched)
 		{
 			try
 			{

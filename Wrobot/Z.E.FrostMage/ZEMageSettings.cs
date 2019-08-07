@@ -18,7 +18,7 @@ public class ZEMageSettings : Settings
         IcyVeinMultiPull = true;
 
         ConfigWinForm(
-            new System.Drawing.Point(400, 400), "Z.E.Mage "
+            new System.Drawing.Point(400, 400), "WholesomeTBCMage "
             + Translate.Get("Settings")
         );
     }
@@ -45,12 +45,12 @@ public class ZEMageSettings : Settings
     {
         try
         {
-            return Save(AdviserFilePathAndName("ZEMage",
+            return Save(AdviserFilePathAndName("WholesomeTBCMage",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName));
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEMage > Save(): " + e);
+            Logging.WriteError("WholesomeTBCMage > Save(): " + e);
             return false;
         }
     }
@@ -59,11 +59,11 @@ public class ZEMageSettings : Settings
     {
         try
         {
-            if (File.Exists(AdviserFilePathAndName("ZEMage",
+            if (File.Exists(AdviserFilePathAndName("WholesomeTBCMage",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName)))
             {
                 CurrentSetting = Load<ZEMageSettings>(
-                    AdviserFilePathAndName("ZEMage",
+                    AdviserFilePathAndName("WholesomeTBCMage",
                     ObjectManager.Me.Name + "." + Usefuls.RealmName));
                 return true;
             }
@@ -71,7 +71,7 @@ public class ZEMageSettings : Settings
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEMage > Load(): " + e);
+            Logging.WriteError("WholesomeTBCMage > Load(): " + e);
         }
         return false;
     }

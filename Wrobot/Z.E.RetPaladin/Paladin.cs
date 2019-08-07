@@ -6,23 +6,13 @@ using wManager.Wow.Class;
 using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
 
-public class ZERetPaladin : ICustomClass
+public static class Paladin
 {
-    private bool _isLaunched;
-    private int _manaSavePercent;
+    private static int _manaSavePercent;
 
-    public float Range
-	{
-		get
-		{
-            return 4.5f;
-		}
-    }
-
-    public void Initialize()
+    public static void Initialize()
     {
-        _isLaunched = true;
-        Log("Initialized");
+        Main.Log("Initialized");
         ZEPaladinSettings.Load();
         _manaSavePercent = ZEPaladinSettings.CurrentSetting.ManaSaveLimitPercent;
         if (_manaSavePercent < 20)
@@ -31,16 +21,15 @@ public class ZERetPaladin : ICustomClass
     }
 
 
-    public void Dispose()
+    public static void Dispose()
     {
-        _isLaunched = false;
-        Log("Stop in progress.");
+        Main.Log("Stop in progress.");
     }
-    
-	internal void Rotation()
+
+    internal static void Rotation()
 	{
-        Log("Started");
-		while (_isLaunched)
+        Main.Log("Started");
+		while (Main._isLaunched)
 		{
 			try
 			{
@@ -60,10 +49,10 @@ public class ZERetPaladin : ICustomClass
 			}
 			Thread.Sleep(20);
 		}
-        Log("Stopped.");
+        Main.Log("Stopped.");
     }
 
-    internal void BuffRotation()
+    internal static void BuffRotation()
     {
         if (ObjectManager.Me.HealthPercent < 50 && !Fight.InFight
             && !ObjectManager.Me.IsMounted)
@@ -86,7 +75,7 @@ public class ZERetPaladin : ICustomClass
     }
 
 
-    internal void CombatRotation()
+    internal static void CombatRotation()
     {
         CheckAutoAttack();
         string _debuff = GetDebuffType();
@@ -132,18 +121,18 @@ public class ZERetPaladin : ICustomClass
             Cast(SealOfTheCrusader);
 
         if (!ObjectManager.Me.HaveBuff("Seal of Righteousness") && !ObjectManager.Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
-            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || ObjectManager.Me.ManaPercentage < _manaSavePercent)
+            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || ObjectManager.Me.ManaPercentage > _manaSavePercent)
             && (!ZEPaladinSettings.CurrentSetting.UseSealOfCommand || !SealOfCommand.KnownSpell))
             Cast(SealOfRighteousness);
 
         if (!ObjectManager.Me.HaveBuff("Seal of Command") && !ObjectManager.Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
-            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || ObjectManager.Me.ManaPercentage < _manaSavePercent)
+            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || ObjectManager.Me.ManaPercentage > _manaSavePercent)
             && ZEPaladinSettings.CurrentSetting.UseSealOfCommand && SealOfCommand.KnownSpell)
             Cast(SealOfCommand);
 
         if (!ObjectManager.Me.HaveBuff("Seal of Righteousness") && !ObjectManager.Me.HaveBuff("Seal of the Crusader") &&
             !ObjectManager.Me.HaveBuff("Seal of Command") && !SealOfCommand.IsSpellUsable && !SealOfRighteousness.IsSpellUsable
-            && SealOfCommand.KnownSpell && ObjectManager.Me.Mana >= 55)
+            && SealOfCommand.KnownSpell && ObjectManager.Me.Mana < _manaSavePercent)
             Lua.RunMacroText("/cast Seal of Command(Rank 1)");
 
         if (ObjectManager.Me.HealthPercent < 50)
@@ -164,54 +153,54 @@ public class ZERetPaladin : ICustomClass
             Cast(HammerOfWrath);
     }
 
-    public void ShowConfiguration()
+    public static void ShowConfiguration()
     {
         ZEPaladinSettings.Load();
         ZEPaladinSettings.CurrentSetting.ToForm();
         ZEPaladinSettings.CurrentSetting.Save();
     }
 
-    private Spell SealOfRighteousness = new Spell("Seal of Righteousness");
-    private Spell SealOfTheCrusader = new Spell("Seal of the Crusader");
-    private Spell SealOfCommand = new Spell("Seal of Command");
-    private Spell HolyLight = new Spell("Holy Light");
-    private Spell DevotionAura = new Spell("Devotion Aura");
-    private Spell BlessingOfMight = new Spell("Blessing of Might");
-    private Spell Judgement = new Spell("Judgement");
-    private Spell LayOnHands = new Spell("Lay on Hands");
-    private Spell HammerOfJustice = new Spell("Hammer of Justice");
-    private Spell RetributionAura = new Spell("Retribution Aura");
-    private Spell Exorcism = new Spell("Exorcism");
-    private Spell ConcentrationAura = new Spell("Concentration Aura");
-    private Spell SanctityAura = new Spell("Sanctity Aura");
-    private Spell FlashOfLight = new Spell("Flash of Light");
-    private Spell BlessingOfWisdom = new Spell("Blessing of Wisdom");
-    private Spell DivineShield = new Spell("Divine Shield");
-    private Spell Cleanse = new Spell("Cleanse");
-    private Spell Purify = new Spell("Purify");
-    private Spell CrusaderStrike = new Spell("Crusader Strike");
-    private Spell HammerOfWrath = new Spell("Hammer of Wrath");
-    private Spell Attack = new Spell("Attack");
-    private Spell CrusaderAura = new Spell("Crusader Aura");
-    private Spell AvengingWrath = new Spell("Avenging Wrath");
+    private static Spell SealOfRighteousness = new Spell("Seal of Righteousness");
+    private static Spell SealOfTheCrusader = new Spell("Seal of the Crusader");
+    private static Spell SealOfCommand = new Spell("Seal of Command");
+    private static Spell HolyLight = new Spell("Holy Light");
+    private static Spell DevotionAura = new Spell("Devotion Aura");
+    private static Spell BlessingOfMight = new Spell("Blessing of Might");
+    private static Spell Judgement = new Spell("Judgement");
+    private static Spell LayOnHands = new Spell("Lay on Hands");
+    private static Spell HammerOfJustice = new Spell("Hammer of Justice");
+    private static Spell RetributionAura = new Spell("Retribution Aura");
+    private static Spell Exorcism = new Spell("Exorcism");
+    private static Spell ConcentrationAura = new Spell("Concentration Aura");
+    private static Spell SanctityAura = new Spell("Sanctity Aura");
+    private static Spell FlashOfLight = new Spell("Flash of Light");
+    private static Spell BlessingOfWisdom = new Spell("Blessing of Wisdom");
+    private static Spell DivineShield = new Spell("Divine Shield");
+    private static Spell Cleanse = new Spell("Cleanse");
+    private static Spell Purify = new Spell("Purify");
+    private static Spell CrusaderStrike = new Spell("Crusader Strike");
+    private static Spell HammerOfWrath = new Spell("Hammer of Wrath");
+    private static Spell Attack = new Spell("Attack");
+    private static Spell CrusaderAura = new Spell("Crusader Aura");
+    private static Spell AvengingWrath = new Spell("Avenging Wrath");
 
-    private void Cast(Spell s)
+    private static void Cast(Spell s)
     {
         if (s.IsSpellUsable && s.KnownSpell)
             s.Launch();
     }
 
-    private void CheckAutoAttack()
+    private static void CheckAutoAttack()
     {
         bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') then isAutoRepeat = true end", "isAutoRepeat");
         if (!_autoAttacking)
         {
-            Log("Re-activating attack");
+            Main.Log("Re-activating attack");
             Attack.Launch();
         }
     }
 
-    private string GetDebuffType()
+    private static string GetDebuffType()
     {
         string debuffType = Lua.LuaDoString<string>
             (@"for i=1,25 do 
@@ -221,10 +210,5 @@ public class ZERetPaladin : ICustomClass
                 end
             end");
         return debuffType;
-    }
-
-    public void Log(string s)
-    {
-        Logging.WriteDebug("[Z.E.Paladin] " + s);
     }
 }

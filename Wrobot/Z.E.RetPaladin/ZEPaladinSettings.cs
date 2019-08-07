@@ -21,7 +21,7 @@ public class ZEPaladinSettings : Settings
         UseHammerOfWrath = false;
 
         ConfigWinForm(
-            new System.Drawing.Point(400, 400), "Z.E.Paladin "
+            new System.Drawing.Point(400, 400), "WholesomeTBCPaladin "
             + Translate.Get("Settings")
         );
     }
@@ -66,12 +66,12 @@ public class ZEPaladinSettings : Settings
     {
         try
         {
-            return Save(AdviserFilePathAndName("ZEPaladin",
+            return Save(AdviserFilePathAndName("WholesomeTBCPaladin",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName));
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEPaladin > Save(): " + e);
+            Logging.WriteError("WholesomeTBCPaladin > Save(): " + e);
             return false;
         }
     }
@@ -80,11 +80,11 @@ public class ZEPaladinSettings : Settings
     {
         try
         {
-            if (File.Exists(AdviserFilePathAndName("ZEPaladin",
+            if (File.Exists(AdviserFilePathAndName("WholesomeTBCPaladin",
                 ObjectManager.Me.Name + "." + Usefuls.RealmName)))
             {
                 CurrentSetting = Load<ZEPaladinSettings>(
-                    AdviserFilePathAndName("ZEPaladin",
+                    AdviserFilePathAndName("WholesomeTBCPaladin",
                     ObjectManager.Me.Name + "." + Usefuls.RealmName));
                 return true;
             }
@@ -92,7 +92,7 @@ public class ZEPaladinSettings : Settings
         }
         catch (Exception e)
         {
-            Logging.WriteError("ZEPaladin > Load(): " + e);
+            Logging.WriteError("WholesomeTBCPaladin > Load(): " + e);
         }
         return false;
     }
