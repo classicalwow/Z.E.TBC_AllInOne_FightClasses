@@ -20,8 +20,10 @@ public static class Warrior
     internal static ZEWarriorSettings _settings;
     private static bool _goInMelee = false;
     private static bool _fightingACaster = false;
-    private static float _pullRange = 28f;
+    private static float _pullRange = 25f;
     private static List<string> _casterEnemies = new List<string>();
+    private static List<WoWUnit> surroundingEnemies = new List<WoWUnit>();
+    private static bool _pullFromAfar = false;
 
     public static void Initialize()
     {
@@ -35,6 +37,8 @@ public static class Warrior
             _fightingACaster = false;
             _meleeTimer.Reset();
             _pullMeleeTimer.Reset();
+            _pullFromAfar = false;
+            Main.settingRange = 5f;
         };
             
         Rotation();
@@ -55,6 +59,8 @@ public static class Warrior
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
+                    Main.LogDebug("_meleeTimer: " + _meleeTimer.ElapsedMilliseconds.ToString());
+                    Main.LogDebug("_pullMeleeTimer: " + _pullMeleeTimer.ElapsedMilliseconds.ToString());
                     // Buff rotation
                     if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
                     {
@@ -93,13 +99,26 @@ public static class Warrior
 
     internal static void Pull()
     {
+        // Check if surrounding enemies
+        if (ObjectManager.Target.GetDistance < 25f && !_pullFromAfar && (Shoot.IsSpellUsable || Throw.IsSpellUsable))
+            _pullFromAfar = CheckIfEnemiesOnPull(ObjectManager.Target);
+
+        // Pull from afar
+        if (_pullFromAfar && _pullMeleeTimer.ElapsedMilliseconds < 5000)
+        {
+            Main.settingRange = 25f;
+            if (Cast(Throw) || Cast(Shoot))
+                Thread.Sleep(500);
+        }
+
         // Melee ?
         if (_pullMeleeTimer.ElapsedMilliseconds <= 0 && ObjectManager.Target.GetDistance <= _pullRange + 3)
             _pullMeleeTimer.Start();
 
-        if (_pullMeleeTimer.ElapsedMilliseconds > 8000 && !_goInMelee)
+        if (_pullMeleeTimer.ElapsedMilliseconds > 5000)
         {
-            _goInMelee = true;
+            Main.LogDebug("Going in Melee range");
+            Main.settingRange = 5f;
             _pullMeleeTimer.Reset();
         }
 
@@ -109,35 +128,12 @@ public static class Warrior
 
         // Charge
         if (ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f && Charge.KnownSpell 
-            && Charge.IsSpellUsable)
+            && Charge.IsSpellUsable && !_pullFromAfar)
             Charge.Launch();
-
-        // Pull with Lightning Bolt
-        /*if (ObjectManager.Target.GetDistance <= _pullRange + 1)
-        {
-            bool cast = false;
-            if (_settings.PullRankOneLightningBolt && LightningBolt.IsSpellUsable)
-            {
-                MovementManager.StopMove();
-                Lua.RunMacroText("/cast Lightning Bolt(Rank 1)");
-                cast = true;
-            }
-            else
-            {
-                if (Cast(LightningBolt))
-                {
-                    cast = true;
-                }
-            }
-            
-            if (cast)
-                return;
-        }*/
     }
 
     internal static void CombatRotation()
     {
-        Main.settingRange = 5f;
         bool _shouldBeInterrupted = false;
         bool _inMeleeRange = ObjectManager.Target.GetDistance < 6f;
 
@@ -152,21 +148,21 @@ public static class Warrior
                                     end");
         if (channelTimeLeft < 0 || ObjectManager.Target.CastingTimeLeft > Usefuls.Latency)
             _shouldBeInterrupted = true;
-
+        
         // Melee ?
         if (_pullMeleeTimer.ElapsedMilliseconds > 0)
             _pullMeleeTimer.Reset();
 
-        if (_meleeTimer.ElapsedMilliseconds <= 0 && !_goInMelee)
+        if (_meleeTimer.ElapsedMilliseconds <= 0 && _pullFromAfar)
             _meleeTimer.Start();
 
-        if ((_shouldBeInterrupted || _meleeTimer.ElapsedMilliseconds > 5000) && !_goInMelee)
+        if ((_shouldBeInterrupted || _meleeTimer.ElapsedMilliseconds > 5000) && Main.settingRange != 5f)
         {
-            Main.LogDebug("Going in melee range");
             if (!_casterEnemies.Contains(ObjectManager.Target.Name))
                 _casterEnemies.Add(ObjectManager.Target.Name);
             _fightingACaster = true;
-            _goInMelee = true;
+            Main.LogDebug("Going in Melee range 2");
+            Main.settingRange = 5f;
             _meleeTimer.Stop();
         }
 
@@ -175,6 +171,11 @@ public static class Warrior
         {
 
         }
+
+        // Overpower
+        if (Overpower.IsSpellUsable)
+            if (Cast(Overpower))
+                return;
 
         // Blood Rage
         if (_settings.UseBloodRage && Me.HealthPercent > 90)
@@ -196,7 +197,12 @@ public static class Warrior
         if (!ObjectManager.Target.HaveBuff("Rend") && CanBleed(ObjectManager.Target) && _inMeleeRange)
             if (Cast(Rend))
                 return;
-        
+
+        // Demoralizing Shout
+        if (_settings.UseDemoralizingShout && !ObjectManager.Target.HaveBuff("Demoralizing Shout"))
+            if (Cast(DemoralizingShout))
+                return;
+
         // Heroic Strike
         if (_inMeleeRange && !HeroicStrikeOn())
             if (Cast(HeroicStrike))
@@ -217,10 +223,43 @@ public static class Warrior
     private static Spell Rend = new Spell("Rend");
     private static Spell Hamstring = new Spell("Hamstring");
     private static Spell BloodRage = new Spell("Bloodrage");
+    private static Spell Overpower = new Spell("Overpower");
+    private static Spell DemoralizingShout = new Spell("Demoralizing Shout");
+    private static Spell Throw = new Spell("Throw");
+    private static Spell Shoot = new Spell("Shoot");
+
+    private static bool CheckIfEnemiesOnPull(WoWUnit target)
+    {
+        surroundingEnemies = ObjectManager.GetObjectWoWUnit();
+        WoWUnit closestUnit = null;
+        float closestUnitDistance = 100;
+
+        foreach (WoWUnit unit in surroundingEnemies)
+        {
+            bool flagHostile = unit.Reaction.ToString().Equals("Hostile");
+            float distanceFromTarget = unit.Position.DistanceTo(target.Position);
+
+            if (unit.IsAlive && !unit.IsTapDenied && unit.IsValid && !unit.IsTaggedByOther && !unit.PlayerControlled 
+                && unit.IsAttackable && distanceFromTarget < closestUnitDistance && flagHostile && unit.Guid != target.Guid)
+            {
+                closestUnit = unit;
+                closestUnitDistance = distanceFromTarget;
+            }
+        }
+
+        if (closestUnit != null && closestUnitDistance < 60)
+        {
+            Main.LogDebug(closestUnit.Guid.ToString());
+            Main.LogDebug(target.Guid.ToString());
+            Main.Log("Enemy too close: " + closestUnit.Name + ", pulling");
+            return true;
+        }
+        return false;
+    }
 
     internal static bool Cast(Spell s)
     {
-        Main.LogDebug("In cast for " + s.Name);
+        //Main.LogDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;
         

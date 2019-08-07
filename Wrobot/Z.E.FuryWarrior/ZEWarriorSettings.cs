@@ -14,7 +14,8 @@ public class ZEWarriorSettings : Settings
     private ZEWarriorSettings()
     {
         UseHamstring = true;
-        UseBloodRage = false;
+        UseBloodRage = true;
+        UseDemoralizingShout = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCWarrior "
@@ -29,10 +30,16 @@ public class ZEWarriorSettings : Settings
     public bool UseHamstring { get; set; }
 
     [Category("Combat Rotation")]
-    [DefaultValue(false)]
+    [DefaultValue(true)]
     [DisplayName("Use Bloodrage")]
     [Description("Use Bloodrage")]
     public bool UseBloodRage { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(true)]
+    [DisplayName("Use Demoralizing Shout")]
+    [Description("Use Demoralizing Shout")]
+    public bool UseDemoralizingShout { get; set; }
 
     public bool Save()
     {
