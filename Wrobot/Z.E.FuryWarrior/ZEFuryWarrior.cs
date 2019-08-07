@@ -257,12 +257,12 @@ public class ZEFuryWarrior : ICustomClass
 
     internal static void Log(string s)
     {
-        Logging.WriteDebug("[Z.E.Shaman] " + s);
+        Logging.WriteDebug("[Z.E.Warrior] " + s);
     }
 
     internal static void Debug(string s)
     {
         if (_debug)
-            Logging.WriteDebug("[Z.E.Shaman DEBUG] " + s);
+            Logging.WriteDebug("[Z.E.Warrior DEBUG] " + s);
     }
 }

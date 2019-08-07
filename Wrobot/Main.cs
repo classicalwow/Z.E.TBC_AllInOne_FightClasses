@@ -5,6 +5,7 @@ public class Main : ICustomClass
 {
     string wowClass = ObjectManager.Me.WowClass.ToString();
     private ZEBMHunter _hunterclass = new ZEBMHunter();
+    private ZEFuryWarrior _warriorclass = new ZEFuryWarrior();
 
     public float Range
 	{
@@ -14,7 +15,8 @@ public class Main : ICustomClass
             {
                 case "Hunter":
                     return _hunterclass.Range;
-
+                case "Warrior":
+                    return _warriorclass.Range;
                 default:
                     return 5f;
             }
@@ -28,6 +30,10 @@ public class Main : ICustomClass
             case "Hunter":
                 _hunterclass.Initialize();
                 break;
+
+            case "Warrior":
+                _warriorclass.Initialize();
+                break;
         }
     }
 
@@ -39,6 +45,10 @@ public class Main : ICustomClass
             case "Hunter":
                 _hunterclass.Dispose();
                 break;
+
+            case "Warrior":
+                _warriorclass.Dispose();
+                break;
         }
     }
 
@@ -48,6 +58,10 @@ public class Main : ICustomClass
         {
             case "Hunter":
                 _hunterclass.ShowConfiguration();
+                break;
+
+            case "Warrior":
+                _warriorclass.ShowConfiguration();
                 break;
         }
     }
