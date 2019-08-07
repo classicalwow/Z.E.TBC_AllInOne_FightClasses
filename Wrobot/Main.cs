@@ -36,7 +36,7 @@ public class Main : ICustomClass
         else
         {
             LogError("Class not supported.");
-            new Thread(() =>{ Products.ProductStop(); }).Start();
+            Products.ProductStop();
         }
     }
 

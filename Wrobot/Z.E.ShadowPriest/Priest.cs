@@ -74,32 +74,41 @@ public static class Priest
     {
         if (!Me.IsMounted)
         {
+            // OOC Cure Disease
             if (HasDisease() && CureDisease.KnownSpell && CureDisease.IsSpellUsable)
                 Cast(CureDisease, true, true);
 
+            // OOC Renew
             if (Me.HealthPercent < 60 && !Me.HaveBuff("Renew") && Renew.KnownSpell && Renew.IsSpellUsable)
                 Cast(Renew, true, true);
 
+            // OOC Power WOrd Shield
             if (Me.HealthPercent < 50 && !Me.HaveBuff("Power Word: Shield") && !HaskWeakenedSoul()
                 && ObjectManager.GetNumberAttackPlayer() > 0 && PowerWordShield.KnownSpell && PowerWordShield.IsSpellUsable)
                 Cast(PowerWordShield, true, true);
 
+            // OOC Psychic Scream
             if (Me.HealthPercent < 30 && ObjectManager.GetNumberAttackPlayer() > 1 && PsychicScream.KnownSpell 
                 && PsychicScream.IsSpellUsable)
                 Cast(PsychicScream, true, true);
 
+            // OOC Power Word Fortitude
             if (!Me.HaveBuff("Power Word: Fortitude") && PowerWordFortitude.KnownSpell && PowerWordFortitude.IsSpellUsable)
                 Cast(PowerWordFortitude, true, true);
 
+            // OOC Inner Fire
             if (!Me.HaveBuff("Inner Fire") && ZEPriestSettings.CurrentSetting.UseInnerFire && InnerFire.KnownSpell)
                 Cast(InnerFire, true, true);
 
+            // OOC Shadowguard
             if (!Me.HaveBuff("Shadowguard") && Shadowguard.KnownSpell && Shadowguard.IsSpellUsable && ZEPriestSettings.CurrentSetting.UseShadowGuard)
                 Cast(Shadowguard, true, true);
 
+            // OOC Shadow Protection
             if (!Me.HaveBuff("Shadow Protection") && ShadowProtection.KnownSpell && ZEPriestSettings.CurrentSetting.UseShadowProtection)
                 Cast(ShadowProtection, true, true);
 
+            // OOC ShadowForm
             if (!Me.HaveBuff("ShadowForm") && Shadowform.KnownSpell && Shadowform.IsSpellUsable && ObjectManager.GetNumberAttackPlayer() < 1)
                 Cast(Shadowform, true, true);
         }
@@ -107,16 +116,19 @@ public static class Priest
 
     internal static void Pull()
     {
+        // Power Word Shield
         if (!HaskWeakenedSoul() && ZEPriestSettings.CurrentSetting.UseShieldOnPull && PowerWordShield.KnownSpell && PowerWordShield.IsSpellUsable
             && !Me.HaveBuff("Power Word: Shield"))
             Cast(PowerWordShield, true, true);
 
+        // Vampiric Touch
         if (Me.HaveBuff("ShadowForm") && ObjectManager.Target.GetDistance <= _maxRange && VampiricTouch.KnownSpell && VampiricTouch.IsSpellUsable)
         {
             Cast(VampiricTouch, true, false);
             return;
         }
 
+        // MindBlast
         if (Me.HaveBuff("ShadowForm") && ObjectManager.Target.GetDistance <= _maxRange && MindBlast.KnownSpell && MindBlast.IsSpellUsable
             && !VampiricTouch.KnownSpell)
         {
@@ -124,6 +136,7 @@ public static class Priest
             return;
         }
 
+        // Shadow Word Pain
         if (Me.HaveBuff("ShadowForm") && ObjectManager.Target.GetDistance <= _maxRange && (!MindBlast.KnownSpell || !MindBlast.IsSpellUsable)
             && ShadowWordPain.KnownSpell && ShadowWordPain.IsSpellUsable)
         {
@@ -131,12 +144,14 @@ public static class Priest
             return;
         }
 
+        // Holy Fire
         if (ObjectManager.Target.GetDistance <= _maxRange && HolyFire.KnownSpell && HolyFire.IsSpellUsable && !Me.HaveBuff("ShadowForm"))
         {
             Cast(HolyFire, true, false);
             return;
         }
 
+        // Smite
         if (ObjectManager.Target.GetDistance <= _maxRange && Smite.KnownSpell && !HolyFire.KnownSpell && Smite.IsSpellUsable 
             && !Me.HaveBuff("ShadowForm"))
         {
@@ -156,49 +171,65 @@ public static class Priest
         bool _inShadowForm = Me.HaveBuff("ShadowForm");
         int _mindBlastCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Mind Blast\"); return start + duration - GetTime();");
         int _innerFocusCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Inner Focus\"); return start + duration - GetTime();");
+        bool _shoulBeInterrupted = EnemyCasting();
 
+        // Power Word Shield
         if (Me.HealthPercent < 70 && !Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul && PowerWordShield.KnownSpell)
         {
             if (Cast(PowerWordShield, true, true))
                 return;
         }
 
+        // Renew
         if (Me.HealthPercent < 60 && !Me.HaveBuff("Renew") && Renew.KnownSpell && !_inShadowForm)
         {
             if (Cast(Renew, true, true))
                 return;
         }
 
+        // Psychic Scream
         if (Me.HealthPercent < 50 && ObjectManager.GetNumberAttackPlayer() > 1 && PsychicScream.KnownSpell)
         {
             if (Cast(PsychicScream, true, true))
                 return;
         }
 
+        // Flash Heal
         if (Me.HealthPercent < 50 && FlashHeal.KnownSpell)
         {
             if (Cast(FlashHeal, true, false))
                 return;
         }
 
+        // Heal
         if (Me.HealthPercent < 50 && Heal.KnownSpell)
         {
             if (Cast(Heal, true, false))
                 return;
         }
 
+        // Lesser Heal
         if (Me.HealthPercent < 50 && LesserHeal.KnownSpell && !FlashHeal.KnownSpell)
         {
             if (Cast(LesserHeal, true, false))
                 return;
         }
-        
+
+        // Silence
+        if (_shoulBeInterrupted && Silence.KnownSpell)
+        {
+            if (Cast(Silence, true, true))
+                return;
+        }
+
+        // Cure Disease
         if (_hasDisease && CureDisease.KnownSpell && !_inShadowForm)
         {
             if (Cast(CureDisease, true, true))
                 return;
         }
 
+        // Dispel Magic self
         if (_hasMagicDebuff && DispelMagic.KnownSpell && _myManaPC > 10)
         {
             if (_usingWand)
@@ -209,6 +240,7 @@ public static class Priest
             return;
         }
 
+        // Vampiric Touch
         if (ObjectManager.Target.GetDistance <= _maxRange && VampiricTouch.KnownSpell && VampiricTouch.IsSpellUsable
             && !ObjectManager.Target.HaveBuff("Vampiric Touch") && _myManaPC > _innerManaSaveThreshold 
             && ObjectManager.Target.HealthPercent > _wandThreshold)
@@ -217,18 +249,21 @@ public static class Priest
             return;
         }
 
+        // Vampiric Embrace
         if (!ObjectManager.Target.HaveBuff("Vampiric Embrace") && VampiricEmbrace.KnownSpell && _myManaPC > _innerManaSaveThreshold)
         {
             if (Cast(VampiricEmbrace, true, true))
                 return;
         }
 
+        // ShadowFiend
         if (Shadowfiend.KnownSpell && ObjectManager.GetNumberAttackPlayer() > 1)
         {
             if (Cast(Shadowfiend, true, true))
                 return;
         }
 
+        // Shadow Word Pain
         if (_myManaPC > 10 && ObjectManager.Target.GetDistance < _maxRange && ObjectManager.Target.HealthPercent > 15
             && !ObjectManager.Target.HaveBuff("Shadow Word: Pain") && ShadowWordPain.KnownSpell)
         {
@@ -236,6 +271,7 @@ public static class Priest
                 return;
         }
 
+        // Inner Fire
         if (!Me.HaveBuff("Inner Fire") && ZEPriestSettings.CurrentSetting.UseInnerFire && InnerFire.KnownSpell
             && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.HealthPercent > _wandThreshold)
         {
@@ -243,6 +279,7 @@ public static class Priest
                 return;
         }
 
+        // Shadowguard
         if (!Me.HaveBuff("Shadowguard") && Shadowguard.KnownSpell && _myManaPC > _innerManaSaveThreshold
             && ZEPriestSettings.CurrentSetting.UseShadowGuard && ObjectManager.Target.HealthPercent > _wandThreshold)
         {
@@ -250,6 +287,7 @@ public static class Priest
                 return;
         }
 
+        // Shadow Protection
         if (!Me.HaveBuff("Shadow Protection") && ShadowProtection.KnownSpell && _myManaPC > 70
             && ZEPriestSettings.CurrentSetting.UseShadowProtection)
         {
@@ -257,6 +295,7 @@ public static class Priest
                 return;
         }
 
+        // Use Wand
         if ((ObjectManager.Target.HealthPercent < _wandThreshold || _myManaPC <= _innerManaSaveThreshold) && 
             !_usingWand && UseWand.IsSpellUsable)
         {
@@ -264,6 +303,7 @@ public static class Priest
             return;
         }
 
+        // Shadow Word Death
         if (_myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange && ZEPriestSettings.CurrentSetting.UseShadowWordDeath
             && ShadowWordDeath.KnownSpell && ObjectManager.Target.HealthPercent < 15)
         {
@@ -271,6 +311,7 @@ public static class Priest
                 return;
         }
 
+        // Mind Blast + Inner Focus
         if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange
             && MindBlast.KnownSpell && ObjectManager.Target.HealthPercent > 50 && !Me.HaveBuff("Power Word: Shield")
             && _mindBlastCD <= 0)
@@ -282,6 +323,7 @@ public static class Priest
                 return;
         }
 
+        // Mind Blast + Inner Focus
         if (_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange
             && MindBlast.KnownSpell && _mindBlastCD <= 0 && ObjectManager.Target.HealthPercent > _wandThreshold)
         {
@@ -292,6 +334,7 @@ public static class Priest
                 return;
         }
 
+        // Mind Flay Range check
         if (_inShadowForm && !MindFlay.IsDistanceGood && MindFlay.KnownSpell && Me.HaveBuff("Power Word: Shield"))
         {
             Main.LogDebug("Approaching to be in Mind Flay range");
@@ -299,6 +342,7 @@ public static class Priest
             return;
         }
 
+        // Mind FLay
         if (Me.HaveBuff("Power Word: Shield") && MindFlay.KnownSpell && MindFlay.IsDistanceGood 
             && _myManaPC > _innerManaSaveThreshold)
         {
@@ -306,12 +350,14 @@ public static class Priest
                 return;
         }
 
+        // Smite
         if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange && Smite.KnownSpell)
         {
             if (Cast(Smite, false, false))
                 return;
         }
 
+        // Use wand
         if (!_usingWand && UseWand.IsSpellUsable)
         {
             UseWand.Launch();
@@ -350,6 +396,7 @@ public static class Priest
     private static Spell VampiricTouch = new Spell("Vampiric Touch");
     private static Spell InnerFocus = new Spell("Inner Focus");
     private static Spell Shadowfiend = new Spell("Shadowfiend");
+    private static Spell Silence = new Spell("Silence");
 
     private static bool Cast(Spell s, bool castEvenIfWanding, bool waitGCD)
     {
@@ -369,6 +416,18 @@ public static class Priest
         if (waitGCD)
             WaitGlobalCoolDown();
         return true;
+    }
+
+    private static bool EnemyCasting()
+    {
+        int channelTimeLeft = Lua.LuaDoString<int>(@"local spell, _, _, _, endTimeMS = UnitChannelInfo('target')
+                                    if spell then
+                                     local finish = endTimeMS / 1000 - GetTime()
+                                     return finish
+                                    end");
+        if (channelTimeLeft < 0 || ObjectManager.Target.CastingTimeLeft > Usefuls.Latency)
+            return true;
+        return false;
     }
 
     private static bool HaskWeakenedSoul()

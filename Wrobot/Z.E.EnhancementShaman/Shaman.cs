@@ -80,7 +80,7 @@ public static class Shaman
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
                     Main.settingRange = _goInMelee ? 5f : _pullRange;
-                    CheckEnchantMainHand();
+                    CheckEnchantWeapon();
                     totemManager.CheckForTotemicCall();
 
                     // Lesser Healing Wave OOC
@@ -381,7 +381,7 @@ public static class Shaman
         }
     }
 
-    private static void CheckEnchantMainHand()
+    private static void CheckEnchantWeapon()
     {
         bool hasMainHandEnchant = Lua.LuaDoString<bool>
             (@"local hasMainHandEnchant, _, _, _, _, _, _, _, _ = GetWeaponEnchantInfo()
