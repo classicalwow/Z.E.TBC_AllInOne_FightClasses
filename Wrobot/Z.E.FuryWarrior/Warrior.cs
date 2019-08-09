@@ -169,7 +169,7 @@ public static class Warrior
             _meleeTimer.Stop();
         }
 
-        // Interrupt
+        // Interrupt !
         if (_fightingACaster)
         {
 
