@@ -75,7 +75,7 @@ public static class Priest
         if (!Me.IsMounted)
         {
             // OOC Cure Disease
-            if (HasDisease() && CureDisease.KnownSpell && CureDisease.IsSpellUsable)
+            if (ToolBox.HasDiseaseDebuff() && CureDisease.KnownSpell && CureDisease.IsSpellUsable)
                 Cast(CureDisease, true, true);
 
             // OOC Renew
@@ -83,7 +83,7 @@ public static class Priest
                 Cast(Renew, true, true);
 
             // OOC Power WOrd Shield
-            if (Me.HealthPercent < 50 && !Me.HaveBuff("Power Word: Shield") && !HaskWeakenedSoul()
+            if (Me.HealthPercent < 50 && !Me.HaveBuff("Power Word: Shield") && !ToolBox.HasDebuff("Weakened Soul")
                 && ObjectManager.GetNumberAttackPlayer() > 0 && PowerWordShield.KnownSpell && PowerWordShield.IsSpellUsable)
                 Cast(PowerWordShield, true, true);
 
@@ -117,7 +117,7 @@ public static class Priest
     internal static void Pull()
     {
         // Power Word Shield
-        if (!HaskWeakenedSoul() && ZEPriestSettings.CurrentSetting.UseShieldOnPull && PowerWordShield.KnownSpell && PowerWordShield.IsSpellUsable
+        if (!ToolBox.HasDebuff("Weakened Soul") && ZEPriestSettings.CurrentSetting.UseShieldOnPull && PowerWordShield.KnownSpell && PowerWordShield.IsSpellUsable
             && !Me.HaveBuff("Power Word: Shield"))
             Cast(PowerWordShield, true, true);
 
@@ -164,14 +164,14 @@ public static class Priest
     {
         _usingWand = Lua.LuaDoString<bool>("isAutoRepeat = false; local name = GetSpellInfo(5019); " +
             "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
-        bool _hasMagicDebuff = HasMagicDebuff();
-        bool _hasDisease = HasDisease();
-        bool _hasWeakenedSoul = HaskWeakenedSoul();
+        bool _hasMagicDebuff = ToolBox.HasMagicDebuff();
+        bool _hasDisease = ToolBox.HasDiseaseDebuff();
+        bool _hasWeakenedSoul = ToolBox.HasDebuff("Weakened Soul");
         double _myManaPC = Me.ManaPercentage;
         bool _inShadowForm = Me.HaveBuff("ShadowForm");
         int _mindBlastCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Mind Blast\"); return start + duration - GetTime();");
         int _innerFocusCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Inner Focus\"); return start + duration - GetTime();");
-        bool _shoulBeInterrupted = EnemyCasting();
+        bool _shoulBeInterrupted = ToolBox.EnemyCasting();
 
         // Power Word Shield
         if (Me.HealthPercent < 70 && !Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul && PowerWordShield.KnownSpell)
@@ -236,7 +236,7 @@ public static class Priest
                 StopWandWaitGCD();
             Lua.RunMacroText("/target player");
             Lua.RunMacroText("/cast Dispel Magic");
-            WaitGlobalCoolDown();
+            ToolBox.WaitGlobalCoolDown(Smite);
             return;
         }
 
@@ -414,56 +414,8 @@ public static class Priest
         s.Launch();
 
         if (waitGCD)
-            WaitGlobalCoolDown();
+            ToolBox.WaitGlobalCoolDown(Smite);
         return true;
-    }
-
-    private static bool EnemyCasting()
-    {
-        int channelTimeLeft = Lua.LuaDoString<int>(@"local spell, _, _, _, endTimeMS = UnitChannelInfo('target')
-                                    if spell then
-                                     local finish = endTimeMS / 1000 - GetTime()
-                                     return finish
-                                    end");
-        if (channelTimeLeft < 0 || ObjectManager.Target.CastingTimeLeft > Usefuls.Latency)
-            return true;
-        return false;
-    }
-
-    private static bool HaskWeakenedSoul()
-    {
-        bool weakenedSoul = Lua.LuaDoString<bool>
-            (@"for i=1,25 do 
-	            local n, _, _, _, _  = UnitDebuff('player',i);
-	            if n == 'Weakened Soul' then
-                return true
-                end
-            end");
-        return weakenedSoul;
-    }
-
-    private static bool HasDisease()
-    {
-        bool hasDisease = Lua.LuaDoString<bool>
-            (@"for i=1,25 do 
-	            local _, _, _, _, d  = UnitDebuff('player',i);
-	            if d == 'Disease' then
-                return true
-                end
-            end");
-        return hasDisease;
-    }
-
-    private static bool HasMagicDebuff()
-    {
-        bool hasMagicDebuff = Lua.LuaDoString<bool>
-            (@"for i=1,25 do 
-	            local _, _, _, _, d  = UnitDebuff('player',i);
-	            if d == 'Magic' then
-                return true
-                end
-            end");
-        return hasMagicDebuff;
     }
 
     private static void StopWandWaitGCD()
@@ -483,18 +435,5 @@ public static class Priest
             if (c >= 1500)
                 UseWand.Launch();
         }
-    }
-
-    private static void WaitGlobalCoolDown()
-    {
-        int c = 0;
-        while (!Smite.IsSpellUsable)
-        {
-            c += 50;
-            Thread.Sleep(50);
-            if (c >= 2000)
-                return;
-        }
-        Main.LogDebug("Waited for GCD : " + c);
     }
 }

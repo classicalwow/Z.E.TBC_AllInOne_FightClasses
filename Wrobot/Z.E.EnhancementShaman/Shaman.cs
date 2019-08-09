@@ -203,12 +203,12 @@ public static class Shaman
         bool _lowMana = Me.ManaPercentage <= _lowManaThreshold;
         bool _mediumMana = Me.ManaPercentage >= _mediumManaThreshold;
         bool _highMana = Me.ManaPercentage >= _highManaThreshold;
-        bool _isPoisoned = HasPoisonDebuff();
-        bool _hasDisease = HasDiseaseDebuff();
+        bool _isPoisoned = ToolBox.HasPoisonDebuff();
+        bool _hasDisease = ToolBox.HasDiseaseDebuff();
         bool _shouldBeInterrupted = false;
 
         // Check Auto-Attacking
-        CheckAutoAttack();
+        ToolBox.CheckAutoAttack(Attack);
 
         // Check if we need to interrupt
         int channelTimeLeft = Lua.LuaDoString<int>(@"local spell, _, _, _, endTimeMS = UnitChannelInfo('target')
@@ -371,16 +371,6 @@ public static class Shaman
         return true;
     }
 
-    private static void CheckAutoAttack()
-    {
-        bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') then isAutoRepeat = true end", "isAutoRepeat");
-        if (!_autoAttacking && ObjectManager.GetNumberAttackPlayer() > 0)
-        {
-            Main.LogDebug("Re-activating attack");
-            Attack.Launch();
-        }
-    }
-
     private static void CheckEnchantWeapon()
     {
         bool hasMainHandEnchant = Lua.LuaDoString<bool>
@@ -410,29 +400,5 @@ public static class Shaman
             if (WindfuryWeapon.KnownSpell)
                 Cast(WindfuryWeapon);
         }
-    }
-
-    private static bool HasPoisonDebuff()
-    {
-        bool hasPoisonDebuff = Lua.LuaDoString<bool>
-            (@"for i=1,25 do 
-	            local _, _, _, _, d  = UnitDebuff('player',i);
-	            if d == 'Poison' then
-                return true
-                end
-            end");
-        return hasPoisonDebuff;
-    }
-
-    private static bool HasDiseaseDebuff()
-    {
-        bool hasDiseaseDebuff = Lua.LuaDoString<bool>
-            (@"for i=1,25 do 
-	            local _, _, _, _, d  = UnitDebuff('player',i);
-	            if d == 'Disease' then
-                return true
-                end
-            end");
-        return hasDiseaseDebuff;
     }
 }

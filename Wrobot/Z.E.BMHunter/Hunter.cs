@@ -200,7 +200,7 @@ public static class Hunter
 
         // Serpent Sting
         if (SerpentSting.KnownSpell && SerpentSting.IsSpellUsable && !ObjectManager.Target.HaveBuff("Serpent Sting") 
-            && ObjectManager.Target.GetDistance < 34f && Canpoison(ObjectManager.Me.TargetObject) 
+            && ObjectManager.Target.GetDistance < 34f && ToolBox.CanBleed(ObjectManager.Me.TargetObject) 
             && ObjectManager.Target.HealthPercent >= 80.0 && ObjectManager.Me.ManaPercentage > 50u && !SteadyShot.KnownSpell
             && ObjectManager.Target.GetDistance > 13f)
 			SerpentSting.Launch();
@@ -231,12 +231,14 @@ public static class Hunter
     {
         if (!ObjectManager.Me.IsDeadMe || !ObjectManager.Me.IsMounted)
         {
+            // Call Pet
             if (!ObjectManager.Pet.IsValid && CallPet.KnownSpell && !ObjectManager.Me.IsMounted && CallPet.IsSpellUsable)
             {
                 CallPet.Launch();
                 Thread.Sleep(Usefuls.Latency + 1000);
             }
 
+            // Revive Pet
             if (ObjectManager.Pet.IsDead && RevivePet.KnownSpell && !ObjectManager.Me.IsMounted && RevivePet.IsSpellUsable)
             {
                 RevivePet.Launch();
@@ -244,6 +246,7 @@ public static class Hunter
                 Usefuls.WaitIsCasting();
             }
 
+            // Mend Pet
             if (ObjectManager.Pet.IsAlive && ObjectManager.Pet.IsValid && !ObjectManager.Pet.HaveBuff("Mend Pet")
                 && ObjectManager.Me.IsAlive && MendPet.KnownSpell && MendPet.IsDistanceGood && ObjectManager.Pet.HealthPercent <= 60.0
                 && MendPet.IsSpellUsable)
@@ -252,11 +255,6 @@ public static class Hunter
                 Thread.Sleep(Usefuls.Latency + 1000);
             }
         }
-    }
-
-    private static bool Canpoison(WoWUnit unit)
-    {
-        return unit.CreatureTypeTarget != "Elemental" && unit.CreatureTypeTarget != "Mechanical";
     }
 
     private static bool RaptorStrikeOn()

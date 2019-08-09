@@ -105,11 +105,11 @@ public class MageFoodManager
             {
                 if (Drink().Contains(item.Name) && Drink().IndexOf(item.Name) < bestDrink)
                 {
-                    LuaDeleteItem(item.Name);
+                    ToolBox.LuaDeleteItem(item.Name);
                 }
                 if (Food().Contains(item.Name) && Food().IndexOf(item.Name) < bestFood)
                 {
-                    LuaDeleteItem(item.Name);
+                    ToolBox.LuaDeleteItem(item.Name);
                 }
             }
         }
@@ -164,12 +164,5 @@ public class MageFoodManager
     public void UseManaStone()
     {
         ItemsManager.UseItemByNameOrId(ManaStone);
-    }
-
-    public void LuaDeleteItem(string item)
-    {
-        Lua.LuaDoString("for bag = 0, 4, 1 do for slot = 1, 32, 1 do local name = GetContainerItemLink(bag, slot); " +
-            "if name and string.find(name, \"" + item + "\") then PickupContainerItem(bag, slot); " +
-            "DeleteCursorItem(); end; end; end", false);
     }
 }

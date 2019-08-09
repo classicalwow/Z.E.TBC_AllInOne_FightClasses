@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ToolBox.cs" />
     <Compile Include="Z.E.BMHunter\HunterFoodManager.cs" />
     <Compile Include="Z.E.BMHunter\Hunter.cs" />
     <Compile Include="Z.E.BMHunter\ZEBMHunterSettings.cs" />

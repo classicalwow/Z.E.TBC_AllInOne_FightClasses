@@ -126,7 +126,7 @@ public static class Mage
         }*/
 
         Lua.LuaDoString("PetAttack();", false);
-        string _debuff = GetDebuffType();
+        bool _hasCurse = ToolBox.HasCurseDebuff();
         _usingWand = Lua.LuaDoString<bool>("isAutoRepeat = false; local name = GetSpellInfo(5019); " +
             "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
 
@@ -135,7 +135,7 @@ public static class Mage
             && (ObjectManager.Me.HealthPercent > 30 || ObjectManager.Me.ManaPercentage < 1))
             UseWand.Launch();
 
-        if (_debuff == "Curse")
+        if (_hasCurse)
             Cast(RemoveCurse);
 
         if (ObjectManager.Target.HealthPercent > 95 || ObjectManager.GetNumberAttackPlayer() > 1)
@@ -200,16 +200,4 @@ public static class Mage
     private static Spell SummonWaterElemental = new Spell("Summon Water Elemental");
     private static Spell IceLance = new Spell("Ice Lance");
     private static Spell RemoveCurse = new Spell("Remove Curse");
-
-    private static string GetDebuffType()
-    {
-        string debuffType = Lua.LuaDoString<string>
-            (@"for i=1,25 do 
-	            local _, _, _, _, d  = UnitDebuff('player',i);
-	            if d == 'Curse' then
-                return d
-                end
-            end");
-        return debuffType;
-    }
 }

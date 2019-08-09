@@ -77,13 +77,12 @@ public static class Paladin
 
     internal static void CombatRotation()
     {
-        CheckAutoAttack();
-        string _debuff = GetDebuffType();
+        ToolBox.CheckAutoAttack(Attack);
 
-        if (_debuff == "Poison" || _debuff == "Disease")
+        if (ToolBox.HasPoisonDebuff() || ToolBox.HasDiseaseDebuff())
             Cast(Purify);
 
-        if (_debuff == "Magic")
+        if (ToolBox.HasMagicDebuff())
             Cast(Cleanse);
 
         if ((ObjectManager.GetNumberAttackPlayer() > 1 && !ObjectManager.Me.HaveBuff("Devotion Aura")) || (!ObjectManager.Me.HaveBuff("Devotion Aura") && !SanctityAura.KnownSpell))
@@ -188,27 +187,5 @@ public static class Paladin
     {
         if (s.IsSpellUsable && s.KnownSpell)
             s.Launch();
-    }
-
-    private static void CheckAutoAttack()
-    {
-        bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') then isAutoRepeat = true end", "isAutoRepeat");
-        if (!_autoAttacking)
-        {
-            Main.Log("Re-activating attack");
-            Attack.Launch();
-        }
-    }
-
-    private static string GetDebuffType()
-    {
-        string debuffType = Lua.LuaDoString<string>
-            (@"for i=1,25 do 
-	            local _, _, _, _, d  = UnitDebuff('player',i);
-	            if (d == 'Poison' or d == 'Magic' or d == 'Curse' or d == 'Disease') then
-                return d
-                end
-            end");
-        return debuffType;
     }
 }
