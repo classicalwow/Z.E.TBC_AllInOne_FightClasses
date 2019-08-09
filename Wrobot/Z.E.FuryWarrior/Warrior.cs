@@ -101,12 +101,11 @@ public static class Warrior
         // Pull from afar
         if (_pullFromAfar && _pullMeleeTimer.ElapsedMilliseconds < 5000)
         {
-            bool castThrow = Cast(Throw);
-            bool castShoot = Cast(Shoot);
-            if (castThrow || castShoot)
+            bool _castPull = Cast(Throw) || Cast(Shoot);
+            if (_castPull)
             {
                 Main.settingRange = 25f;
-                Thread.Sleep(500);
+                Thread.Sleep(2000);
             }
             else
             {
@@ -215,7 +214,7 @@ public static class Warrior
 
         // Demoralizing Shout
         if (_settings.UseDemoralizingShout && !ObjectManager.Target.HaveBuff("Demoralizing Shout") 
-            && (!CheckIfEnemiesClose() || ObjectManager.GetNumberAttackPlayer() > 1) && _inMeleeRange)
+            && (ObjectManager.GetNumberAttackPlayer() > 1 || !CheckIfEnemiesClose()) && _inMeleeRange)
             if (Cast(DemoralizingShout))
                 return;
 
@@ -299,7 +298,7 @@ public static class Warrior
             }
         }
 
-        if (closestUnit != null && closestUnitDistance < 10)
+        if (closestUnit != null && closestUnitDistance < 15)
         {
             Main.Log("Enemy too close: " + closestUnit.Name);
             return true;
@@ -309,7 +308,7 @@ public static class Warrior
 
     internal static bool Cast(Spell s)
     {
-        Main.LogDebug("In cast for " + s.Name);
+        //Main.LogDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;
         
