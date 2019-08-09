@@ -134,8 +134,9 @@ public static class Warrior
     {
         bool _shouldBeInterrupted = false;
         bool _inMeleeRange = ObjectManager.Target.GetDistance < 6f;
-        bool _saveRage = ((ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f) && Cleave.KnownSpell)
-            || (Execute.KnownSpell && ObjectManager.Target.HealthPercent < 40));
+        bool _saveRage = ((Cleave.KnownSpell && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f))
+            || (Execute.KnownSpell && ObjectManager.Target.HealthPercent < 40) 
+            || (Bloodthirst.KnownSpell && ObjectManager.Me.Rage < 40 && ObjectManager.Target.HealthPercent > 40));
 
         // Check Auto-Attacking
         ToolBox.CheckAutoAttack(Attack);
@@ -172,9 +173,12 @@ public static class Warrior
                 return;
 
         // Overpower
-        if (Overpower.IsSpellUsable)
-            if (Cast(Overpower))
-                return;
+        if (Cast(Overpower))
+            return;
+
+        // Bloodthirst
+        if (Cast(Bloodthirst))
+            return;
 
         // Sweeping Strikes
         if (_inMeleeRange && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f))
@@ -188,7 +192,7 @@ public static class Warrior
 
         // Cleave
         if (_inMeleeRange && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f) && 
-            (!SweepingStrikes.IsSpellUsable || !SweepingStrikes.KnownSpell))
+            (!SweepingStrikes.IsSpellUsable || !SweepingStrikes.KnownSpell) && ObjectManager.Me.Rage > 40)
             if (Cast(Cleave))
                 return;
 
@@ -247,10 +251,11 @@ public static class Warrior
     private static Spell Cleave = new Spell("Cleave");
     private static Spell Execute = new Spell("Execute");
     private static Spell SweepingStrikes = new Spell("Sweeping Strikes");
-    
+    private static Spell Bloodthirst = new Spell("Bloodthirst");
+
     internal static bool Cast(Spell s)
     {
-        //Main.LogDebug("In cast for " + s.Name);
+        Main.LogDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;
         

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using wManager.Wow.Class;
 using wManager.Wow.Helpers;
@@ -21,7 +22,6 @@ public class ToolBox
     public static bool CheckIfEnemiesClose(float distance)
     {
         List<WoWUnit> surroundingEnemies = ObjectManager.GetObjectWoWUnit();
-        //surroundingEnemies = ObjectManager.GetObjectWoWUnit();
         WoWUnit closestUnit = null;
         float closestUnitDistance = 100;
 
@@ -49,7 +49,6 @@ public class ToolBox
     public static bool CheckIfEnemiesOnPull(WoWUnit target, float distance)
     {
         List<WoWUnit> surroundingEnemies = ObjectManager.GetObjectWoWUnit();
-        //surroundingEnemies = ObjectManager.GetObjectWoWUnit();
         WoWUnit closestUnit = null;
         float closestUnitDistance = 100;
 
@@ -191,5 +190,20 @@ public class ToolBox
                 return;
         }
         Main.LogDebug("Waited for GCD : " + c);
+    }
+
+    // Gets Character's specialization (talents)
+    public static string GetSpec()
+    {
+        var Talents = new Dictionary<string, int>();
+        for (int i = 1; i <= 3; i++)
+        {
+            Talents.Add(
+                Lua.LuaDoString<string>($"local name, iconTexture, pointsSpent = GetTalentTabInfo({i}); return name"),
+                Lua.LuaDoString<int>($"local name, iconTexture, pointsSpent = GetTalentTabInfo({i}); return pointsSpent")
+            );
+        }
+        var highestTalents = Talents.Max(x => x.Value);
+        return Talents.Where(t => t.Value == highestTalents).FirstOrDefault().Key;
     }
 }
