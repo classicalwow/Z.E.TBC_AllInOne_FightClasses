@@ -101,7 +101,9 @@ public static class Warrior
         // Pull from afar
         if (_pullFromAfar && _pullMeleeTimer.ElapsedMilliseconds < 5000)
         {
-            if (Cast(Throw) || Cast(Shoot))
+            bool castThrow = Cast(Throw);
+            bool castShoot = Cast(Shoot);
+            if (castThrow || castShoot)
             {
                 Main.settingRange = 25f;
                 Thread.Sleep(500);
