@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3E1285D5-CB6B-4AB7-8C98-F909D4F1BA64}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Wrobot</RootNamespace>
+    <AssemblyName>TBC_ZE_AllInOne_FightClasses</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\..\..\Desktop\WRobot\WRobot\FightClass\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="MemoryRobot">
+      <HintPath>..\..\WRobot\Bin\MemoryRobot.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="robotManager">
+      <HintPath>..\..\WRobot\Bin\robotManager.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="wManager">
+      <HintPath>..\..\WRobot\Bin\wManager.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Main.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Z.E.BMHunter\HunterFoodManager.cs" />
+    <Compile Include="Z.E.BMHunter\Hunter.cs" />
+    <Compile Include="Z.E.BMHunter\ZEBMHunterSettings.cs" />
+    <Compile Include="Z.E.EnhancementShaman\Shaman.cs" />
+    <Compile Include="Z.E.EnhancementShaman\TotemManager.cs" />
+    <Compile Include="Z.E.EnhancementShaman\ZEShamanSettings.cs" />
+    <Compile Include="Z.E.FrostMage\MageFoodManager.cs" />
+    <Compile Include="Z.E.FrostMage\Mage.cs" />
+    <Compile Include="Z.E.FrostMage\ZEMageSettings.cs" />
+    <Compile Include="Z.E.FuryWarrior\Warrior.cs" />
+    <Compile Include="Z.E.FuryWarrior\ZEWarriorSettings.cs" />
+    <Compile Include="Z.E.RetPaladin\Paladin.cs" />
+    <Compile Include="Z.E.RetPaladin\ZEPaladinSettings.cs" />
+    <Compile Include="Z.E.ShadowPriest\Priest.cs" />
+    <Compile Include="Z.E.ShadowPriest\ZEPriestSettings.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

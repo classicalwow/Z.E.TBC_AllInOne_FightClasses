@@ -45,8 +45,6 @@
 
 \.vs/ZEPriest/v15/Server/sqlite3/storage\.ide
 
-TBC_ZE_AllInOne_FightClasses\.sln
-
 Wrobot/bin/Debug/TBC_ZE_AllInOne_FightClasses\.dll
 
 Wrobot/bin/Debug/TBC_ZE_AllInOne_FightClasses\.pdb
@@ -90,9 +88,3 @@ Wrobot/obj/Release/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1\.
 Wrobot/obj/Release/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3\.cs
 
 Wrobot/obj/Release/Z\.E\.Warrior\.csproj\.CoreCompileInputs\.cache
-
-Wrobot/Properties/AssemblyInfo\.cs
-
-Wrobot/TBC_ZE_AllInOne_FightClasses\.csproj
-
-Wrobot/TBC_ZE_AllInOne_FightClasses\.csproj\.user
