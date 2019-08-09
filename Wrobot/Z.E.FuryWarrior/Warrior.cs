@@ -272,8 +272,6 @@ public static class Warrior
         
         if (closestUnit != null && closestUnitDistance < 25)
         {
-            Main.LogDebug(closestUnit.Guid.ToString());
-            Main.LogDebug(target.Guid.ToString());
             Main.Log("Enemy too close: " + closestUnit.Name + ", pulling");
             return true;
         }
@@ -300,7 +298,7 @@ public static class Warrior
 
         if (closestUnit != null && closestUnitDistance < 15)
         {
-            Main.Log("Enemy too close: " + closestUnit.Name);
+            Main.LogDebug("Enemy too close: " + closestUnit.Name);
             return true;
         }
         return false;
