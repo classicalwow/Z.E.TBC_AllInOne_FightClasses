@@ -25,24 +25,24 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\..\Desktop\WRobot\WRobot\FightClass\</OutputPath>
+    <OutputPath>E:\WoW\WRobot\WRobot\FightClass\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MemoryRobot">
-      <HintPath>..\..\WRobot\Bin\MemoryRobot.dll</HintPath>
+      <HintPath>E:\WoW\WRobot\WRobot\Bin\MemoryRobot.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="robotManager">
-      <HintPath>..\..\WRobot\Bin\robotManager.dll</HintPath>
+      <HintPath>E:\WoW\WRobot\WRobot\Bin\robotManager.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="wManager">
-      <HintPath>..\..\WRobot\Bin\wManager.dll</HintPath>
+      <HintPath>E:\WoW\WRobot\WRobot\Bin\wManager.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

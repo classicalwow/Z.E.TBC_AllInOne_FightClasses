@@ -155,6 +155,7 @@ public static class Priest
         if (ObjectManager.Target.GetDistance <= _maxRange && Smite.KnownSpell && !HolyFire.KnownSpell && Smite.IsSpellUsable 
             && !Me.HaveBuff("ShadowForm"))
         {
+            Main.Log("Pull smite");
             Cast(Smite, false, false);
             return;
         }
@@ -350,8 +351,19 @@ public static class Priest
                 return;
         }
 
+        // Low level Smite
+        if (Me.Level < 5 && (ObjectManager.Target.HealthPercent > 30 || Me.ManaPercentage > 80) && _myManaPC > _innerManaSaveThreshold 
+            && ObjectManager.Target.GetDistance < _maxRange && Smite.KnownSpell)
+        {
+            Main.Log("Casting low level smite");
+            Main.Log("Enemy health percentage : " + ObjectManager.Target.HealthPercent.ToString());
+            if (Cast(Smite, false, false))
+                return;
+        }
+
         // Smite
-        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange && Smite.KnownSpell)
+        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange && Smite.KnownSpell
+            && Me.Level >= 5)
         {
             if (Cast(Smite, false, false))
                 return;

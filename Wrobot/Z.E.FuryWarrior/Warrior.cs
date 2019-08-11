@@ -8,6 +8,7 @@ using wManager.Wow.Class;
 using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
 using System.Collections.Generic;
+using wManager.Wow.Bot.Tasks;
 
 public static class Warrior
 {
@@ -84,8 +85,14 @@ public static class Warrior
         if (!Me.IsMounted && !Me.IsCast)
         {
             // Battle Shout
-            if (!Me.HaveBuff("Battle Shout") && BattleShout.IsSpellUsable)
+            if (!Me.HaveBuff("Battle Shout") && BattleShout.IsSpellUsable && 
+                (!_settings.UseCommandingShout || !CommandingShout.KnownSpell))
                 if (Cast(BattleShout))
+                    return;
+
+            // Commanding Shout
+            if (!Me.HaveBuff("Commanding Shout") && (_settings.UseCommandingShout && CommandingShout.KnownSpell))
+                if (Cast(CommandingShout))
                     return;
         }
     }
@@ -96,17 +103,33 @@ public static class Warrior
         if (ObjectManager.Target.GetDistance < _pullRange && !_pullFromAfar)
             _pullFromAfar = ToolBox.CheckIfEnemiesOnPull(ObjectManager.Target, _pullRange);
 
+        // Check stance
+        if (!InBattleStance() && ObjectManager.Me.Rage < 10 && !_pullFromAfar && !_settings.AlwaysPull)
+            Cast(BattleStance);
+
         // Pull from afar
-        if (_pullFromAfar && _pullMeleeTimer.ElapsedMilliseconds < 5000)
+        if ((_pullFromAfar && _pullMeleeTimer.ElapsedMilliseconds < 5000) || _settings.AlwaysPull
+            && ObjectManager.Target.GetDistance < 24f)
         {
-            bool _castPull = Cast(Throw) || Cast(Shoot);
-            if (_castPull)
-            {
-                Main.settingRange = _pullRange;
-                Thread.Sleep(2000);
-            }
-            else
+            Spell pullMethod = null;
+
+            if (Shoot.IsSpellUsable && Shoot.KnownSpell)
+                pullMethod = Shoot;
+
+            if (Throw.IsSpellUsable && Throw.KnownSpell)
+                pullMethod = Throw;
+
+            if (pullMethod == null)
                 Main.Log("Can't pull from distance. Please equip a ranged weapon in order to Throw or Shoot.");
+            else
+            {
+                if (Me.IsMounted)
+                    MountTask.DismountMount();
+
+                Main.settingRange = _pullRange;
+                if (Cast(pullMethod))
+                    Thread.Sleep(2000);
+            }
         }
 
         // Melee ?
@@ -120,29 +143,42 @@ public static class Warrior
             _pullMeleeTimer.Reset();
         }
 
-        // Check if caster
+        // Check if caster in list
         if (_casterEnemies.Contains(ObjectManager.Target.Name))
             _fightingACaster = true;
 
-        // Charge
-        if (ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f && Charge.KnownSpell 
-            && Charge.IsSpellUsable && !_pullFromAfar)
-            Charge.Launch();
+        // Charge Battle Stance
+        if (InBattleStance() && ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f 
+            && !_pullFromAfar && !_settings.AlwaysPull)
+            if (Cast(Charge))
+                return;
+
+        // Charge Berserker Stance
+        if (InBerserkStance() && ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f 
+            && !_pullFromAfar && !_settings.AlwaysPull)
+            if (Cast(Intercept))
+                return;
     }
 
     internal static void CombatRotation()
     {
-        bool _shouldBeInterrupted = false;
+        bool _shouldBeInterrupted = ToolBox.EnemyCasting();
         bool _inMeleeRange = ObjectManager.Target.GetDistance < 6f;
-        bool _saveRage = ((Cleave.KnownSpell && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f))
+        bool _saveRage = ((Cleave.KnownSpell && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f)
+            && _settings.UseCleave)
             || (Execute.KnownSpell && ObjectManager.Target.HealthPercent < 40) 
-            || (Bloodthirst.KnownSpell && ObjectManager.Me.Rage < 40 && ObjectManager.Target.HealthPercent > 40));
+            || (Bloodthirst.KnownSpell && ObjectManager.Me.Rage < 40 && ObjectManager.Target.HealthPercent > 50));
 
         // Check Auto-Attacking
         ToolBox.CheckAutoAttack(Attack);
 
         // Check if we need to interrupt
-        _shouldBeInterrupted = ToolBox.EnemyCasting();
+        if (_shouldBeInterrupted)
+        {
+            _fightingACaster = true;
+            if (!_casterEnemies.Contains(ObjectManager.Target.Name))
+                _casterEnemies.Add(ObjectManager.Target.Name);
+        }
 
         // Melee ?
         if (_pullMeleeTimer.ElapsedMilliseconds > 0)
@@ -153,19 +189,50 @@ public static class Warrior
 
         if ((_shouldBeInterrupted || _meleeTimer.ElapsedMilliseconds > 5000) && Main.settingRange != _meleRange)
         {
-            if (!_casterEnemies.Contains(ObjectManager.Target.Name))
-                _casterEnemies.Add(ObjectManager.Target.Name);
-            _fightingACaster = true;
             Main.LogDebug("Going in Melee range 2");
-            Main.settingRange = 5f;
+            Main.settingRange = _meleRange;
             _meleeTimer.Stop();
         }
 
-        // Interrupt !
-        if (_fightingACaster)
-        {
+        // Battle stance
+        if (InBerserkStance() && Me.Rage < 10 && (!_settings.PrioritizeBerserkStance || ObjectManager.GetNumberAttackPlayer() > 1) 
+            && !_fightingACaster)
+            if (Cast(BattleStance))
+                return;
 
+        // Berserker stance
+        if (_settings.PrioritizeBerserkStance && !InBerserkStance() && BerserkerStance.KnownSpell && Me.Rage < 15
+            && ObjectManager.GetNumberAttackPlayer() < 2)
+            if (Cast(BerserkerStance))
+                return;
+
+        // Fighting a caster
+        if (_fightingACaster && !InBerserkStance() && BerserkerStance.KnownSpell && Me.Rage < 20
+            && ObjectManager.GetNumberAttackPlayer() < 2)
+        {
+            if (Cast(BerserkerStance))
+                return;
         }
+
+        // Interrupt
+        if (_shouldBeInterrupted && InBerserkStance())
+            if (Cast(Pummel))
+                return;
+
+        // Victory Rush
+        if (VictoryRush.KnownSpell)
+            if (Cast(VictoryRush))
+                return;
+
+        // Rampage
+        if (Rampage.KnownSpell && (!Me.HaveBuff("Rampage") || (Me.HaveBuff("Rampage") && ToolBox.BuffTimeLeft("Rampage") < 10)))
+            if (Cast(Rampage))
+                return;
+
+        // Berserker Rage
+        if (InBerserkStance() && ObjectManager.Target.HealthPercent > 70)
+            if (Cast(BerserkerRage))
+                return;
 
         // Execute
         if (ObjectManager.Target.HealthPercent < 20)
@@ -187,12 +254,13 @@ public static class Warrior
 
         // Retaliation
         if (_inMeleeRange && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f))
-            if (Cast(Retaliation))
+            if (Cast(Retaliation) && (!SweepingStrikes.IsSpellUsable || !SweepingStrikes.KnownSpell))
                 return;
 
         // Cleave
         if (_inMeleeRange && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f) && 
-            (!SweepingStrikes.IsSpellUsable || !SweepingStrikes.KnownSpell) && ObjectManager.Me.Rage > 40)
+            (!SweepingStrikes.IsSpellUsable || !SweepingStrikes.KnownSpell) && ObjectManager.Me.Rage > 40
+            && _settings.UseCleave)
             if (Cast(Cleave))
                 return;
 
@@ -207,13 +275,18 @@ public static class Warrior
             if (Cast(Hamstring))
                 return;
 
+        // Commanding Shout
+        if (!Me.HaveBuff("Commanding Shout") && (_settings.UseCommandingShout && CommandingShout.KnownSpell))
+            if (Cast(CommandingShout))
+                return;
+
         // Battle Shout
-        if (!Me.HaveBuff("Battle Shout"))
+        if (!Me.HaveBuff("Battle Shout") && (!_settings.UseCommandingShout || !CommandingShout.KnownSpell))
             if (Cast(BattleShout))
                 return;
 
         // Rend
-        if (!ObjectManager.Target.HaveBuff("Rend") && ToolBox.CanBleed(ObjectManager.Target) && _inMeleeRange && !_saveRage)
+        if (!ObjectManager.Target.HaveBuff("Rend") && ToolBox.CanBleed(ObjectManager.Target) && _inMeleeRange && _settings.UseRend)
             if (Cast(Rend))
                 return;
 
@@ -224,7 +297,7 @@ public static class Warrior
                 return;
         
         // Heroic Strike
-        if (_inMeleeRange && !HeroicStrikeOn() && !_saveRage)
+        if (_inMeleeRange && !HeroicStrikeOn() && (!_saveRage || Me.Rage > 60))
             if (Cast(HeroicStrike))
                 return;
     }
@@ -239,6 +312,7 @@ public static class Warrior
     private static Spell Attack = new Spell("Attack");
     private static Spell HeroicStrike = new Spell("Heroic Strike");
     private static Spell BattleShout = new Spell("Battle Shout");
+    private static Spell CommandingShout = new Spell("Commanding Shout");
     private static Spell Charge = new Spell("Charge");
     private static Spell Rend = new Spell("Rend");
     private static Spell Hamstring = new Spell("Hamstring");
@@ -252,6 +326,13 @@ public static class Warrior
     private static Spell Execute = new Spell("Execute");
     private static Spell SweepingStrikes = new Spell("Sweeping Strikes");
     private static Spell Bloodthirst = new Spell("Bloodthirst");
+    private static Spell BerserkerStance = new Spell("Berserker Stance");
+    private static Spell BattleStance = new Spell("Battle Stance");
+    private static Spell Intercept = new Spell("Intercept");
+    private static Spell Pummel = new Spell("Pummel");
+    private static Spell BerserkerRage = new Spell("Berserker Rage");
+    private static Spell Rampage = new Spell("Rampage");
+    private static Spell VictoryRush = new Spell("Victory Rush");
 
     internal static bool Cast(Spell s)
     {
@@ -265,6 +346,16 @@ public static class Warrior
 
     private static bool HeroicStrikeOn()
     {
-        return Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Heroic Strike') then isAutoRepeat = true end", "isAutoRepeat");
+        return Lua.LuaDoString<bool>("hson = false; if IsCurrentSpell('Heroic Strike') then hson = true end", "hson");
+    }
+
+    private static bool InBattleStance()
+    {
+        return Lua.LuaDoString<bool>("bs = false; if GetShapeshiftForm() == 1 then bs = true end", "bs");
+    }
+
+    private static bool InBerserkStance()
+    {
+        return Lua.LuaDoString<bool>("bs = false; if GetShapeshiftForm() == 3 then bs = true end", "bs");
     }
 }

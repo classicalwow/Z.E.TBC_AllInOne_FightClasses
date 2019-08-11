@@ -82,79 +82,85 @@ public class ToolBox
     // Returns whether the player is poisoned
     public static bool HasPoisonDebuff()
     {
-        bool hasPoisonDebuff = Lua.LuaDoString<bool>
+        return Lua.LuaDoString<bool>
             (@"for i=1,25 do 
 	            local _, _, _, _, d  = UnitDebuff('player',i);
 	            if d == 'Poison' then
                 return true
                 end
             end");
-        return hasPoisonDebuff;
     }
 
     // Returns whether the player has a disease
     public static bool HasDiseaseDebuff()
     {
-        bool hasDiseaseDebuff = Lua.LuaDoString<bool>
+        return Lua.LuaDoString<bool>
             (@"for i=1,25 do 
 	            local _, _, _, _, d  = UnitDebuff('player',i);
 	            if d == 'Disease' then
                 return true
                 end
             end");
-        return hasDiseaseDebuff;
     }
 
     // Returns whether the player has a curse
     public static bool HasCurseDebuff()
     {
-        bool hasCurseDebuff = Lua.LuaDoString<bool>
+        return Lua.LuaDoString<bool>
             (@"for i=1,25 do 
 	            local _, _, _, _, d  = UnitDebuff('player',i);
 	            if d == 'Curse' then
                 return true
                 end
             end");
-        return hasCurseDebuff;
     }
 
     // Returns whether the player has a magic debuff
     public static bool HasMagicDebuff()
     {
-        bool hasMagicDebuff = Lua.LuaDoString<bool>
+        return Lua.LuaDoString<bool>
             (@"for i=1,25 do 
 	            local _, _, _, _, d  = UnitDebuff('player',i);
 	            if d == 'Magic' then
                 return true
                 end
             end");
-        return hasMagicDebuff;
     }
 
     // Returns the type of debuff the player has as a string
     public static string GetDebuffType()
     {
-        string debuffType = Lua.LuaDoString<string>
+        return Lua.LuaDoString<string>
             (@"for i=1,25 do 
 	            local _, _, _, _, d  = UnitDebuff('player',i);
 	            if (d == 'Poison' or d == 'Magic' or d == 'Curse' or d == 'Disease') then
                 return d
                 end
             end");
-        return debuffType;
     }
 
     // Returns whether the player has the debuff passed as a string (ex: Weakened Soul)
     public static bool HasDebuff(string debuffName)
     {
-        bool hasDebuff = Lua.LuaDoString<bool>
+        return Lua.LuaDoString<bool>
             ($"for i=1,25 do " +
 	            "local n, _, _, _, _  = UnitDebuff('player',i); " +
                 "if n == '" + debuffName + "' then " +
                 "return true " +
                 "end "+
             "end");
-        return hasDebuff;
+    }
+
+    // Returns the time left on a buff in seconds, buff name is passed as string
+    public static int BuffTimeLeft(string buffName)
+    {
+        return Lua.LuaDoString<int>
+            ($"for i=1,25 do " +
+                "local n, _, _, _, _, duration, _  = UnitBuff('player',i); " +
+                "if n == '" + buffName + "' then " +
+                "return duration " +
+                "end " +
+            "end");
     }
 
     // Deletes item passed as string

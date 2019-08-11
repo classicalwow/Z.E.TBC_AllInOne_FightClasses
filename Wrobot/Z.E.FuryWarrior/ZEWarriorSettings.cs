@@ -16,12 +16,29 @@ public class ZEWarriorSettings : Settings
         UseHamstring = true;
         UseBloodRage = true;
         UseDemoralizingShout = true;
+        UseRend = true;
+        UseCleave = true;
+        PrioritizeBerserkStance = false;
+        AlwaysPull = false;
+        UseCommandingShout = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCWarrior "
             + Translate.Get("Settings")
         );
     }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Prioritize Berserker Stance")]
+    [Description("Prioritize Berserker Stance over Battle Stance")]
+    public bool PrioritizeBerserkStance { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Always pull")]
+    [Description("Always pull with a range weapon")]
+    public bool AlwaysPull { get; set; }
 
     [Category("Combat Rotation")]
     [DefaultValue(true)]
@@ -40,6 +57,24 @@ public class ZEWarriorSettings : Settings
     [DisplayName("Use Demoralizing Shout")]
     [Description("Use Demoralizing Shout")]
     public bool UseDemoralizingShout { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(false)]
+    [DisplayName("Use Commanding Shout")]
+    [Description("Use Commanding Shout instead of Battle Shout")]
+    public bool UseCommandingShout { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(true)]
+    [DisplayName("Use Rend")]
+    [Description("Use Rend")]
+    public bool UseRend { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(true)]
+    [DisplayName("Use Cleave")]
+    [Description("Use Cleave on multi aggro")]
+    public bool UseCleave { get; set; }
 
     public bool Save()
     {
