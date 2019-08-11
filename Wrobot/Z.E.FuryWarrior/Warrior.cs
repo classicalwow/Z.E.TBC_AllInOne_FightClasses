@@ -120,7 +120,10 @@ public static class Warrior
                 pullMethod = Throw;
 
             if (pullMethod == null)
+            {
                 Main.Log("Can't pull from distance. Please equip a ranged weapon in order to Throw or Shoot.");
+                _pullFromAfar = false;
+            }
             else
             {
                 if (Me.IsMounted)
@@ -149,13 +152,13 @@ public static class Warrior
 
         // Charge Battle Stance
         if (InBattleStance() && ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f 
-            && !_pullFromAfar && !_settings.AlwaysPull)
+            && !_pullFromAfar)
             if (Cast(Charge))
                 return;
 
         // Charge Berserker Stance
         if (InBerserkStance() && ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f 
-            && !_pullFromAfar && !_settings.AlwaysPull)
+            && !_pullFromAfar)
             if (Cast(Intercept))
                 return;
     }
