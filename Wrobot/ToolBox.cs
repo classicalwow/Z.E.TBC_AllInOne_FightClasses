@@ -163,14 +163,6 @@ public class ToolBox
             "end");
     }
 
-    // Deletes item passed as string
-    public static void LuaDeleteItem(string item)
-    {
-        Lua.LuaDoString("for bag = 0, 4, 1 do for slot = 1, 32, 1 do local name = GetContainerItemLink(bag, slot); " +
-            "if name and string.find(name, \"" + item + "\") then PickupContainerItem(bag, slot); " +
-            "DeleteCursorItem(); end; end; end", false);
-    }
-
     // Returns true if the enemy is either casting or channeling (good for interrupts)
     public static bool EnemyCasting()
     {
@@ -212,4 +204,154 @@ public class ToolBox
         var highestTalents = Talents.Max(x => x.Value);
         return Talents.Where(t => t.Value == highestTalents).FirstOrDefault().Key;
     }
+
+    #region Items
+
+    // Deletes item passed as string
+    public static void LuaDeleteItem(string item)
+    {
+        Lua.LuaDoString("for bag = 0, 4, 1 do for slot = 1, 32, 1 do local name = GetContainerItemLink(bag, slot); " +
+            "if name and string.find(name, \"" + item + "\") then PickupContainerItem(bag, slot); " +
+            "DeleteCursorItem(); end; end; end", false);
+    }
+
+    // Count the amount of the specified item stacks in your bags
+    public static int CountItemStacks(string itemArg)
+    {
+        return Lua.LuaDoString<int>("local count = GetItemCount('" + itemArg + "'); return count");
+    }
+
+    // Checks if you have any of the listed items in your bags
+    public static bool HaveOneInList(List<string> list)
+    {
+        List<WoWItem> _bagItems = Bag.GetBagItem();
+        bool _haveItem = false;
+        foreach (WoWItem item in _bagItems)
+        {
+            if (list.Contains(item.Name))
+                _haveItem = true;
+        }
+        return _haveItem;
+    }
+
+    // Get item ID in bag from a list passed as argument (good to check CD)
+    public static int GetItemID(List<string> list)
+    {
+        List<WoWItem> _bagItems = Bag.GetBagItem();
+        foreach (WoWItem item in _bagItems)
+            if (list.Contains(item.Name))
+                return item.Entry;
+
+        return 0;
+    }
+
+    // Get item ID in bag from a string passed as argument (good to check CD)
+    public static int GetItemID(string itemName)
+    {
+        List<WoWItem> _bagItems = Bag.GetBagItem();
+        foreach (WoWItem item in _bagItems)
+            if (itemName.Equals(item))
+                return item.Entry;
+
+        return 0;
+    }
+
+    // Get item Cooldown (must pass item string as arg)
+    public static int GetItemCooldown(string itemName)
+    {
+        int entry = GetItemID(itemName);
+        List<WoWItem> _bagItems = Bag.GetBagItem();
+        foreach (WoWItem item in _bagItems)
+            if (entry == item.Entry)
+                return Lua.LuaDoString<int>("local startTime, duration, enable = GetItemCooldown(" + entry + "); " +
+                    "return duration - (GetTime() - startTime)");
+
+        Main.Log("Couldn't find item" + itemName);
+        return 0;
+    }
+
+    // Get item Cooldown from list (must pass item list as arg)
+    public static int GetItemCooldown(List<string> itemList)
+    {
+        int entry = GetItemID(itemList);
+        List<WoWItem> _bagItems = Bag.GetBagItem();
+        foreach (WoWItem item in _bagItems)
+            if (entry == item.Entry)
+                return Lua.LuaDoString<int>("local startTime, duration, enable = GetItemCooldown(" + entry + "); " +
+                    "return duration - (GetTime() - startTime)");
+
+        Main.Log("Couldn't find item");
+        return 0;
+    }
+
+    // Uses the first item found in your bags that matches any element from the list
+    public static void UseFirstMatchingItem(List<string> list)
+    {
+        List<WoWItem> _bagItems = Bag.GetBagItem();
+        foreach (WoWItem item in _bagItems)
+        {
+            if (list.Contains(item.Name))
+            {
+                ItemsManager.UseItemByNameOrId(item.Name);
+                Main.Log("Using " + item.Name);
+                return;
+            }
+        }
+    }
+
+    #endregion
+    
+    #region Pet
+    
+    // Returns the index of the pet spell passed as argument
+    public static int GetPetSpellIndex(string spellName)
+    {
+        int spellindex = Lua.LuaDoString<int>
+            ($"for i=1,10 do " +
+                "local name, _, _, _, _, _, _ = GetPetActionInfo(i); " +
+                "if name == '" + spellName + "' then " +
+                "return i " +
+                "end " +
+            "end");
+
+        return spellindex;
+    }
+
+    // Returns the cooldown of the pet spell passed as argument
+    public static int GetPetSpellCooldown(string spellName)
+    {
+        int _spellIndex = GetPetSpellIndex(spellName);
+        return Lua.LuaDoString<int>("local startTime, duration, enable = GetPetActionCooldown(" + _spellIndex + "); return duration - (GetTime() - startTime)");
+    }
+
+    // Returns whether a pet spell is available (off cooldown)
+    public static bool GetPetSpellReady(string spellName)
+    {
+        return GetPetSpellCooldown(spellName) <= 0;
+    }
+
+    // Casts the pet spell passed as argument
+    public static void PetSpellCast(string spellName)
+    {
+        int spellIndex = GetPetSpellIndex(spellName);
+        if (GetPetSpellReady(spellName))
+            Lua.LuaDoString("CastPetAction(" + spellIndex + ");");
+    }
+
+    // Toggles Pet spell autocast (pass true as second argument to toggle on, or false to toggle off)
+    public static void TogglePetSpellAuto(string spellName, bool toggle, bool useIndex = true)
+    {
+        string spell = useIndex ? GetPetSpellIndex(spellName).ToString() : "'" + spellName + "'";
+
+        if (!spell.Equals("0"))
+        {
+            bool autoCast = Lua.LuaDoString<bool>("local _, autostate = GetSpellAutocast(" + spell + ", 'pet'); " +
+                "return autostate == 1");
+
+            if ((toggle && !autoCast) || (!toggle && autoCast))
+                Lua.LuaDoString("ToggleSpellAutocast(" + spell + ", 'pet');");
+        }
+    }
+
+    #endregion
 }

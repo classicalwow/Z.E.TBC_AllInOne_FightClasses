@@ -352,7 +352,7 @@ public static class Priest
 
         // Low level Smite
         if (Me.Level < 5 && (ObjectManager.Target.HealthPercent > 30 || Me.ManaPercentage > 80) && _myManaPC > _innerManaSaveThreshold 
-            && ObjectManager.Target.GetDistance < _maxRange && Smite.KnownSpell)
+            && ObjectManager.Target.GetDistance < _maxRange)
         {
             if (Cast(Smite, false, false))
                 return;
@@ -409,7 +409,7 @@ public static class Priest
 
     private static bool Cast(Spell s, bool castEvenIfWanding, bool waitGCD)
     {
-        Main.Log("Into Cast for " + s.Name);
+        Main.LogDebug("Into Cast for " + s.Name);
 
         if (_usingWand && !castEvenIfWanding)
             return false;

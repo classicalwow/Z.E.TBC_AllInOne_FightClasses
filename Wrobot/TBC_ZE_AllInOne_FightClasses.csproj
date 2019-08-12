@@ -56,6 +56,7 @@
     <Compile Include="Z.E.BMHunter\HunterFoodManager.cs" />
     <Compile Include="Z.E.BMHunter\Hunter.cs" />
     <Compile Include="Z.E.BMHunter\ZEBMHunterSettings.cs" />
+    <Compile Include="Z.E.DemonologyWarlock\PetAndConsumables.cs" />
     <Compile Include="Z.E.EnhancementShaman\Shaman.cs" />
     <Compile Include="Z.E.EnhancementShaman\TotemManager.cs" />
     <Compile Include="Z.E.EnhancementShaman\ZEShamanSettings.cs" />
@@ -68,6 +69,8 @@
     <Compile Include="Z.E.RetPaladin\ZEPaladinSettings.cs" />
     <Compile Include="Z.E.ShadowPriest\Priest.cs" />
     <Compile Include="Z.E.ShadowPriest\ZEPriestSettings.cs" />
+    <Compile Include="Z.E.DemonologyWarlock\Warlock.cs" />
+    <Compile Include="Z.E.DemonologyWarlock\ZEWarlockSettings.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
