@@ -39,6 +39,7 @@ public static class PetAndConsumables
             "Lesser Soulstone",
             "Soulstone",
             "Major Soulstone",
+            "Greater Soulstone",
             "Master Soulstone"
         };
     }

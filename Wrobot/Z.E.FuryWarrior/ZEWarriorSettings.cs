@@ -36,7 +36,7 @@ public class ZEWarriorSettings : Settings
 
     [Category("Misc")]
     [DefaultValue(false)]
-    [DisplayName("Always pull")]
+    [DisplayName("Always range pull")]
     [Description("Always pull with a range weapon")]
     public bool AlwaysPull { get; set; }
 

@@ -16,18 +16,17 @@ public static class Warlock
     private static float _maxRange = 27f;
     private static bool _usingWand = false;
     private static int _innerManaSaveThreshold = 20;
-    private static int _wandThreshold;
     private static bool _iCanUseWand = false;
     private static ZEWarlockSettings _settings;
     private static readonly BackgroundWorker _petPulseThread = new BackgroundWorker();
-    internal static Stopwatch _addCheckTimer = new Stopwatch();
+    private static Stopwatch _addCheckTimer = new Stopwatch();
+    private static int _saveDrinkPercent = wManager.wManagerSetting.CurrentSetting.DrinkPercent;
 
     public static void Initialize()
     {
         Main.Log("Initialized");
         ZEWarlockSettings.Load();
         _settings = ZEWarlockSettings.CurrentSetting;
-        _wandThreshold = ZEWarlockSettings.CurrentSetting.WandThreshold > 100 ? 50 : ZEWarlockSettings.CurrentSetting.WandThreshold;
         Main.settingRange = _maxRange;
         _petPulseThread.DoWork += PetThread;
         _petPulseThread.RunWorkerAsync();
@@ -61,9 +60,11 @@ public static class Warlock
     
     public static void Dispose()
     {
+        Main.Log("Stop in progress.");
         _petPulseThread.DoWork -= PetThread;
         _petPulseThread.Dispose();
-        Main.Log("Stop in progress.");
+        Lua.LuaDoString("PetPassiveMode();");
+        wManager.wManagerSetting.CurrentSetting.DrinkPercent = _saveDrinkPercent;
     }
 
     // Pet thread
@@ -77,7 +78,7 @@ public static class Warlock
                 {
                     // Voidwalker Torment
                     if (PetAndConsumables.MyWarlockPet().Equals("Voidwalker") && ObjectManager.Target.Target == Me.Guid
-                        && Me.InCombatFlagOnly)
+                        && Me.InCombatFlagOnly && !_settings.AutoTorment)
                         ToolBox.PetSpellCast("Torment");
                 }
             }
@@ -98,6 +99,7 @@ public static class Warlock
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
+                    Main.Log(_addCheckTimer.ElapsedMilliseconds.ToString());
                     if (!Fight.InFight)
                     {
                         BuffRotation();
@@ -126,27 +128,43 @@ public static class Warlock
         if (!Me.IsMounted)
         {
             // Make sure we have mana to summon
-            if (!ObjectManager.Pet.IsValid && ObjectManager.Me.ManaPercentage < 70)
+            if (!ObjectManager.Pet.IsValid && ObjectManager.Me.ManaPercentage < 95 && !ObjectManager.Me.HaveBuff("Drink") &&
+                ((SummonVoidwalker.KnownSpell && !SummonVoidwalker.IsSpellUsable) ||
+                (SummonImp.KnownSpell && !SummonImp.IsSpellUsable && !SummonVoidwalker.KnownSpell)))
             {
-                Main.Log("Not enough mana to summon")
+                Main.Log("Not enough mana to summon, forcing regen");
+                wManager.wManagerSetting.CurrentSetting.DrinkPercent = 95;
+                Thread.Sleep(1000);
+                return;
             }
-            // Switch Auto Torment off
+            else
+                wManager.wManagerSetting.CurrentSetting.DrinkPercent = _saveDrinkPercent;
+
+            // Switch Auto Torment & Suffering off
             if (PetAndConsumables.MyWarlockPet().Equals("Voidwalker"))
             {
-                ToolBox.TogglePetSpellAuto("Torment", false);
+                ToolBox.TogglePetSpellAuto("Torment", _settings.AutoTorment);
                 ToolBox.TogglePetSpellAuto("Suffering", false);
             }
 
             // Summon Void Walker
             if ((!ObjectManager.Pet.IsValid || !PetAndConsumables.MyWarlockPet().Equals("Voidwalker")) && SummonVoidwalker.KnownSpell)
-                if (Cast(SummonVoidwalker))
-                    return;
+            {
+                Thread.Sleep(Usefuls.Latency + 500); // Safety for Mount check
+                if (!ObjectManager.Me.IsMounted)
+                    if (Cast(SummonVoidwalker))
+                        return;
+            }
 
             // Summon Imp
             if (!ObjectManager.Pet.IsValid && SummonImp.KnownSpell && 
                 (!SummonVoidwalker.KnownSpell || ToolBox.CountItemStacks("Soul Shard") < 1))
-                if (Cast(SummonImp))
-                    return;
+            {
+                Thread.Sleep(Usefuls.Latency + 500); // Safety for Mount check
+                if (!ObjectManager.Me.IsMounted)
+                    if (Cast(SummonImp))
+                        return;
+            }
 
             // Life Tap
             if (Me.HealthPercent > 50 && Me.ManaPercentage < 80 && _settings.UseLifeTap)
@@ -154,7 +172,7 @@ public static class Warlock
                     return;
 
             // Unending Breath
-            if (!Me.HaveBuff("Unending Breath") && UnendingBreath.KnownSpell)
+            if (!Me.HaveBuff("Unending Breath") && UnendingBreath.KnownSpell && _settings.UseUnendingBreath)
             {
                 Lua.RunMacroText("/target player");
                 if (Cast(UnendingBreath))
@@ -228,6 +246,16 @@ public static class Warlock
         if (AmplifyCurse.IsSpellUsable && AmplifyCurse.KnownSpell)
             AmplifyCurse.Launch();
 
+        // Siphon Life
+        if (Me.HealthPercent < 90 && _settings.UseSiphonLife && ObjectManager.Target.GetDistance < _maxRange + 2)
+            if (Cast(SiphonLife))
+                return;
+
+        // Unstable Affliction
+        if (ObjectManager.Target.GetDistance < _maxRange + 2)
+            if (Cast(UnstableAffliction))
+                return;
+
         // Curse of Agony
         if (ObjectManager.Target.GetDistance < _maxRange + 2)
             if (Cast(CurseOfAgony))
@@ -268,8 +296,9 @@ public static class Warlock
             foreach (WoWUnit unit in _listUnitsAttackingMe)
             {
                 Thread.Sleep(500);
-                if (unit.Target == Me.Guid && unit.Guid != Me.Target)
+                if (unit.IsTargetingMe && unit.Guid != Me.Target)
                 {
+                    Main.LogDebug(unit.Name + " is not targeting me, trying to take back aggro");
                     Lua.RunMacroText("/cleartarget");
                     Lua.LuaDoString("/TargetUnit('" + unit.Guid + "')");
                 }
@@ -294,10 +323,27 @@ public static class Warlock
             if (Cast(ShadowBolt))
                 return;
 
+        // Siphon Life
+        if (Me.HealthPercent < 90 && _overLowManaThreshold && Target.HealthPercent > 20
+            && !Target.HaveBuff("Siphon Life") && _settings.UseSiphonLife)
+            if (Cast(SiphonLife))
+                return;
+
+        // Drain Life low
+        if (Me.HealthPercent < 30 && Target.HealthPercent > 20)
+            if (Cast(DrainLife))
+                return;
+
         // Curse of Agony
         if (ObjectManager.Target.GetDistance < _maxRange && !Target.HaveBuff("Curse of Agony") && _overLowManaThreshold
             && Target.HealthPercent > 20)
             if (Cast(CurseOfAgony))
+                return;
+
+        // Unstable Affliction
+        if (ObjectManager.Target.GetDistance < _maxRange && !Target.HaveBuff("Unstable Affliction") && _overLowManaThreshold
+            && Target.HealthPercent > 30)
+            if (Cast(UnstableAffliction))
                 return;
 
         // Corruption
@@ -308,17 +354,11 @@ public static class Warlock
 
         // Immolate
         if (ObjectManager.Target.GetDistance < _maxRange && !Target.HaveBuff("Immolate") && _overLowManaThreshold
-            && Target.HealthPercent > 30)
+            && Target.HealthPercent > 30 && (_settings.UseImmolateHighLevel || !UnstableAffliction.KnownSpell))
             if (Cast(Immolate))
                 return;
 
-        // Siphon Life
-        if (Me.HealthPercent < 90 && _overLowManaThreshold && Target.HealthPercent > 20
-            && _settings.UseSiphonLife)
-            if (Cast(SiphonLife))
-                return;
-
-        // Drain Life
+        // Drain Life high
         if (Me.HealthPercent < 70 && Target.HealthPercent > 20)
             if (Cast(DrainLife))
                 return;
@@ -332,7 +372,8 @@ public static class Warlock
         }
 
         // Dark Pact
-        if (Me.ManaPercentage < 70 && ObjectManager.Pet.Mana > 0 && ObjectManager.Pet.ManaPercentage > 60)
+        if (Me.ManaPercentage < 70 && ObjectManager.Pet.Mana > 0 && ObjectManager.Pet.ManaPercentage > 60
+            && _settings.UseDarkPact)
             if (Cast(DarkPact))
                 return;
 
@@ -349,18 +390,10 @@ public static class Warlock
                 return;
 
         // Life Tap
-        if (Me.HealthPercent > 60 && Me.ManaPercentage < 40 && !ObjectManager.Target.IsTargetingMe
+        if (Me.HealthPercent > 40 && Me.ManaPercentage < 40 && !ObjectManager.Target.IsTargetingMe
             && _settings.UseLifeTap)
             if (Cast(LifeTap))
                 return;
-
-        // Use Wand on conditions
-        if ((ObjectManager.Target.HealthPercent < _wandThreshold || _myManaPC <= _innerManaSaveThreshold) &&
-            !_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance < _maxRange + 2)
-        {
-            UseWand.Launch();
-            return;
-        }
         
         // Use wand because nothing else to do
         if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance < _maxRange + 2)
@@ -406,6 +439,7 @@ public static class Warlock
     private static Spell SiphonLife = new Spell("Siphon Life");
     private static Spell DrainMana = new Spell("Drain Mana");
     private static Spell DarkPact = new Spell("Dark Pact");
+    private static Spell UnstableAffliction = new Spell("Unstable Affliction");
 
     private static bool Cast(Spell s, bool castEvenIfWanding = true, bool waitGCD = true)
     {
