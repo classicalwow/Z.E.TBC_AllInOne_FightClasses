@@ -75,12 +75,15 @@ public static class Mage
                         _foodManager.CheckIfThrowFoodAndDrinks();
                         _foodManager.CheckIfHaveManaStone();
 
+                        // Evocation
                         if (ObjectManager.Me.ManaPercentage < 30)
                             Cast(Evocation);
 
+                        // Frost Armor
                         if (!ObjectManager.Me.HaveBuff("Frost Armor"))
                             Cast(FrostArmor);
 
+                        // Arcane Intellect
                         if (!ObjectManager.Me.HaveBuff("Arcane Intellect"))
                             Cast(ArcaneIntellect);
                     }
@@ -130,27 +133,34 @@ public static class Mage
         _usingWand = Lua.LuaDoString<bool>("isAutoRepeat = false; local name = GetSpellInfo(5019); " +
             "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
 
+        // Use Wand
         if ((ObjectManager.Target.HealthPercent < ZEMageSettings.CurrentSetting.WandThreshold || 
             ObjectManager.Me.ManaPercentage < 5 ) && !_usingWand && UseWand.IsSpellUsable && ObjectManager.GetNumberAttackPlayer() < 2
             && (ObjectManager.Me.HealthPercent > 30 || ObjectManager.Me.ManaPercentage < 1))
             UseWand.Launch();
 
+        // Remove Curse
         if (_hasCurse)
             Cast(RemoveCurse);
 
+        // Summon Water Elemental
         if (ObjectManager.Target.HealthPercent > 95 || ObjectManager.GetNumberAttackPlayer() > 1)
             Cast(SummonWaterElemental);
 
+        // Ice Barrier
         if (IceBarrier.IsSpellUsable && !ObjectManager.Me.HaveBuff("Ice Barrier"))
             Cast(IceBarrier);
 
+        // Cold Snap
         if (ObjectManager.GetNumberAttackPlayer() > 1 && !ObjectManager.Me.HaveBuff("Icy Veins") && !IcyVeins.IsSpellUsable)
             Cast(ColdSnap);
 
+        // Icy Veins
         if ((ObjectManager.GetNumberAttackPlayer() > 1 && ZEMageSettings.CurrentSetting.IcyVeinMultiPull) 
             || !ZEMageSettings.CurrentSetting.IcyVeinMultiPull)
             Cast(IcyVeins);
 
+        // Use Mana Stone
         if (((ObjectManager.GetNumberAttackPlayer() > 1 && ObjectManager.Me.ManaPercentage < 50) || ObjectManager.Me.ManaPercentage < 5)
             && _foodManager.ManaStone != "")
         {
@@ -158,22 +168,32 @@ public static class Mage
             _foodManager.ManaStone = "";
         }
 
+        // Ice Lance
         if (ObjectManager.Target.HaveBuff("Frostbite") || ObjectManager.Target.HaveBuff("Frost Nova"))
             Cast(IceLance);
 
+        // Fire Blast
         if (ObjectManager.Target.GetDistance < 20f && ObjectManager.Target.HealthPercent > 30f)
             Cast(FireBlast);
 
+        // Con of Cold
         if (ObjectManager.Target.GetDistance < 10 && ZEMageSettings.CurrentSetting.UseConeOfCold)
             Cast(ConeOfCold);
 
+        // Frost Nova
         if (ObjectManager.Target.GetDistance < _meleeRange && ObjectManager.Target.HealthPercent > 5 && !(ObjectManager.Target.HaveBuff("Frostbite")))
             Cast(FrostNova);
 
-        if (Frostbolt.IsDistanceGood)
+        // Frost Bolt
+        if (Frostbolt.IsDistanceGood && ObjectManager.Me.Level >= 6)
             Cast(Frostbolt);
 
-        if (Fireball.IsDistanceGood && !Frostbolt.KnownSpell)
+        // Low level Frost Bolt
+        if (Frostbolt.IsDistanceGood && ObjectManager.Target.HealthPercent > 30 && ObjectManager.Me.Level < 6)
+            Cast(Frostbolt);
+
+        // FireBall
+        if (Fireball.IsDistanceGood && !Frostbolt.KnownSpell && ObjectManager.Target.HealthPercent > 30)
             Cast(Fireball);
     }
 

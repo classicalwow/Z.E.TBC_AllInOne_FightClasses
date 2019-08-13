@@ -339,17 +339,21 @@ public class ToolBox
     }
 
     // Toggles Pet spell autocast (pass true as second argument to toggle on, or false to toggle off)
-    public static void TogglePetSpellAuto(string spellName, bool toggle, bool useIndex = true)
+    public static void TogglePetSpellAuto(string spellName, bool toggle)
     {
-        string spell = useIndex ? GetPetSpellIndex(spellName).ToString() : "'" + spellName + "'";
+        string spellIndex = GetPetSpellIndex(spellName).ToString();
 
-        if (!spell.Equals("0"))
+        if (!spellIndex.Equals("0"))
         {
-            bool autoCast = Lua.LuaDoString<bool>("local _, autostate = GetSpellAutocast(" + spell + ", 'pet'); " +
+            bool autoCast = Lua.LuaDoString<bool>("local _, autostate = GetSpellAutocast(" + spellIndex + ", 'pet'); " +
+                "return autostate == 1") || Lua.LuaDoString<bool>("local _, autostate = GetSpellAutocast('" + spellName + "', 'pet'); " +
                 "return autostate == 1");
 
             if ((toggle && !autoCast) || (!toggle && autoCast))
-                Lua.LuaDoString("ToggleSpellAutocast(" + spell + ", 'pet');");
+            {
+                Lua.LuaDoString("ToggleSpellAutocast(" + spellIndex + ", 'pet');");
+                Lua.LuaDoString("ToggleSpellAutocast('" + spellName + "', 'pet');");
+            }
         }
     }
 

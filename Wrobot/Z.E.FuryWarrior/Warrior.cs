@@ -289,7 +289,8 @@ public static class Warrior
                 return;
 
         // Rend
-        if (!ObjectManager.Target.HaveBuff("Rend") && ToolBox.CanBleed(ObjectManager.Target) && _inMeleeRange && _settings.UseRend)
+        if (!ObjectManager.Target.HaveBuff("Rend") && ToolBox.CanBleed(ObjectManager.Target) && _inMeleeRange && _settings.UseRend
+            && ObjectManager.Target.HealthPercent > 25)
             if (Cast(Rend))
                 return;
 

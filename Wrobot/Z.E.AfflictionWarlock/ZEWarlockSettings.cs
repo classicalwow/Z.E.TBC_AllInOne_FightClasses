@@ -16,6 +16,8 @@ public class ZEWarlockSettings : Settings
         WandThreshold = 40;
         UseLifeTap = true;
         PetInPassiveWhenOOC = true;
+        PrioritizeWandingOverSB = true;
+        UseSiphonLife = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCWarlock "
@@ -34,6 +36,18 @@ public class ZEWarlockSettings : Settings
     [DisplayName("Use Life Tap")]
     [Description("Use Life Tap")]
     public bool UseLifeTap { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(true)]
+    [DisplayName("Prioritize wanding over Shadow Bolt")]
+    [Description("Prioritize wanding over Shadow Bolt during combat to save mana")]
+    public bool PrioritizeWandingOverSB { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(false)]
+    [DisplayName("Use Siphon Life")]
+    [Description("Use Siphon Life")]
+    public bool UseSiphonLife { get; set; }
 
     [Category("Misc")]
     [DefaultValue(true)]

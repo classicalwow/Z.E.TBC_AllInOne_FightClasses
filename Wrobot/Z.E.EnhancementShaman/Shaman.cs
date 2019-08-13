@@ -85,9 +85,7 @@ public static class Shaman
 
                     // Lesser Healing Wave OOC
                     if (!Fight.InFight && Me.HealthPercent < 65 && LesserHealingWave.KnownSpell)
-                    {
                         Cast(LesserHealingWave);
-                    }
 
                     // Ghost Wolf
                     if (Me.ManaPercentage > 50 && !Me.IsIndoors && _ghostWolfTimer.ElapsedMilliseconds > 3000
@@ -99,9 +97,7 @@ public static class Shaman
 
                     // Buff rotation
                     if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
-                    {
                         BuffRotation();
-                    }
 
                     // Pull & Combat rotation
                     if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable && ObjectManager.Target.IsAlive)
@@ -128,18 +124,14 @@ public static class Shaman
         {
             // OOC Healing Wave
             if (Me.HealthPercent < 65 && !LesserHealingWave.KnownSpell)
-            {
                 if (Cast(HealingWave))
                     return;
-            }
 
             // Water Shield
             if (!Me.HaveBuff("Water Shield") && !Me.HaveBuff("Lightning Shield")
                 && (_settings.UseWaterShield || !_settings.UseLightningShield || Me.ManaPercentage < 20))
-            {
                 if (Cast(WaterShield))
                     return;
-            }
         }
     }
 
@@ -162,18 +154,14 @@ public static class Shaman
         // Water Shield
         if (!Me.HaveBuff("Water Shield") && !Me.HaveBuff("Lightning Shield")
             && (_settings.UseWaterShield || !_settings.UseLightningShield) || Me.ManaPercentage < _lowManaThreshold)
-        {
             if (Cast(WaterShield))
                 return;
-        }
 
         // Ligntning Shield
         if (Me.ManaPercentage > _lowManaThreshold && !Me.HaveBuff("Lightning Shield") && !Me.HaveBuff("Water Shield") 
             && _settings.UseLightningShield && (!WaterShield.KnownSpell || !_settings.UseWaterShield))
-        {
             if (Cast(LightningShield))
                 return;
-        }
 
         // Pull with Lightning Bolt
         if (ObjectManager.Target.GetDistance <= _pullRange + 1)
@@ -186,12 +174,8 @@ public static class Shaman
                 cast = true;
             }
             else
-            {
                 if (Cast(LightningBolt))
-                {
                     cast = true;
-                }
-            }
             
             if (cast)
                 return;
@@ -238,46 +222,34 @@ public static class Shaman
 
         // Shamanistic Rage
         if (!_mediumMana && ((ObjectManager.Target.HealthPercent > 80 && !_settings.ShamanisticRageOnMultiOnly) || ObjectManager.GetNumberAttackPlayer() > 1))
-        {
             if (Cast(ShamanisticRage))
                 return;
-        }
 
         // Lesser Healing Wave
         if (Me.HealthPercent < 50 && LesserHealingWave.KnownSpell)
-        {
             if (Cast(LesserHealingWave))
                 return;
-        }
 
         // Healing Wave
         if (Me.HealthPercent < 50 && !LesserHealingWave.KnownSpell)
-        {
             if (Cast(HealingWave))
                 return;
-        }
 
         // Cure Poison
         if (_isPoisoned && !_lowMana)
-        {
             if (Cast(CurePoison))
                 return;
-        }
 
         // Cure Disease
         if (_hasDisease && !_lowMana)
-        {
             if (Cast(CureDisease))
                 return;
-        }
 
         // Ligntning Shield
         if (!_lowMana && !Me.HaveBuff("Lightning Shield") && !Me.HaveBuff("Water Shield") && _settings.UseLightningShield 
             && (!WaterShield.KnownSpell || !_settings.UseWaterShield))
-        {
             if (Cast(LightningShield))
                 return;
-        }
 
         // Earth Shock Interupt Rank 1
         if (_shouldBeInterrupted && ObjectManager.Target.GetDistance < 19f 
@@ -303,39 +275,36 @@ public static class Shaman
         // Water Shield
         if (!Me.HaveBuff("Water Shield") && !Me.HaveBuff("Lightning Shield")
             && (_settings.UseWaterShield || !_settings.UseLightningShield || _lowMana))
-        {
             if (Cast(WaterShield))
                 return;
-        }
 
         // Flame Shock DPS
         if (!_lowMana && ObjectManager.Target.GetDistance < 19f && !ObjectManager.Target.HaveBuff("Flame Shock") 
             && ObjectManager.Target.HealthPercent > 20 && !_fightingACaster && _settings.UseFlameShock)
-        {
             if (Cast(FlameShock))
                 return;
-        }
 
         // Totems
         if (!_lowMana && ObjectManager.Target.GetDistance < 20)
-        {
             if (totemManager.CastTotems())
                 return;
-        }
 
         // Stormstrike
         if (!_lowMana && Stormstrike.IsDistanceGood)
-        {
             if (Cast(Stormstrike))
                 return;
-        }
 
         // Earth Shock DPS
-        if (_highMana && ObjectManager.Target.GetDistance < 19f && !FlameShock.KnownSpell)
-        {
+        if (!_lowMana && ObjectManager.Target.GetDistance < 19f && !FlameShock.KnownSpell 
+            && ObjectManager.Target.HealthPercent > 25 && Me.ManaPercentage > 30)
             if (Cast(EarthShock))
                 return;
-        }
+
+        // Low level lightning bolt
+        if (!EarthShock.KnownSpell && Me.ManaPercentage > 30 && !_lowMana && ObjectManager.Target.GetDistance < 29f
+            && ObjectManager.Target.HealthPercent > 40)
+            if (Cast(LightningBolt))
+                return;
     }
 
     public static void ShowConfiguration()
