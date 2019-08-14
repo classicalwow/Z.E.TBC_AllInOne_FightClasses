@@ -72,5 +72,11 @@
     <Compile Include="Z.E.AfflictionWarlock\Warlock.cs" />
     <Compile Include="Z.E.AfflictionWarlock\ZEWarlockSettings.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Compiled\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y "$(TargetDir)\$(ProjectName).dll" "$(SolutionDir)\Compiled\$(ProjectName).dll</PostBuildEvent>
+  </PropertyGroup>
 </Project>

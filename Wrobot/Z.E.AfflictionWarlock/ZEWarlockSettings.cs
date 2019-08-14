@@ -22,6 +22,7 @@ public class ZEWarlockSettings : Settings
         UseDarkPact = true;
         UseSoulStone = true;
         AutoTorment = false;
+        UseFelArmor = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCWarlock "
@@ -56,7 +57,7 @@ public class ZEWarlockSettings : Settings
     [Category("Combat Rotation")]
     [DefaultValue(false)]
     [DisplayName("Use Siphon Life")]
-    [Description("Use Siphon Life")]
+    [Description("Use Siphon Life (Recommended only after TBC green gear)")]
     public bool UseSiphonLife { get; set; }
 
     [Category("Misc")]
@@ -76,6 +77,12 @@ public class ZEWarlockSettings : Settings
     [DisplayName("Use Dark Pact")]
     [Description("Use Dark Pact")]
     public bool UseDarkPact { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(true)]
+    [DisplayName("Use Fel Armor")]
+    [Description("Use Fel Armor instead of Demon Armor")]
+    public bool UseFelArmor { get; set; }
 
     [Category("Misc")]
     [DefaultValue(true)]

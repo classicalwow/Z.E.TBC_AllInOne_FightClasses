@@ -186,10 +186,16 @@ public static class Warlock
             if (!Me.HaveBuff("Demon Skin") && !DemonArmor.KnownSpell && DemonSkin.KnownSpell)
                 if (Cast(DemonSkin))
                     return;
-
+            
             // Demon Armor
-            if ((!Me.HaveBuff("Demon Armor") || Me.HaveBuff("Demon Skin")) && DemonArmor.KnownSpell)
+            if ((!Me.HaveBuff("Demon Armor") || Me.HaveBuff("Demon Skin")) && DemonArmor.KnownSpell && 
+                (!FelArmor.KnownSpell || (FelArmor.KnownSpell && !_settings.UseFelArmor)))
                 if (Cast(DemonArmor))
+                    return;
+
+            // Fel Armor
+            if (!Me.HaveBuff("Fel Armor") && FelArmor.KnownSpell && _settings.UseFelArmor)
+                if (Cast(FelArmor))
                     return;
 
             // Health Funnel
@@ -447,6 +453,7 @@ public static class Warlock
     private static Spell DarkPact = new Spell("Dark Pact");
     private static Spell UnstableAffliction = new Spell("Unstable Affliction");
     private static Spell DeathCoil = new Spell("Death Coil");
+    private static Spell FelArmor = new Spell("Fel Armor");
 
     private static bool Cast(Spell s, bool castEvenIfWanding = true, bool waitGCD = true)
     {
