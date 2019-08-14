@@ -12,7 +12,8 @@ public static class PetAndConsumables
             "Lesser Healthstone",
             "Healthstone",
             "Greater Healthstone",
-            "Major Healthstone"
+            "Major Healthstone",
+            "Master Healthstone"
         };
     }
 

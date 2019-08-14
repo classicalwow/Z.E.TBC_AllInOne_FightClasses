@@ -152,8 +152,12 @@ public static class Warlock
             {
                 Thread.Sleep(Usefuls.Latency + 500); // Safety for Mount check
                 if (!ObjectManager.Me.IsMounted)
+                {
+                    if (Cast(FelDomination))
+                        Thread.Sleep(200);
                     if (Cast(SummonVoidwalker))
                         return;
+                }
             }
 
             // Summon Imp
@@ -162,8 +166,12 @@ public static class Warlock
             {
                 Thread.Sleep(Usefuls.Latency + 500); // Safety for Mount check
                 if (!ObjectManager.Me.IsMounted)
+                {
+                    if (Cast(FelDomination))
+                        Thread.Sleep(200);
                     if (Cast(SummonImp))
                         return;
+                }
             }
 
             // Life Tap
@@ -294,7 +302,7 @@ public static class Warlock
 
         // Multi aggro
         if (ObjectManager.GetNumberAttackPlayer() > 1 && 
-            (_addCheckTimer.ElapsedMilliseconds > 6000 || _addCheckTimer.ElapsedMilliseconds <= 0))
+            (_addCheckTimer.ElapsedMilliseconds > 3000 || _addCheckTimer.ElapsedMilliseconds <= 0))
         {
             _addCheckTimer.Restart();
             WoWUnit _currenTarget = ObjectManager.Target;
@@ -304,10 +312,22 @@ public static class Warlock
                 Thread.Sleep(500);
                 if (unit.Target == Me.Guid && unit.Guid != Me.Target && PetAndConsumables.MyWarlockPet().Equals("Voidwalker"))
                 {
-                    Main.LogDebug(unit.Name + " is targeting me, trying to take back aggro");
+                    ulong saveTarget = Me.Target;
+                    if (Cast(SoulShatter))
+                    {
+                        _addCheckTimer.Reset();
+                        Thread.Sleep(500 + Usefuls.Latency);
+                        return;
+                    }
                     Lua.RunMacroText("/cleartarget");
-                    Lua.LuaDoString("/TargetUnit('" + unit.Guid + "')");
-                    return;
+                    Me.Target = unit.Guid;
+                    Thread.Sleep(200 + Usefuls.Latency);
+                    if (_settings.FearAdds)
+                        if (Cast(Fear))
+                        {
+                            Thread.Sleep(200 + Usefuls.Latency);
+                            Me.Target = saveTarget;
+                        }
                 }
             }
         }
@@ -317,7 +337,7 @@ public static class Warlock
             Lua.LuaDoString("PetAttack();", false);
 
         // Drain Soul
-        if (ToolBox.CountItemStacks("Soul Shard") < 2 && Target.HealthPercent < 40)
+        if (ToolBox.CountItemStacks("Soul Shard") < _settings.NumberOfSoulShards && Target.HealthPercent < 40)
             if (Cast(DrainSoul))
                 return;
 
@@ -394,6 +414,12 @@ public static class Warlock
             if (Cast(DrainMana))
                 return;
 
+        // Incinerate
+        if (ObjectManager.Target.GetDistance < _maxRange && Target.HaveBuff("Immolate") && _overLowManaThreshold
+            && Target.HealthPercent > 30 && (_settings.UseIncinerate))
+            if (Cast(Incinerate))
+                return;
+
         // Shadow Bolt
         if ((!_settings.PrioritizeWandingOverSB || !_iCanUseWand) && 
             (ObjectManager.Target.HealthPercent > 50 || (Me.ManaPercentage > 90 && ObjectManager.Target.HealthPercent > 10)) 
@@ -454,6 +480,9 @@ public static class Warlock
     private static Spell UnstableAffliction = new Spell("Unstable Affliction");
     private static Spell DeathCoil = new Spell("Death Coil");
     private static Spell FelArmor = new Spell("Fel Armor");
+    private static Spell Incinerate = new Spell("Incinerate");
+    private static Spell SoulShatter = new Spell("Soulshatter");
+    private static Spell FelDomination = new Spell("Fel Domination");
 
     private static bool Cast(Spell s, bool castEvenIfWanding = true, bool waitGCD = true)
     {
