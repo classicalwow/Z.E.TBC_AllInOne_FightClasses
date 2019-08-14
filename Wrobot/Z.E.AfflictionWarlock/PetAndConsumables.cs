@@ -19,9 +19,7 @@ public static class PetAndConsumables
     // Checks if we have a Healthstone
     public static bool HaveHealthstone()
     {
-        if (ToolBox.HaveOneInList(HealthStones()))
-            return true;
-        return false;
+        return ToolBox.HaveOneInList(HealthStones());
     }
 
     // Use Healthstone
@@ -47,9 +45,7 @@ public static class PetAndConsumables
     // Checks if we have a Soulstone
     public static bool HaveSoulstone()
     {
-        if (ToolBox.HaveOneInList(SoulStones()))
-            return true;
-        return false;
+        return ToolBox.HaveOneInList(SoulStones());
     }
 
     // Use Soulstone

@@ -43,6 +43,7 @@ public static class Warlock
             _usingWand = false;
             _iCanUseWand = false;
             Main.settingRange = _maxRange;
+            _addCheckTimer.Reset();
             if (_settings.PetInPassiveWhenOOC)
                 Lua.LuaDoString("PetPassiveMode();");
         };
@@ -99,7 +100,6 @@ public static class Warlock
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    Main.Log(_addCheckTimer.ElapsedMilliseconds.ToString());
                     if (!Fight.InFight)
                     {
                         BuffRotation();
@@ -129,7 +129,7 @@ public static class Warlock
         {
             // Make sure we have mana to summon
             if (!ObjectManager.Pet.IsValid && ObjectManager.Me.ManaPercentage < 95 && !ObjectManager.Me.HaveBuff("Drink") &&
-                ((SummonVoidwalker.KnownSpell && !SummonVoidwalker.IsSpellUsable) ||
+                ((SummonVoidwalker.KnownSpell && !SummonVoidwalker.IsSpellUsable) && ToolBox.CountItemStacks("Soul Shard") > 0 ||
                 (SummonImp.KnownSpell && !SummonImp.IsSpellUsable && !SummonVoidwalker.KnownSpell)))
             {
                 Main.Log("Not enough mana to summon, forcing regen");
@@ -296,11 +296,12 @@ public static class Warlock
             foreach (WoWUnit unit in _listUnitsAttackingMe)
             {
                 Thread.Sleep(500);
-                if (unit.IsTargetingMe && unit.Guid != Me.Target)
+                if (unit.Target == Me.Guid && unit.Guid != Me.Target && PetAndConsumables.MyWarlockPet().Equals("Voidwalker"))
                 {
-                    Main.LogDebug(unit.Name + " is not targeting me, trying to take back aggro");
+                    Main.LogDebug(unit.Name + " is targeting me, trying to take back aggro");
                     Lua.RunMacroText("/cleartarget");
                     Lua.LuaDoString("/TargetUnit('" + unit.Guid + "')");
+                    return;
                 }
             }
         }
@@ -327,6 +328,11 @@ public static class Warlock
         if (Me.HealthPercent < 90 && _overLowManaThreshold && Target.HealthPercent > 20
             && !Target.HaveBuff("Siphon Life") && _settings.UseSiphonLife)
             if (Cast(SiphonLife))
+                return;
+
+        // Death Coil
+        if (Me.HealthPercent < 20)
+            if (Cast(DeathCoil))
                 return;
 
         // Drain Life low
@@ -440,6 +446,7 @@ public static class Warlock
     private static Spell DrainMana = new Spell("Drain Mana");
     private static Spell DarkPact = new Spell("Dark Pact");
     private static Spell UnstableAffliction = new Spell("Unstable Affliction");
+    private static Spell DeathCoil = new Spell("Death Coil");
 
     private static bool Cast(Spell s, bool castEvenIfWanding = true, bool waitGCD = true)
     {
