@@ -75,7 +75,8 @@ public static class Warlock
         {
             try
             {
-                if (Conditions.InGameAndConnectedAndProductStartedNotInPause && !ObjectManager.Me.IsOnTaxi && ObjectManager.Me.IsAlive)
+                if (Conditions.InGameAndConnectedAndProductStartedNotInPause && !ObjectManager.Me.IsOnTaxi && ObjectManager.Me.IsAlive
+                    && ObjectManager.Pet.IsValid)
                 {
                     // Voidwalker Torment
                     if (PetAndConsumables.MyWarlockPet().Equals("Voidwalker") && ObjectManager.Target.Target == Me.Guid

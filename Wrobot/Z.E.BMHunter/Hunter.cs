@@ -10,7 +10,9 @@ using wManager.Wow.ObjectManager;
 
 public static class Hunter
 {
+    private static WoWLocalPlayer Me = ObjectManager.Me;
     private static HunterFoodManager _foodManager = new HunterFoodManager();
+    private static readonly BackgroundWorker _petPulseThread = new BackgroundWorker();
     internal static ZEBMHunterSettings _settings;
     public static bool _autoshotRepeating;
     public static bool RangeCheck;
@@ -22,6 +24,8 @@ public static class Hunter
     public static void Initialize()
     {
         Main.Log("Initialized");
+        _petPulseThread.DoWork += PetThread;
+        _petPulseThread.RunWorkerAsync();
         ZEBMHunterSettings.Load();
         _settings = ZEBMHunterSettings.CurrentSetting;
 
@@ -55,8 +59,8 @@ public static class Hunter
         FightEvents.OnFightLoop += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
             if (ObjectManager.Target.GetDistance < 13f && ObjectManager.Target.IsTargetingMyPet && _backupAttempts < _settings.MaxBackupAttempts
-            && !MovementManager.InMovement && ObjectManager.Me.IsAlive && !ObjectManager.Pet.HaveBuff("Pacifying Dust") && !_canOnlyMelee
-            && !ObjectManager.Pet.IsStunned && !_isBackingUp && !ObjectManager.Me.IsCast && _settings.BackupFromMelee)
+            && !MovementManager.InMovement && Me.IsAlive && !ObjectManager.Pet.HaveBuff("Pacifying Dust") && !_canOnlyMelee
+            && !ObjectManager.Pet.IsStunned && !_isBackingUp && !Me.IsCast && _settings.BackupFromMelee)
             {
                 _isBackingUp = true;
                 Move.Backward(Move.MoveAction.DownKey, 700);
@@ -81,10 +85,35 @@ public static class Hunter
         Rotation();
     }
 
+    // Pet thread
+    private static void PetThread(object sender, DoWorkEventArgs args)
+    {
+        while (Main._isLaunched)
+        {
+            try
+            {
+                if (Conditions.InGameAndConnectedAndProductStartedNotInPause && !Me.IsOnTaxi && Me.IsAlive
+                    && ObjectManager.Pet.IsValid)
+                {
+                    // Pet Growl
+                    if (ObjectManager.Target.Target == Me.Guid && Me.InCombatFlagOnly && !_settings.AutoGrowl)
+                        ToolBox.PetSpellCast("Growl");
+                }
+            }
+            catch (Exception arg)
+            {
+                Logging.WriteError(string.Concat(arg), true);
+            }
+            Thread.Sleep(300);
+        }
+    }
+
 
     public static void Dispose()
     {
         Main.Log("Stop in progress.");
+        _petPulseThread.DoWork -= PetThread;
+        _petPulseThread.Dispose();
     }
 
     internal static void Rotation()
@@ -94,28 +123,34 @@ public static class Hunter
 		{
 			try
 			{
-				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
+				if (!Products.InPause && !Me.IsDeadMe)
 				{
                     Main.settingRange = _canOnlyMelee ? 4.5f : 33f;
                     PetManager();
 
+                    // Switch Auto Growl
+                    if (ObjectManager.Pet.IsValid)
+                    {
+                        ToolBox.TogglePetSpellAuto("Growl", _settings.AutoGrowl);
+                    }
+
                     // Feed
-					if (Lua.LuaDoString<int>("happiness, damagePercentage, loyaltyRate = GetPetHappiness() return happiness", "") < 3 
+                    if (Lua.LuaDoString<int>("happiness, damagePercentage, loyaltyRate = GetPetHappiness() return happiness", "") < 3 
                         && !Fight.InFight && _settings.FeedPet)
 						Feed();
 
                     // Pet attack
-					if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable 
-                        && !ObjectManager.Pet.HaveBuff("Feed Pet Effect"))
+					if (Fight.InFight && Me.Target > 0UL && ObjectManager.Target.IsAttackable 
+                        && !ObjectManager.Pet.HaveBuff("Feed Pet Effect") && ObjectManager.Pet.Target != Me.Target)
 						Lua.LuaDoString("PetAttack();", false);
 
                     // Aspect of the Cheetah
-                    if (!ObjectManager.Me.IsMounted && !Fight.InFight && !ObjectManager.Me.HaveBuff("Aspect of the Cheetah") 
+                    if (!Me.IsMounted && !Fight.InFight && !Me.HaveBuff("Aspect of the Cheetah") 
                         && MovementManager.InMoveTo && AspectCheetah.IsSpellUsable && AspectCheetah.KnownSpell 
-                        && ObjectManager.Me.ManaPercentage > 60f)
+                        && Me.ManaPercentage > 60f)
                         AspectCheetah.Launch();
 
-					if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable)
+					if (Fight.InFight && Me.Target > 0UL && ObjectManager.Target.IsAttackable)
 						CombatRotation();
 				}
 			}
@@ -131,23 +166,23 @@ public static class Hunter
     internal static void CombatRotation()
     {
         // Aspect of the viper
-        if (AspectViper.KnownSpell && AspectViper.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Viper")
-            && ObjectManager.Me.ManaPercentage < 30)
+        if (AspectViper.KnownSpell && AspectViper.IsSpellUsable && !Me.HaveBuff("Aspect of the Viper")
+            && Me.ManaPercentage < 30)
             AspectViper.Launch();
 
         // Aspect of the Hawk
-        if (AspectHawk.KnownSpell && AspectHawk.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Hawk")
-            && (ObjectManager.Me.ManaPercentage > 90 || ObjectManager.Me.HaveBuff("Aspect of the Cheetah")))
+        if (AspectHawk.KnownSpell && AspectHawk.IsSpellUsable && !Me.HaveBuff("Aspect of the Hawk")
+            && (Me.ManaPercentage > 90 || Me.HaveBuff("Aspect of the Cheetah")))
             AspectHawk.Launch();
 
         // Aspect of the Monkey
-        if (AspectMonkey.KnownSpell && AspectMonkey.IsSpellUsable && !ObjectManager.Me.HaveBuff("Aspect of the Monkey")
+        if (AspectMonkey.KnownSpell && AspectMonkey.IsSpellUsable && !Me.HaveBuff("Aspect of the Monkey")
             && !AspectHawk.KnownSpell)
             AspectMonkey.Launch();
 
         // Bestial Wrath
         if (BestialWrath.KnownSpell && BestialWrath.IsSpellUsable && ObjectManager.Target.GetDistance < 34f
-            && ObjectManager.Target.HealthPercent >= 60.0 && ObjectManager.Me.ManaPercentage > 10u && BestialWrath.IsSpellUsable
+            && ObjectManager.Target.HealthPercent >= 60 && Me.ManaPercentage > 10 && BestialWrath.IsSpellUsable
             && ((_settings.BestialWrathOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !_settings.BestialWrathOnMulti))
             BestialWrath.Launch();
 
@@ -162,15 +197,15 @@ public static class Hunter
             KillCommand.Launch();
         
         // Raptor Strike
-        if (RaptorStrike.KnownSpell && RaptorStrike.IsSpellUsable && ObjectManager.Target.GetDistance < 6u && !RaptorStrikeOn())
+        if (RaptorStrike.KnownSpell && RaptorStrike.IsSpellUsable && ObjectManager.Target.GetDistance < 6f && !RaptorStrikeOn())
             RaptorStrike.Launch();
         
         // Mongoose Bite
-        if (MongooseBite.KnownSpell && MongooseBite.IsSpellUsable && ObjectManager.Target.GetDistance < 6u)
+        if (MongooseBite.KnownSpell && MongooseBite.IsSpellUsable && ObjectManager.Target.GetDistance < 6f)
             MongooseBite.Launch();
         
         // Feign Death
-        if (FeignDeath.KnownSpell && FeignDeath.IsSpellUsable && ObjectManager.Me.HealthPercent < 20u)
+        if (FeignDeath.KnownSpell && FeignDeath.IsSpellUsable && Me.HealthPercent < 20)
         {
             FeignDeath.Launch();
             Fight.StopFight();
@@ -192,7 +227,7 @@ public static class Hunter
 			HuntersMark.Launch();
         
         // Steady Shot
-        if (SteadyShot.KnownSpell && SteadyShot.IsSpellUsable && ObjectManager.Me.ManaPercentage > 30 && SteadyShot.IsDistanceGood && !_isBackingUp)
+        if (SteadyShot.KnownSpell && SteadyShot.IsSpellUsable && Me.ManaPercentage > 30 && SteadyShot.IsDistanceGood && !_isBackingUp)
         {
             SteadyShot.Launch();
             Thread.Sleep(_steadyShotSleep);
@@ -200,27 +235,27 @@ public static class Hunter
 
         // Serpent Sting
         if (SerpentSting.KnownSpell && SerpentSting.IsSpellUsable && !ObjectManager.Target.HaveBuff("Serpent Sting") 
-            && ObjectManager.Target.GetDistance < 34f && ToolBox.CanBleed(ObjectManager.Me.TargetObject) 
-            && ObjectManager.Target.HealthPercent >= 80.0 && ObjectManager.Me.ManaPercentage > 50u && !SteadyShot.KnownSpell
+            && ObjectManager.Target.GetDistance < 34f && ToolBox.CanBleed(Me.TargetObject) 
+            && ObjectManager.Target.HealthPercent >= 80 && Me.ManaPercentage > 50u && !SteadyShot.KnownSpell
             && ObjectManager.Target.GetDistance > 13f)
 			SerpentSting.Launch();
 		
         // Intimidation
 		if (Intimidation.KnownSpell && Intimidation.IsSpellUsable && ObjectManager.Target.GetDistance < 34f 
-            && ObjectManager.Target.GetDistance > 10f && ObjectManager.Target.HealthPercent >= 20.0 && ObjectManager.Me.ManaPercentage > 10u 
+            && ObjectManager.Target.GetDistance > 10f && ObjectManager.Target.HealthPercent >= 20 && Me.ManaPercentage > 10
             && Intimidation.IsSpellUsable)
 			Intimidation.Launch();
 		
         // Arcane Shot
 		if (ArcaneShot.KnownSpell && ArcaneShot.IsSpellUsable && ObjectManager.Target.GetDistance < 34f 
-            && ObjectManager.Target.HealthPercent >= 30.0 && ObjectManager.Me.ManaPercentage > 80u
+            && ObjectManager.Target.HealthPercent >= 30 && Me.ManaPercentage > 80
             && !SteadyShot.KnownSpell)
 			ArcaneShot.Launch();
     }
 
     public static void Feed()
     {
-        if (ObjectManager.Pet.IsAlive && !ObjectManager.Me.IsCast && !ObjectManager.Pet.HaveBuff("Feed Pet Effect"))
+        if (ObjectManager.Pet.IsAlive && !Me.IsCast && !ObjectManager.Pet.HaveBuff("Feed Pet Effect"))
         {
             _foodManager.FeedPet();
             Thread.Sleep(400);
@@ -229,17 +264,17 @@ public static class Hunter
 
     internal static void PetManager()
     {
-        if (!ObjectManager.Me.IsDeadMe || !ObjectManager.Me.IsMounted)
+        if (!Me.IsDeadMe || !Me.IsMounted)
         {
             // Call Pet
-            if (!ObjectManager.Pet.IsValid && CallPet.KnownSpell && !ObjectManager.Me.IsMounted && CallPet.IsSpellUsable)
+            if (!ObjectManager.Pet.IsValid && CallPet.KnownSpell && !Me.IsMounted && CallPet.IsSpellUsable)
             {
                 CallPet.Launch();
                 Thread.Sleep(Usefuls.Latency + 1000);
             }
 
             // Revive Pet
-            if (ObjectManager.Pet.IsDead && RevivePet.KnownSpell && !ObjectManager.Me.IsMounted && RevivePet.IsSpellUsable)
+            if (ObjectManager.Pet.IsDead && RevivePet.KnownSpell && !Me.IsMounted && RevivePet.IsSpellUsable)
             {
                 RevivePet.Launch();
                 Thread.Sleep(Usefuls.Latency + 1000);
@@ -248,7 +283,7 @@ public static class Hunter
 
             // Mend Pet
             if (ObjectManager.Pet.IsAlive && ObjectManager.Pet.IsValid && !ObjectManager.Pet.HaveBuff("Mend Pet")
-                && ObjectManager.Me.IsAlive && MendPet.KnownSpell && MendPet.IsDistanceGood && ObjectManager.Pet.HealthPercent <= 60.0
+                && Me.IsAlive && MendPet.KnownSpell && MendPet.IsDistanceGood && ObjectManager.Pet.HealthPercent <= 60
                 && MendPet.IsSpellUsable)
             {
                 MendPet.Launch();

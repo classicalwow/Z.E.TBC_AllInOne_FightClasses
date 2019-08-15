@@ -7,6 +7,9 @@ using wManager.Wow.ObjectManager;
 
 public class ToolBox
 {
+
+    #region Misc
+
     // Reactivates auto attack if it's off. Must pass the Attack spell as argument
     public static void CheckAutoAttack(Spell attack)
     {
@@ -204,6 +207,8 @@ public class ToolBox
         var highestTalents = Talents.Max(x => x.Value);
         return Talents.Where(t => t.Value == highestTalents).FirstOrDefault().Key;
     }
+
+    #endregion
 
     #region Items
 
