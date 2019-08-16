@@ -134,7 +134,7 @@ public static class Mage
         if (!Me.HaveBuff("Arcane Intellect"))
         {
             Lua.RunMacroText("/target player");
-            if (Cast(ArcaneIntellect, true))
+            if (Cast(ArcaneIntellect))
             {
                 Lua.RunMacroText("/cleartarget");
                 return;
@@ -238,21 +238,19 @@ public static class Mage
         // Frost Bolt
         if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > ZEMageSettings.CurrentSetting.WandThreshold
             || ObjectManager.GetNumberAttackPlayer() > 1 || Me.HealthPercent < 30 || !_iCanUseWand))
-            if (Cast(Frostbolt))
+            if (Cast(Frostbolt, true))
                 return;
 
         // Low level Frost Bolt
         if (_target.GetDistance < _range + 1 && _target.HealthPercent > 30 && Me.Level < 6)
-            if (Cast(Frostbolt))
+            if (Cast(Frostbolt, true))
                 return;
 
         // Low level FireBall
         if (_target.GetDistance < _range + 1 && !Frostbolt.KnownSpell && _target.HealthPercent > 30)
-            if (Cast(Fireball))
+            if (Cast(Fireball, true))
                 return;
-
-        Main.Log("_iCanUseWand is " + _iCanUseWand);
-        Main.Log("_usingWand is " + _usingWand);
+        
         // Use Wand
         if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _range && !_isBackingUp)
         {
@@ -299,6 +297,12 @@ public static class Mage
 
         if (_spellCD < 2f && _spellCD > 0f)
         {
+            if (ToolBox.GetSpellCastTime(s.Name) < 1f)
+            {
+                Main.LogDebug(s.Name + " is instant and low CD, recycle");
+                return true;
+            }
+
             int t = 0;
             while (ToolBox.GetSpellCooldown(s.Name) > 0)
             {
@@ -321,7 +325,8 @@ public static class Mage
         }
 
         Main.LogDebug("Launching");
-        s.Launch();
+        if (ObjectManager.Target.IsAlive || (!Fight.InFight && ObjectManager.Target.Guid < 1))
+            s.Launch();
         return true;
     }
 

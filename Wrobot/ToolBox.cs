@@ -23,6 +23,12 @@ public class ToolBox
         return Lua.LuaDoString<int>("local name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange = GetSpellInfo('" + spellName + "'); return cost");
     }
 
+    // Returns the cast time in milliseconds of the spell passed as argument
+    public static float GetSpellCastTime(string spellName)
+    {
+        return Lua.LuaDoString<float>("local name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange = GetSpellInfo('" + spellName + "'); return castTime");
+    }
+
     // Reactivates auto attack if it's off. Must pass the Attack spell as argument
     public static void CheckAutoAttack(Spell attack)
     {
