@@ -12,15 +12,17 @@ public static class Mage
 {
     private static MageFoodManager _foodManager = new MageFoodManager();
     private static float _meleeRange = 5f;
-    private static float _range = 27f;
+    private static float _range = 28f;
     private static bool _usingWand = false;
     private static bool _isBackingUp = false;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     private static bool _iCanUseWand = false;
+    private static bool _saveCalcuCombatRangeSetting = wManager.wManagerSetting.CurrentSetting.CalcuCombatRange;
 
     public static void Initialize()
     {
         Main.settingRange = _range;
+        wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = false;
         Main.Log("Initialized.");
         ZEMageSettings.Load();
 
@@ -72,7 +74,8 @@ public static class Mage
 	}
 
     public static void Dispose()
-	{
+    {
+        wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
         _usingWand = false;
         _isBackingUp = false;
         Main.Log("Stopped in progress.");
@@ -85,60 +88,94 @@ public static class Mage
         ZEMageSettings.CurrentSetting.Save();
     }
 
+
     internal static void Rotation()
-	{
-		Main.Log("Started");
+    {
+        Main.Log("Started");
         while (Main._isLaunched)
-		{
-			try
-			{
-				if (!Products.InPause && !Me.IsDeadMe)
+        {
+            try
+            {
+                if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = false;
-                    Main.Log(ObjectManager.Target.GetDistance.ToString());
-                    Main.Log(Main.settingRange.ToString());
-                    if (!Fight.InFight && !Me.InCombatFlagOnly)
+                    if (!Fight.InFight)
                     {
-                        _foodManager.CheckIfEnoughFoodAndDrinks();
-                        _foodManager.CheckIfThrowFoodAndDrinks();
-                        _foodManager.CheckIfHaveManaStone();
-
-                        // Frost Armor
-                        if (!Me.HaveBuff("Frost Armor"))
-                            if (Cast(FrostArmor))
-                                return;
-
-                        // Arcane Intellect
-                        if (!Me.HaveBuff("Arcane Intellect"))
-                        {
-                            Lua.RunMacroText("/target player");
-                            if (Cast(ArcaneIntellect))
-                            {
-                                Lua.RunMacroText("/cleartarget");
-                                return;
-                            }
-                        }
-
-                        // Evocation
-                        if (Me.ManaPercentage < 30)
-                            if (Cast(Evocation))
-                                return;
+                        BuffRotation();
                     }
 
-                    if (Fight.InFight && Me.Target > 0UL && ObjectManager.Target.IsAttackable && !_isBackingUp)
-						CombatRotation();
-				}
-			}
-			catch (Exception arg)
-			{
-				Logging.WriteError("ERROR: " + arg, true);
-			}
-			Thread.Sleep(50);
-		}
-		Main.Log("Stopped.");
-	}
-    
-	internal static void CombatRotation()
+                    if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable && ObjectManager.Target.IsAlive)
+                    {
+                        if (ObjectManager.GetNumberAttackPlayer() < 1 && !ObjectManager.Target.InCombatFlagOnly)
+                            Pull();
+                        else
+                            CombatRotation();
+                    }
+                }
+            }
+            catch (Exception arg)
+            {
+                Logging.WriteError("ERROR: " + arg, true);
+            }
+            Thread.Sleep(Usefuls.Latency + 20);
+        }
+        Main.Log("Stopped.");
+    }
+
+    internal static void BuffRotation()
+    {
+        _foodManager.CheckIfEnoughFoodAndDrinks();
+        _foodManager.CheckIfThrowFoodAndDrinks();
+        _foodManager.CheckIfHaveManaStone();
+
+        // Frost Armor
+        if (!Me.HaveBuff("Frost Armor"))
+            if (Cast(FrostArmor))
+                return;
+
+        // Arcane Intellect
+        if (!Me.HaveBuff("Arcane Intellect"))
+        {
+            Lua.RunMacroText("/target player");
+            if (Cast(ArcaneIntellect))
+            {
+                Lua.RunMacroText("/cleartarget");
+                return;
+            }
+        }
+
+        // Evocation
+        if (Me.ManaPercentage < 30)
+            if (Cast(Evocation))
+                return;
+    }
+
+    internal static void Pull()
+    {
+        WoWUnit _target = ObjectManager.Target;
+
+        // Ice Barrier
+        if (IceBarrier.IsSpellUsable && !Me.HaveBuff("Ice Barrier"))
+            if (Cast(IceBarrier))
+                return;
+
+        // Frost Bolt
+        if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > ZEMageSettings.CurrentSetting.WandThreshold
+            || ObjectManager.GetNumberAttackPlayer() > 1 || Me.HealthPercent < 30 || !_iCanUseWand))
+            if (Cast(Frostbolt))
+                return;
+
+        // Low level Frost Bolt
+        if (_target.GetDistance < _range + 1 && _target.HealthPercent > 30 && Me.Level < 6)
+            if (Cast(Frostbolt))
+                return;
+
+        // Low level FireBall
+        if (_target.GetDistance < _range + 1 && !Frostbolt.KnownSpell && _target.HealthPercent > 30)
+            if (Cast(Fireball))
+                return;
+    }
+
+    internal static void CombatRotation()
     {
         Lua.LuaDoString("PetAttack();", false);
         bool _hasCurse = ToolBox.HasCurseDebuff();
@@ -185,6 +222,11 @@ public static class Mage
             if (Cast(IceLance))
                 return;
 
+        // Frost Nova
+        if (_target.GetDistance < _meleeRange + 2 && _target.HealthPercent > 5 && !_target.HaveBuff("Frostbite"))
+            if (Cast(FrostNova))
+                return;
+
         // Fire Blast
         if (_target.GetDistance < 20f && _target.HealthPercent > 30f)
             if (Cast(FireBlast))
@@ -195,47 +237,37 @@ public static class Mage
             if (Cast(ConeOfCold))
                 return;
 
-        // Frost Nova
-        if (_target.GetDistance < _meleeRange + 2 && _target.HealthPercent > 5 && !_target.HaveBuff("Frostbite"))
-            if (Cast(FrostNova))
-                return;
-
         // Frost Bolt
-        if (Frostbolt.IsDistanceGood && Me.Level >= 6 && (_target.HealthPercent > ZEMageSettings.CurrentSetting.WandThreshold
+        if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > ZEMageSettings.CurrentSetting.WandThreshold
             || ObjectManager.GetNumberAttackPlayer() > 1 || Me.HealthPercent < 30 || !_iCanUseWand))
             if (Cast(Frostbolt))
-            {
-                Main.settingRange = _target.GetDistance + 1;
                 return;
-            }
 
         // Low level Frost Bolt
-        if (_target.GetDistance < _range && _target.HealthPercent > 30 && Me.Level < 6)
+        if (_target.GetDistance < _range + 1 && _target.HealthPercent > 30 && Me.Level < 6)
             if (Cast(Frostbolt))
-            {
-                Main.settingRange = _target.GetDistance + 1;
                 return;
-            }
 
         // Low level FireBall
-        if (Fireball.IsDistanceGood && !Frostbolt.KnownSpell && _target.HealthPercent > 30)
+        if (_target.GetDistance < _range + 1 && !Frostbolt.KnownSpell && _target.HealthPercent > 30)
             if (Cast(Fireball))
-            {
-                Main.settingRange = _target.GetDistance + 1;
                 return;
-            }
 
         // Use Wand
         if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _range && !_isBackingUp)
+        {
             UseWand.Launch();
+            return;
+        }
 
         // Go in melee because nothing else to do
-        if (!_usingWand && !UseWand.IsSpellUsable && Main.settingRange != _meleeRange)
+        if (!_usingWand && !UseWand.IsSpellUsable && Main.settingRange != _meleeRange && !_isBackingUp)
         {
             Main.Log("Going in melee");
             Main.settingRange = _meleeRange;
             return;
         }
+        return;
     }
 
     private static bool Cast(Spell s, bool castEvenIfWanding = true, bool waitGCD = true)
