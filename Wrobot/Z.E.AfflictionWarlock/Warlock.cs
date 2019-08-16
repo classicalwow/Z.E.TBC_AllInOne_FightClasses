@@ -182,7 +182,8 @@ public static class Warlock
                     return;
 
             // Unending Breath
-            if (!Me.HaveBuff("Unending Breath") && UnendingBreath.KnownSpell && _settings.UseUnendingBreath)
+            if (!Me.HaveBuff("Unending Breath") && UnendingBreath.KnownSpell && UnendingBreath.IsSpellUsable 
+                && _settings.UseUnendingBreath)
             {
                 Lua.RunMacroText("/target player");
                 if (Cast(UnendingBreath))

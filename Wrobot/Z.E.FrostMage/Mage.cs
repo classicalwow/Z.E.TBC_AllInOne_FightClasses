@@ -128,7 +128,7 @@ public static class Mage
                 return;
 
         // Arcane Intellect
-        if (!Me.HaveBuff("Arcane Intellect"))
+        if (!Me.HaveBuff("Arcane Intellect") && ArcaneIntellect.KnownSpell && ArcaneIntellect.IsSpellUsable)
         {
             Lua.RunMacroText("/target player");
             if (Cast(ArcaneIntellect))
