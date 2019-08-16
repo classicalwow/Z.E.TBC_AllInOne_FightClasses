@@ -14,6 +14,7 @@ public static class Warlock
 {
     private static WoWLocalPlayer Me = ObjectManager.Me;
     private static float _maxRange = 27f;
+    private static float _meleeRange = 27f;
     private static bool _usingWand = false;
     private static int _innerManaSaveThreshold = 20;
     private static bool _iCanUseWand = false;
@@ -216,7 +217,7 @@ public static class Warlock
                     ToolBox.PetSpellCast("Consume Shadows");
                 }
 
-                StopWandWaitGCD();
+                ToolBox.StopWandWaitGCD(UseWand, ShadowBolt);
                 if (Cast(HealthFunnel))
                 {
                     Usefuls.WaitIsCasting();
@@ -433,19 +434,19 @@ public static class Warlock
             && _settings.UseLifeTap)
             if (Cast(LifeTap))
                 return;
-        
-        // Use wand because nothing else to do
-        if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance < _maxRange + 2)
+
+        // Use Wand
+        if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _maxRange + 2)
         {
-            UseWand.Launch();
-            return;
+            if (Cast(UseWand, false))
+                return;
         }
-        
+
         // Go in melee because nothing else to do
-        if (!_usingWand && !UseWand.IsSpellUsable && Main.settingRange != 5f)
+        if (!_usingWand && !UseWand.IsSpellUsable && Main.settingRange != _meleeRange)
         {
             Main.Log("Going in melee");
-            Main.settingRange = 5f;
+            Main.settingRange = _meleeRange;
             return;
         }
     }
@@ -485,42 +486,68 @@ public static class Warlock
     private static Spell SoulShatter = new Spell("Soulshatter");
     private static Spell FelDomination = new Spell("Fel Domination");
 
-    private static bool Cast(Spell s, bool castEvenIfWanding = true, bool waitGCD = true)
+    private static bool Cast(Spell s, bool castEvenIfWanding = true)
     {
-        Main.LogDebug("Into Cast for " + s.Name);
+        if (!s.KnownSpell)
+            return false;
+
+        Main.LogDebug("*----------- INTO CAST FOR " + s.Name);
+        float _spellCD = ToolBox.GetSpellCooldown(s.Name);
+        Main.LogDebug("Cooldown is " + _spellCD);
+
+        if (ToolBox.GetSpellCost(s.Name) > Me.Mana)
+        {
+            Main.LogDebug(s.Name + ": Not enough mana, SKIPPING");
+            return false;
+        }
 
         if (_usingWand && !castEvenIfWanding)
+        {
+            Main.LogDebug("Didn't cast because we were backing up or wanding");
             return false;
+        }
+
+        if (_spellCD >= 2f)
+        {
+            Main.LogDebug("Didn't cast because cd is too long");
+            return false;
+        }
 
         if (_usingWand && castEvenIfWanding)
-            StopWandWaitGCD();
+            ToolBox.StopWandWaitGCD(UseWand, ShadowBolt);
+
+        if (_spellCD < 2f && _spellCD > 0f)
+        {
+            if (ToolBox.GetSpellCastTime(s.Name) < 1f)
+            {
+                Main.LogDebug(s.Name + " is instant and low CD, recycle");
+                return true;
+            }
+
+            int t = 0;
+            while (ToolBox.GetSpellCooldown(s.Name) > 0)
+            {
+                Thread.Sleep(50);
+                t += 50;
+                if (t > 2000)
+                {
+                    Main.LogDebug(s.Name + ": waited for tool long, give up");
+                    return false;
+                }
+            }
+            Thread.Sleep(100 + Usefuls.Latency);
+            Main.LogDebug(s.Name + ": waited " + (t + 100) + " for it to be ready");
+        }
 
         if (!s.IsSpellUsable)
-            return false;
-        
-        s.Launch();
-
-        if (waitGCD)
-            ToolBox.WaitGlobalCoolDown(ShadowBolt);
-        return true;
-    }
-
-    private static void StopWandWaitGCD()
-    {
-        if (Me.ManaPercentage > 15)
         {
-            UseWand.Launch();
-            int c = 0;
-            while (!ShadowBolt.IsSpellUsable)
-            {
-                c += 50;
-                Thread.Sleep(50);
-                if (c >= 1500)
-                    return;
-            }
-            Main.LogDebug("Waited for GCD : " + c);
-            if (c >= 1500)
-                UseWand.Launch();
+            Main.LogDebug("Didn't cast because spell somehow not usable");
+            return false;
         }
+
+        Main.LogDebug("Launching");
+        if (ObjectManager.Target.IsAlive || (!Fight.InFight && ObjectManager.Target.Guid < 1))
+            s.Launch();
+        return true;
     }
 }

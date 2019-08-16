@@ -9,8 +9,25 @@ using wManager.Wow.ObjectManager;
 public class ToolBox
 {
 
-    #region Misc
-    
+    #region Combat
+
+    // Stops using wand and waits for its CD to be over
+    public static void StopWandWaitGCD(Spell wandSpell, Spell basicSpell)
+    {
+        wandSpell.Launch();
+        int c = 0;
+        while (!basicSpell.IsSpellUsable)
+        {
+            c += 50;
+            Thread.Sleep(50);
+            if (c >= 1500)
+                return;
+        }
+        Main.LogDebug("Waited for GCD : " + c);
+        if (c >= 1500)
+            wandSpell.Launch();
+    }
+
     // Returns the cooldown of the spell passed as argument
     public static float GetSpellCooldown(string spellName)
     {
@@ -38,61 +55,6 @@ public class ToolBox
             Main.LogDebug("Re-activating attack");
             attack.Launch();
         }
-    }
-
-    // Returns whether units, hostile or not, are close to the player. Distance must be passed as argument
-    public static bool CheckIfEnemiesClose(float distance)
-    {
-        List<WoWUnit> surroundingEnemies = ObjectManager.GetObjectWoWUnit();
-        WoWUnit closestUnit = null;
-        float closestUnitDistance = 100;
-
-        foreach (WoWUnit unit in surroundingEnemies)
-        {
-            float distanceFromTarget = unit.Position.DistanceTo(ObjectManager.Me.Position);
-
-            if (unit.IsAlive && !unit.IsTapDenied && unit.IsValid && !unit.IsTaggedByOther && !unit.PlayerControlled
-                && unit.IsAttackable && distanceFromTarget < closestUnitDistance && unit.Guid != ObjectManager.Target.Guid)
-            {
-                closestUnit = unit;
-                closestUnitDistance = distanceFromTarget;
-            }
-        }
-
-        if (closestUnit != null && closestUnitDistance < distance)
-        {
-            Main.LogDebug("Enemy close: " + closestUnit.Name);
-            return true;
-        }
-        return false;
-    }
-
-    // Returns whether hostile units are close to the target. Target and distance must be passed as argument
-    public static bool CheckIfEnemiesOnPull(WoWUnit target, float distance)
-    {
-        List<WoWUnit> surroundingEnemies = ObjectManager.GetObjectWoWUnit();
-        WoWUnit closestUnit = null;
-        float closestUnitDistance = 100;
-
-        foreach (WoWUnit unit in surroundingEnemies)
-        {
-            bool flagHostile = unit.Reaction.ToString().Equals("Hostile");
-            float distanceFromTarget = unit.Position.DistanceTo(target.Position);
-
-            if (unit.IsAlive && !unit.IsTapDenied && unit.IsValid && !unit.IsTaggedByOther && !unit.PlayerControlled
-                && unit.IsAttackable && distanceFromTarget < closestUnitDistance && flagHostile && unit.Guid != target.Guid)
-            {
-                closestUnit = unit;
-                closestUnitDistance = distanceFromTarget;
-            }
-        }
-
-        if (closestUnit != null && closestUnitDistance < distance)
-        {
-            Main.Log("Enemy too close: " + closestUnit.Name + ", pulling with range weapon");
-            return true;
-        }
-        return false;
     }
 
     // Returns whether the unit can bleed or be poisoned
@@ -166,10 +128,10 @@ public class ToolBox
     {
         return Lua.LuaDoString<bool>
             ($"for i=1,25 do " +
-	            "local n, _, _, _, _  = UnitDebuff('player',i); " +
+                "local n, _, _, _, _  = UnitDebuff('player',i); " +
                 "if n == '" + debuffName + "' then " +
                 "return true " +
-                "end "+
+                "end " +
             "end");
     }
 
@@ -210,6 +172,65 @@ public class ToolBox
                 return;
         }
         Main.LogDebug("Waited for GCD : " + c);
+    }
+
+    #endregion
+
+    #region Misc
+
+    // Returns whether units, hostile or not, are close to the player. Distance must be passed as argument
+    public static bool CheckIfEnemiesClose(float distance)
+    {
+        List<WoWUnit> surroundingEnemies = ObjectManager.GetObjectWoWUnit();
+        WoWUnit closestUnit = null;
+        float closestUnitDistance = 100;
+
+        foreach (WoWUnit unit in surroundingEnemies)
+        {
+            float distanceFromTarget = unit.Position.DistanceTo(ObjectManager.Me.Position);
+
+            if (unit.IsAlive && !unit.IsTapDenied && unit.IsValid && !unit.IsTaggedByOther && !unit.PlayerControlled
+                && unit.IsAttackable && distanceFromTarget < closestUnitDistance && unit.Guid != ObjectManager.Target.Guid)
+            {
+                closestUnit = unit;
+                closestUnitDistance = distanceFromTarget;
+            }
+        }
+
+        if (closestUnit != null && closestUnitDistance < distance)
+        {
+            Main.LogDebug("Enemy close: " + closestUnit.Name);
+            return true;
+        }
+        return false;
+    }
+
+    // Returns whether hostile units are close to the target. Target and distance must be passed as argument
+    public static bool CheckIfEnemiesOnPull(WoWUnit target, float distance)
+    {
+        List<WoWUnit> surroundingEnemies = ObjectManager.GetObjectWoWUnit();
+        WoWUnit closestUnit = null;
+        float closestUnitDistance = 100;
+
+        foreach (WoWUnit unit in surroundingEnemies)
+        {
+            bool flagHostile = unit.Reaction.ToString().Equals("Hostile");
+            float distanceFromTarget = unit.Position.DistanceTo(target.Position);
+
+            if (unit.IsAlive && !unit.IsTapDenied && unit.IsValid && !unit.IsTaggedByOther && !unit.PlayerControlled
+                && unit.IsAttackable && distanceFromTarget < closestUnitDistance && flagHostile && unit.Guid != target.Guid)
+            {
+                closestUnit = unit;
+                closestUnitDistance = distanceFromTarget;
+            }
+        }
+
+        if (closestUnit != null && closestUnitDistance < distance)
+        {
+            Main.Log("Enemy too close: " + closestUnit.Name + ", pulling with range weapon");
+            return true;
+        }
+        return false;
     }
 
     // Gets Character's specialization (talents)

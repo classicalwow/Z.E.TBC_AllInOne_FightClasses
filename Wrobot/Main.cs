@@ -11,6 +11,7 @@ public class Main : ICustomClass
     public static float settingRange = 5f;
     public static bool _isLaunched;
     private static bool _debug = true;
+    private static bool _saveCalcuCombatRangeSetting = wManager.wManagerSetting.CurrentSetting.CalcuCombatRange;
 
     public float Range
 	{
@@ -27,6 +28,7 @@ public class Main : ICustomClass
 
         if (type != null)
         {
+            wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = false;
             _isLaunched = true;
             type.GetMethod("Initialize").Invoke(null, null);
         }
@@ -43,6 +45,7 @@ public class Main : ICustomClass
         if (type != null)
             type.GetMethod("Dispose").Invoke(null, null);
         _isLaunched = false;
+        wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
     }
 
     public void ShowConfiguration()

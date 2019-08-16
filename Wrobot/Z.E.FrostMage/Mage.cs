@@ -17,12 +17,10 @@ public static class Mage
     private static bool _isBackingUp = false;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     private static bool _iCanUseWand = false;
-    private static bool _saveCalcuCombatRangeSetting = wManager.wManagerSetting.CurrentSetting.CalcuCombatRange;
 
     public static void Initialize()
     {
         Main.settingRange = _range;
-        wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = false;
         Main.Log("Initialized.");
         ZEMageSettings.Load();
 
@@ -75,7 +73,6 @@ public static class Mage
 
     public static void Dispose()
     {
-        wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
         _usingWand = false;
         _isBackingUp = false;
         Main.Log("Stopped in progress.");
@@ -265,11 +262,13 @@ public static class Mage
             Main.settingRange = _meleeRange;
             return;
         }
-        return;
     }
 
     private static bool Cast(Spell s, bool castEvenIfWanding = true)
     {
+        if (!s.KnownSpell)
+            return false;
+
         Main.LogDebug("*----------- INTO CAST FOR " + s.Name);
         float _spellCD = ToolBox.GetSpellCooldown(s.Name);
         Main.LogDebug("Cooldown is " + _spellCD);
@@ -288,12 +287,12 @@ public static class Mage
 
         if (_spellCD >= 2f)
         {
-            Main.LogDebug("Not casting cause cd is too long");
+            Main.LogDebug("Didn't cast because cd is too long");
             return false;
         }
 
         if (_usingWand && castEvenIfWanding)
-            StopWandWaitGCD();
+            ToolBox.StopWandWaitGCD(UseWand, Fireball);
 
         if (_spellCD < 2f && _spellCD > 0f)
         {
@@ -314,7 +313,7 @@ public static class Mage
                     return false;
                 }
             }
-            Thread.Sleep(100);
+            Thread.Sleep(100 + Usefuls.Latency);
             Main.LogDebug(s.Name + ": waited " + (t + 100) + " for it to be ready");
         }
 
@@ -328,22 +327,6 @@ public static class Mage
         if (ObjectManager.Target.IsAlive || (!Fight.InFight && ObjectManager.Target.Guid < 1))
             s.Launch();
         return true;
-    }
-
-    private static void StopWandWaitGCD()
-    {
-        UseWand.Launch();
-        int c = 0;
-        while (!Fireball.IsSpellUsable)
-        {
-            c += 50;
-            Thread.Sleep(50);
-            if (c >= 1500)
-                return;
-        }
-        Main.LogDebug("Waited for GCD : " + c);
-        if (c >= 1500)
-            UseWand.Launch();
     }
 
     private static Spell FrostArmor = new Spell("Frost Armor");
