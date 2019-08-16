@@ -38,8 +38,7 @@ public static class Mage
         // Fight start
         FightEvents.OnFightStart += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
-            if (UseWand.IsSpellUsable)
-                _iCanUseWand = true;
+            _iCanUseWand = ToolBox.HaveRangedWeaponEquipped();
         };
 
         // Fight Loop
@@ -59,7 +58,8 @@ public static class Mage
                     MovementManager.Go(PathFinder.FindPath(position), false);
 
                     while (MovementManager.InMovement && Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
-                    && ObjectManager.Target.GetDistance < 10f && ObjectManager.Target.IsAlive)
+                    && ObjectManager.Target.GetDistance < 10f && ObjectManager.Target.IsAlive
+                    && (ObjectManager.Target.HaveBuff("Frostbite") || ObjectManager.Target.HaveBuff("Frost Nova")))
                     {
                         // Wait follow path
                         Thread.Sleep(2000);
@@ -99,9 +99,7 @@ public static class Mage
                 if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
                     if (!Fight.InFight)
-                    {
                         BuffRotation();
-                    }
 
                     if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable && ObjectManager.Target.IsAlive)
                     {
@@ -116,7 +114,7 @@ public static class Mage
             {
                 Logging.WriteError("ERROR: " + arg, true);
             }
-            Thread.Sleep(Usefuls.Latency + 20);
+            Thread.Sleep(Usefuls.Latency + 10);
         }
         Main.Log("Stopped.");
     }
@@ -136,7 +134,7 @@ public static class Mage
         if (!Me.HaveBuff("Arcane Intellect"))
         {
             Lua.RunMacroText("/target player");
-            if (Cast(ArcaneIntellect))
+            if (Cast(ArcaneIntellect, true))
             {
                 Lua.RunMacroText("/cleartarget");
                 return;
@@ -233,7 +231,7 @@ public static class Mage
                 return;
 
         // Cone of Cold
-        if (_target.GetDistance < 10 && ZEMageSettings.CurrentSetting.UseConeOfCold)
+        if (_target.GetDistance < 10 && ZEMageSettings.CurrentSetting.UseConeOfCold && !_isBackingUp)
             if (Cast(ConeOfCold))
                 return;
 
@@ -253,11 +251,13 @@ public static class Mage
             if (Cast(Fireball))
                 return;
 
+        Main.Log("_iCanUseWand is " + _iCanUseWand);
+        Main.Log("_usingWand is " + _usingWand);
         // Use Wand
         if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _range && !_isBackingUp)
         {
-            UseWand.Launch();
-            return;
+            if (Cast(UseWand, false))
+                return;
         }
 
         // Go in melee because nothing else to do
@@ -270,43 +270,75 @@ public static class Mage
         return;
     }
 
-    private static bool Cast(Spell s, bool castEvenIfWanding = true, bool waitGCD = true)
+    private static bool Cast(Spell s, bool castEvenIfWanding = true)
     {
-        Main.LogDebug("Into Cast for " + s.Name);
+        Main.LogDebug("*----------- INTO CAST FOR " + s.Name);
+        float _spellCD = ToolBox.GetSpellCooldown(s.Name);
+        Main.LogDebug("Cooldown is " + _spellCD);
+
+        if (ToolBox.GetSpellCost(s.Name) > Me.Mana)
+        {
+            Main.LogDebug(s.Name + ": Not enough mana, SKIPPING");
+            return false;
+        }
 
         if ((_usingWand && !castEvenIfWanding) || _isBackingUp)
+        {
+            Main.LogDebug("Didn't cast because we were backing up or wanding");
             return false;
+        }
+
+        if (_spellCD >= 2f)
+        {
+            Main.LogDebug("Not casting cause cd is too long");
+            return false;
+        }
 
         if (_usingWand && castEvenIfWanding)
             StopWandWaitGCD();
 
-        if (!s.IsSpellUsable)
-            return false;
-        
-        s.Launch();
+        if (_spellCD < 2f && _spellCD > 0f)
+        {
+            int t = 0;
+            while (ToolBox.GetSpellCooldown(s.Name) > 0)
+            {
+                Thread.Sleep(50);
+                t += 50;
+                if (t > 2000)
+                {
+                    Main.LogDebug(s.Name + ": waited for tool long, give up");
+                    return false;
+                }
+            }
+            Thread.Sleep(100);
+            Main.LogDebug(s.Name + ": waited " + (t + 100) + " for it to be ready");
+        }
 
-        if (waitGCD)
-            ToolBox.WaitGlobalCoolDown(Fireball);
+        if (!s.IsSpellUsable)
+        {
+            Main.LogDebug("Didn't cast because spell somehow not usable");
+            return false;
+        }
+
+        Main.LogDebug("Launching");
+        s.Launch();
         return true;
     }
 
     private static void StopWandWaitGCD()
     {
-        if (Me.ManaPercentage > 15)
+        UseWand.Launch();
+        int c = 0;
+        while (!Fireball.IsSpellUsable)
         {
-            UseWand.Launch();
-            int c = 0;
-            while (!Fireball.IsSpellUsable)
-            {
-                c += 50;
-                Thread.Sleep(50);
-                if (c >= 1500)
-                    return;
-            }
-            Main.LogDebug("Waited for GCD : " + c);
+            c += 50;
+            Thread.Sleep(50);
             if (c >= 1500)
-                UseWand.Launch();
+                return;
         }
+        Main.LogDebug("Waited for GCD : " + c);
+        if (c >= 1500)
+            UseWand.Launch();
     }
 
     private static Spell FrostArmor = new Spell("Frost Armor");

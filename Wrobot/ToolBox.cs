@@ -10,6 +10,18 @@ public class ToolBox
 {
 
     #region Misc
+    
+    // Returns the cooldown of the spell passed as argument
+    public static float GetSpellCooldown(string spellName)
+    {
+        return Lua.LuaDoString<float>("local startTime, duration, enable = GetSpellCooldown('" + spellName + "'); return duration - (GetTime() - startTime)");
+    }
+
+    // Returns the cost of the spell passed as argument
+    public static int GetSpellCost(string spellName)
+    {
+        return Lua.LuaDoString<int>("local name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange = GetSpellInfo('" + spellName + "'); return cost");
+    }
 
     // Reactivates auto attack if it's off. Must pass the Attack spell as argument
     public static void CheckAutoAttack(Spell attack)
@@ -212,6 +224,12 @@ public class ToolBox
     #endregion
 
     #region Items
+
+    // Check if range weapon (wand, bow, gun) equipped
+    public static bool HaveRangedWeaponEquipped()
+    {
+        return ObjectManager.Me.GetEquipedItemBySlot(wManager.Wow.Enums.InventorySlot.INVSLOT_RANGED) != 0;
+    }
 
     // Deletes item passed as string
     public static void LuaDeleteItem(string item)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using robotManager.Helpful;
 using robotManager.Products;
@@ -15,6 +16,7 @@ public static class Priest
     private static int _innerManaSaveThreshold = 20;
     private static int _wandThreshold;
     private static bool _goInMFRange = false;
+    private static Stopwatch _dispelTimer = new Stopwatch();
 
     public static void Initialize()
     {
@@ -26,6 +28,7 @@ public static class Priest
         {
             _usingWand = false;
             _goInMFRange = false;
+            _dispelTimer.Reset();
         };
 
         Rotation();
@@ -214,12 +217,14 @@ public static class Priest
                 return;
 
         // Dispel Magic self
-        if (_hasMagicDebuff && DispelMagic.KnownSpell && _myManaPC > 10)
+        if (_hasMagicDebuff && DispelMagic.KnownSpell && _myManaPC > 10 && _dispelTimer.ElapsedMilliseconds > 10000
+            || _dispelTimer.ElapsedMilliseconds <= 0)
         {
             if (_usingWand)
                 StopWandWaitGCD();
             Lua.RunMacroText("/target player");
             Lua.RunMacroText("/cast Dispel Magic");
+            _dispelTimer.Restart();
             ToolBox.WaitGlobalCoolDown(Smite);
             return;
         }
