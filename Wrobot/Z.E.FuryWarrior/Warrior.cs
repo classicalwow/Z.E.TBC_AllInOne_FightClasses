@@ -9,6 +9,7 @@ using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
 using System.Collections.Generic;
 using wManager.Wow.Bot.Tasks;
+using System.Drawing;
 
 public static class Warrior
 {
@@ -37,7 +38,7 @@ public static class Warrior
             _pullFromAfar = false;
             Main.settingRange = _meleRange;
         };
-            
+
         Rotation();
     }
 

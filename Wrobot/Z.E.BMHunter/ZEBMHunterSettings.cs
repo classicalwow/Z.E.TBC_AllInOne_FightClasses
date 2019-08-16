@@ -16,7 +16,7 @@ public class ZEBMHunterSettings : Settings
         RangedWeaponSpeed = 2500;
         BackupFromMelee = true;
         UseFreezingTrap = true;
-        MaxBackupAttempts = 5;
+        MaxBackupAttempts = 3;
         FeedPet = true;
         BestialWrathOnMulti = false;
         RapidFireOnMulti = false;

@@ -175,59 +175,43 @@ public static class Priest
 
         // Power Word Shield
         if (Me.HealthPercent < 70 && !Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul && PowerWordShield.KnownSpell)
-        {
             if (Cast(PowerWordShield, true, true))
                 return;
-        }
 
         // Renew
         if (Me.HealthPercent < 60 && !Me.HaveBuff("Renew") && Renew.KnownSpell && !_inShadowForm)
-        {
             if (Cast(Renew, true, true))
                 return;
-        }
 
         // Psychic Scream
         if (Me.HealthPercent < 50 && ObjectManager.GetNumberAttackPlayer() > 1 && PsychicScream.KnownSpell)
-        {
             if (Cast(PsychicScream, true, true))
                 return;
-        }
 
         // Flash Heal
         if (Me.HealthPercent < 50 && FlashHeal.KnownSpell)
-        {
             if (Cast(FlashHeal, true, false))
                 return;
-        }
 
         // Heal
         if (Me.HealthPercent < 50 && Heal.KnownSpell)
-        {
             if (Cast(Heal, true, false))
                 return;
-        }
 
         // Lesser Heal
         if (Me.HealthPercent < 50 && LesserHeal.KnownSpell && !FlashHeal.KnownSpell)
-        {
             if (Cast(LesserHeal, true, false))
                 return;
-        }
 
         // Silence
         if (_shoulBeInterrupted && Silence.KnownSpell)
-        {
             if (Cast(Silence, true, true))
                 return;
-        }
 
         // Cure Disease
         if (_hasDisease && CureDisease.KnownSpell && !_inShadowForm)
-        {
             if (Cast(CureDisease, true, true))
                 return;
-        }
 
         // Dispel Magic self
         if (_hasMagicDebuff && DispelMagic.KnownSpell && _myManaPC > 10)
@@ -251,49 +235,37 @@ public static class Priest
 
         // Vampiric Embrace
         if (!ObjectManager.Target.HaveBuff("Vampiric Embrace") && VampiricEmbrace.KnownSpell && _myManaPC > _innerManaSaveThreshold)
-        {
             if (Cast(VampiricEmbrace, true, true))
                 return;
-        }
 
         // ShadowFiend
         if (Shadowfiend.KnownSpell && ObjectManager.GetNumberAttackPlayer() > 1)
-        {
             if (Cast(Shadowfiend, true, true))
                 return;
-        }
 
         // Shadow Word Pain
         if (_myManaPC > 10 && ObjectManager.Target.GetDistance < _maxRange && ObjectManager.Target.HealthPercent > 15
             && !ObjectManager.Target.HaveBuff("Shadow Word: Pain") && ShadowWordPain.KnownSpell)
-        {
             if (Cast(ShadowWordPain, true, true))
                 return;
-        }
 
         // Inner Fire
         if (!Me.HaveBuff("Inner Fire") && ZEPriestSettings.CurrentSetting.UseInnerFire && InnerFire.KnownSpell
             && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.HealthPercent > _wandThreshold)
-        {
             if (Cast(InnerFire, true, true))
                 return;
-        }
 
         // Shadowguard
         if (!Me.HaveBuff("Shadowguard") && Shadowguard.KnownSpell && _myManaPC > _innerManaSaveThreshold
             && ZEPriestSettings.CurrentSetting.UseShadowGuard && ObjectManager.Target.HealthPercent > _wandThreshold)
-        {
-            Cast(Shadowguard, true, true);
+            if (Cast(Shadowguard, true, true))
                 return;
-        }
 
         // Shadow Protection
         if (!Me.HaveBuff("Shadow Protection") && ShadowProtection.KnownSpell && _myManaPC > 70
             && ZEPriestSettings.CurrentSetting.UseShadowProtection)
-        {
-            Cast(ShadowProtection, true, true);
+            if (Cast(ShadowProtection, true, true))
                 return;
-        }
 
         // Use Wand
         if ((ObjectManager.Target.HealthPercent < _wandThreshold || _myManaPC <= _innerManaSaveThreshold) && 
@@ -306,10 +278,8 @@ public static class Priest
         // Shadow Word Death
         if (_myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange && ZEPriestSettings.CurrentSetting.UseShadowWordDeath
             && ShadowWordDeath.KnownSpell && ObjectManager.Target.HealthPercent < 15)
-        {
             if (Cast(ShadowWordDeath, true, false))
                 return;
-        }
 
         // Mind Blast + Inner Focus
         if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange
@@ -345,26 +315,20 @@ public static class Priest
         // Mind FLay
         if (Me.HaveBuff("Power Word: Shield") && MindFlay.KnownSpell && MindFlay.IsDistanceGood 
             && _myManaPC > _innerManaSaveThreshold)
-        {
             if (Cast(MindFlay, false, false))
                 return;
-        }
 
         // Low level Smite
         if (Me.Level < 5 && (ObjectManager.Target.HealthPercent > 30 || Me.ManaPercentage > 80) && _myManaPC > _innerManaSaveThreshold 
             && ObjectManager.Target.GetDistance < _maxRange)
-        {
             if (Cast(Smite, false, false))
                 return;
-        }
 
         // Smite
         if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange && Smite.KnownSpell
             && Me.Level >= 5)
-        {
             if (Cast(Smite, false, false))
                 return;
-        }
 
         // Use wand
         if (!_usingWand && UseWand.IsSpellUsable)

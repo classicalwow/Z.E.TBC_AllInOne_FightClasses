@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Threading;
 using robotManager.Helpful;
 using robotManager.Products;
@@ -56,14 +57,19 @@ public static class Hunter
             _canOnlyMelee = false;
         };
 
+        Radar3D.OnDrawEvent += () =>
+        {
+            if (ObjectManager.Me.TargetObject != null)
+                Radar3D.DrawCircle(ToolBox.BackofVector3(Me.Position, Me, 20f), 1f, Color.Cyan);
+        };
+
         FightEvents.OnFightLoop += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
             if (ObjectManager.Target.GetDistance < 13f && ObjectManager.Target.IsTargetingMyPet && _backupAttempts < _settings.MaxBackupAttempts
             && !MovementManager.InMovement && Me.IsAlive && !ObjectManager.Pet.HaveBuff("Pacifying Dust") && !_canOnlyMelee
             && !ObjectManager.Pet.IsStunned && !_isBackingUp && !Me.IsCast && _settings.BackupFromMelee)
             {
-                _isBackingUp = true;
-                Move.Backward(Move.MoveAction.DownKey, 700);
+                /*Move.Backward(Move.MoveAction.DownKey, 700);
                 Thread.Sleep(700 + Usefuls.Latency);
                 _isBackingUp = false;
                 _backupAttempts++;
@@ -78,7 +84,28 @@ public static class Hunter
                 if (_backupAttempts >= _settings.MaxBackupAttempts)
                 {
                     _canOnlyMelee = true;
+                }*/
+                _isBackingUp = true;
+                var pos = 1;
+                if (ObjectManager.Me.IsAlive && ObjectManager.Target.IsAlive && pos == 1)
+                {
+                    Vector3 position = ToolBox.BackofVector3(Me.Position, Me, 20f);
+                    MovementManager.Go(PathFinder.FindPath(position), false);
+                    
+                    while (MovementManager.InMovement && Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
+                    && ObjectManager.Target.GetDistance < 13f && _backupAttempts < _settings.MaxBackupAttempts && !_canOnlyMelee)
+                    {
+                        // Wait follow path
+                        Thread.Sleep(2000);
+                        pos = 0;
+                        _backupAttempts++;
+                    }
                 }
+                ReenableAutoshot();
+                Main.LogDebug("Backup attempt : " + _backupAttempts);
+                _isBackingUp = false;
+                if (_backupAttempts >= _settings.MaxBackupAttempts)
+                    _canOnlyMelee = true;
             }
         };
 
@@ -295,6 +322,17 @@ public static class Hunter
     private static bool RaptorStrikeOn()
     {
         return Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Raptor Strike') then isAutoRepeat = true end", "isAutoRepeat");
+    }
+
+    private static void ReenableAutoshot()
+    {
+        _autoshotRepeating = Lua.LuaDoString<bool>("isAutoRepeat = false; local name = GetSpellInfo(75); " +
+               "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
+        if (!_autoshotRepeating)
+        {
+            Main.LogDebug("Re-enabling auto shot");
+            AutoShot.Launch();
+        }
     }
 
     public static void ShowConfiguration()

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using robotManager.Helpful;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using wManager.Wow.Class;
@@ -360,6 +361,21 @@ public class ToolBox
                 Lua.LuaDoString("ToggleSpellAutocast('" + spellName + "', 'pet');");
             }
         }
+    }
+
+    #endregion
+
+    #region Movement
+    
+    public static Vector3 BackofVector3(Vector3 from, WoWUnit targetObject, float radius)
+    {
+        if (from != null && from != Vector3.Empty)
+        {
+            //abit ugly
+            float rotation = -Math.DegreeToRadian(Math.RadianToDegree(targetObject.Rotation) + 90);
+            return new Vector3((System.Math.Sin(rotation) * radius) + from.X, (System.Math.Cos(rotation) * radius) + from.Y, from.Z);
+        }
+        return new Vector3(0, 0, 0);
     }
 
     #endregion

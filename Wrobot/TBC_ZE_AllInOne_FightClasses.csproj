@@ -63,6 +63,8 @@
     <Compile Include="Z.E.FrostMage\MageFoodManager.cs" />
     <Compile Include="Z.E.FrostMage\Mage.cs" />
     <Compile Include="Z.E.FrostMage\ZEMageSettings.cs" />
+    <Compile Include="Z.E.FeralDruid\Druid.cs" />
+    <Compile Include="Z.E.FeralDruid\ZEDruidSettings.cs" />
     <Compile Include="Z.E.FuryWarrior\Warrior.cs" />
     <Compile Include="Z.E.FuryWarrior\ZEWarriorSettings.cs" />
     <Compile Include="Z.E.RetPaladin\Paladin.cs" />
@@ -72,9 +74,7 @@
     <Compile Include="Z.E.AfflictionWarlock\Warlock.cs" />
     <Compile Include="Z.E.AfflictionWarlock\ZEWarlockSettings.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Compiled\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)\$(ProjectName).dll" "$(SolutionDir)\Compiled\$(ProjectName).dll</PostBuildEvent>
