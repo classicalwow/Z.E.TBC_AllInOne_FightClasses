@@ -129,7 +129,7 @@ public static class Priest
                     return;
 
             // OOC Shadowguard
-            if (!Me.HaveBuff("Shadowguard") && _settings.UseShadowGuard)
+            if (!Me.HaveBuff("Shadowguard") && _settings.UseShadowGuard && Shadowguard.KnownSpell && Shadowguard.IsSpellUsable)
             {
                 Lua.RunMacroText("/target player");
                 if (Cast(Shadowguard))
@@ -140,7 +140,8 @@ public static class Priest
             }
 
             // OOC Shadow Protection
-            if (!Me.HaveBuff("Shadow Protection") && ShadowProtection.KnownSpell && _settings.UseShadowProtection)
+            if (!Me.HaveBuff("Shadow Protection") && ShadowProtection.KnownSpell && _settings.UseShadowProtection
+                && ShadowProtection.KnownSpell && ShadowProtection.IsSpellUsable)
             {
                 Lua.RunMacroText("/target player");
                 if (Cast(ShadowProtection))
@@ -252,8 +253,8 @@ public static class Priest
                 return;
 
         // Dispel Magic self
-        if (_hasMagicDebuff && _myManaPC > 10 && 
-            (_dispelTimer.ElapsedMilliseconds > 10000 || _dispelTimer.ElapsedMilliseconds <= 0))
+        if (_hasMagicDebuff && _myManaPC > 10 && DispelMagic.KnownSpell && DispelMagic.IsSpellUsable
+            && (_dispelTimer.ElapsedMilliseconds > 10000 || _dispelTimer.ElapsedMilliseconds <= 0))
         {
             if (_usingWand)
                 ToolBox.StopWandWaitGCD(UseWand, Smite);
