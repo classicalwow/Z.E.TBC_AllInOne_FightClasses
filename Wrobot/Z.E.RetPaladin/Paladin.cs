@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using robotManager.Helpful;
 using robotManager.Products;
+using wManager.Events;
 using wManager.Wow.Class;
 using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
@@ -9,6 +11,8 @@ using wManager.Wow.ObjectManager;
 public static class Paladin
 {
     private static int _manaSavePercent;
+    private static Stopwatch _purifyTimer = new Stopwatch();
+    private static Stopwatch _cleanseTimer = new Stopwatch();
 
     public static void Initialize()
     {
@@ -17,6 +21,14 @@ public static class Paladin
         _manaSavePercent = ZEPaladinSettings.CurrentSetting.ManaSaveLimitPercent;
         if (_manaSavePercent < 20)
             _manaSavePercent = 20;
+
+        // Fight end
+        FightEvents.OnFightEnd += (ulong guid) =>
+        {
+            _purifyTimer.Reset();
+            _cleanseTimer.Reset();
+        };
+
         Rotation();
     }
 
@@ -79,11 +91,18 @@ public static class Paladin
     {
         ToolBox.CheckAutoAttack(Attack);
 
-        if (ToolBox.HasPoisonDebuff() || ToolBox.HasDiseaseDebuff())
+        if (ToolBox.HasPoisonDebuff() || ToolBox.HasDiseaseDebuff() && 
+            (_purifyTimer.ElapsedMilliseconds > 10000 || _purifyTimer.ElapsedMilliseconds <= 0))
+        {
+            _purifyTimer.Restart();
             Cast(Purify);
+        }
 
-        if (ToolBox.HasMagicDebuff())
+        if (ToolBox.HasMagicDebuff() && (_cleanseTimer.ElapsedMilliseconds > 10000 || _cleanseTimer.ElapsedMilliseconds <= 0))
+        {
+            _cleanseTimer.Restart();
             Cast(Cleanse);
+        }
 
         if ((ObjectManager.GetNumberAttackPlayer() > 1 && !ObjectManager.Me.HaveBuff("Devotion Aura")) || (!ObjectManager.Me.HaveBuff("Devotion Aura") && !SanctityAura.KnownSpell))
             Cast(DevotionAura);

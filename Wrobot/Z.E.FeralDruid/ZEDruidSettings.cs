@@ -14,6 +14,8 @@ public class ZEDruidSettings : Settings
     private ZEDruidSettings()
     {
         AlwaysPull = false;
+        UseEnrage = true;
+        UseSwipe = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCDruid "
@@ -24,8 +26,20 @@ public class ZEDruidSettings : Settings
     [Category("Misc")]
     [DefaultValue(false)]
     [DisplayName("Always range pull")]
-    [Description("Always pull with a range weapon")]
+    [Description("Always pull with a range spell")]
     public bool AlwaysPull { get; set; }
+
+    [Category("Bear Form")]
+    [DefaultValue(true)]
+    [DisplayName("Always use Enrage")]
+    [Description("Always use Enrage")]
+    public bool UseEnrage { get; set; }
+
+    [Category("Bear Form")]
+    [DefaultValue(true)]
+    [DisplayName("Use Swipe")]
+    [Description("Use Swipe on multi aggro")]
+    public bool UseSwipe { get; set; }
 
     public bool Save()
     {

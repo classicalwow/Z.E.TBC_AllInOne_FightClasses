@@ -227,7 +227,7 @@ public class ToolBox
 
         if (closestUnit != null && closestUnitDistance < distance)
         {
-            Main.Log("Enemy too close: " + closestUnit.Name + ", pulling with range weapon");
+            Main.Log("Enemy too close: " + closestUnit.Name + ", pulling from distance");
             return true;
         }
         return false;

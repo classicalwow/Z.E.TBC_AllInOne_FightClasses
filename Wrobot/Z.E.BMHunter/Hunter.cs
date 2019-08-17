@@ -69,22 +69,6 @@ public static class Hunter
             && !MovementManager.InMovement && Me.IsAlive && !ObjectManager.Pet.HaveBuff("Pacifying Dust") && !_canOnlyMelee
             && !ObjectManager.Pet.IsStunned && !_isBackingUp && !Me.IsCast && _settings.BackupFromMelee)
             {
-                /*Move.Backward(Move.MoveAction.DownKey, 700);
-                Thread.Sleep(700 + Usefuls.Latency);
-                _isBackingUp = false;
-                _backupAttempts++;
-                _autoshotRepeating = Lua.LuaDoString<bool>("isAutoRepeat = false; local name = GetSpellInfo(75); " +
-                       "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
-                if (!_autoshotRepeating)
-                {
-                    Main.LogDebug("Re-enabling auto shot");
-                    AutoShot.Launch();
-                }
-                Main.LogDebug("Backup attempt : " + _backupAttempts);
-                if (_backupAttempts >= _settings.MaxBackupAttempts)
-                {
-                    _canOnlyMelee = true;
-                }*/
                 _isBackingUp = true;
                 var pos = 1;
                 if (ObjectManager.Me.IsAlive && ObjectManager.Target.IsAlive && pos == 1)
