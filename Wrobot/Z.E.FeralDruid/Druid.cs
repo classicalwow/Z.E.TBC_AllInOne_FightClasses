@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using wManager.Wow.Bot.Tasks;
 using System.ComponentModel;
 using robotManager.FiniteStateMachine;
+using System.Drawing;
 
 public static class Druid
 {
@@ -19,6 +20,7 @@ public static class Druid
     private static bool _isStealthApproching;
     internal static Stopwatch _pullMeleeTimer = new Stopwatch();
     internal static Stopwatch _meleeTimer = new Stopwatch();
+    internal static Stopwatch _stealthApproachTimer = new Stopwatch();
     internal static Vector3 _fireTotemPosition = null;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     internal static ZEDruidSettings _settings;
@@ -41,6 +43,7 @@ public static class Druid
             _fightingACaster = false;
             _meleeTimer.Reset();
             _pullMeleeTimer.Reset();
+            _stealthApproachTimer.Reset();
             _pullFromAfar = false;
             Main.settingRange = _pullRange;
             _isStealthApproching = false;
@@ -51,10 +54,40 @@ public static class Druid
         {
             if (Regrowth.KnownSpell)
             {
+                string bearFormSpell = DireBearForm.KnownSpell ? "Dire Bear Form" : "Bear Form";
                 _bigHealComboCost = ToolBox.GetSpellCost("Regrowth") + ToolBox.GetSpellCost("Rejuvenation") +
-                ToolBox.GetSpellCost("Bear Form");
-                _smallHealComboCost = ToolBox.GetSpellCost("Regrowth") + ToolBox.GetSpellCost("Bear Form");
+                ToolBox.GetSpellCost(bearFormSpell);
+                _smallHealComboCost = ToolBox.GetSpellCost("Regrowth") + ToolBox.GetSpellCost(bearFormSpell);
             }
+        };
+
+        // Fight Loop
+        FightEvents.OnFightLoop += (WoWUnit unit, CancelEventArgs cancelable) =>
+        {
+            if ((ObjectManager.Target.HaveBuff("Pounce") || ObjectManager.Target.HaveBuff("Maim"))
+            && !MovementManager.InMovement && Me.IsAlive && !Me.IsCast)
+            {
+                if (Me.IsAlive && ObjectManager.Target.IsAlive)
+                {
+                    Vector3 position = ToolBox.BackofVector3(ObjectManager.Target.Position, ObjectManager.Target, 2.5f);
+                    MovementManager.Go(PathFinder.FindPath(position), false);
+
+                    while (MovementManager.InMovement && Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
+                    && (ObjectManager.Target.HaveBuff("Pounce") || ObjectManager.Target.HaveBuff("Maim")))
+                    {
+                        // Wait follow path
+                        Thread.Sleep(500);
+                    }
+                }
+            }
+        };
+
+        // We override movement to target when approaching in prowl
+        MovementEvents.OnMoveToPulse += (Vector3 point, CancelEventArgs cancelable) =>
+        {
+            if (_isStealthApproching && 
+            !point.ToString().Equals(ToolBox.BackofVector3(ObjectManager.Target.Position, ObjectManager.Target, 2.5f).ToString()))
+                cancelable.Cancel = true;
         };
 
         Rotation();
@@ -104,7 +137,7 @@ public static class Druid
         if (!Me.IsMounted && !Me.IsCast)
         {
             // Regrowth
-            if (Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth"))
+            if (Me.HealthPercent < 70 && !Me.HaveBuff("Regrowth"))
                 if (Cast(Regrowth))
                     return;
 
@@ -117,6 +150,28 @@ public static class Druid
             if (Me.HealthPercent < 40 && !Regrowth.KnownSpell)
                 if (Cast(HealingTouch))
                     return;
+
+            // Remove Curse
+            if (ToolBox.HasCurseDebuff() && RemoveCurse.KnownSpell && RemoveCurse.IsSpellUsable)
+            {
+                Lua.RunMacroText("/target player");
+                if (Cast(RemoveCurse))
+                {
+                    Lua.RunMacroText("/cleartarget");
+                    return;
+                }
+            }
+
+            // Abolish Poison
+            if (ToolBox.HasPoisonDebuff() && RemoveCurse.KnownSpell && RemoveCurse.IsSpellUsable)
+            {
+                Lua.RunMacroText("/target player");
+                if (Cast(AbolishPoison))
+                {
+                    Lua.RunMacroText("/cleartarget");
+                    return;
+                }
+            }
 
             // Mark of the Wild
             if (!Me.HaveBuff("Mark of the Wild") && MarkOfTheWild.KnownSpell && MarkOfTheWild.IsSpellUsable)
@@ -136,8 +191,15 @@ public static class Druid
                 return;
             }
 
+            // Travel Form
+            if (!Me.HaveBuff("Travel Form") && _settings.UseTravelForm && Me.ManaPercentage > 50
+                && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent)
+                if (Cast(TravelForm))
+                    return;
+
             // Cat Form
-            if (!Me.HaveBuff("Cat Form"))
+            if (!Me.HaveBuff("Cat Form") && (!_settings.UseTravelForm || Me.ManaPercentage < 50) 
+                && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent)
                 if (Cast(CatForm))
                     return;
         }
@@ -145,7 +207,7 @@ public static class Druid
 
     internal static void Pull()
     {
-        if (!BearForm.KnownSpell || (!Me.HaveBuff("Bear Form") && !Me.HaveBuff("Cat Form")))
+        if (!BearForm.KnownSpell && !CatForm.KnownSpell)
             _pullFromAfar = true;
 
         // Check if surrounding enemies
@@ -155,15 +217,8 @@ public static class Druid
         // Pull from afar
         if (((_pullFromAfar && _pullMeleeTimer.ElapsedMilliseconds < 5000) || _settings.AlwaysPull)
             && ObjectManager.Target.GetDistance <= _pullRange)
-        {
-            Main.settingRange = _pullRange;
-            MovementManager.StopMoveTo(false, 500);
-            if (Cast(FaerieFire) || Cast(Wrath))
-            {
-                Thread.Sleep(2000);
+            if (PullSpell())
                 return;
-            }
-        }
 
         // Melee ?
         if (_pullMeleeTimer.ElapsedMilliseconds <= 0 && ObjectManager.Target.GetDistance <= _pullRange)
@@ -186,48 +241,61 @@ public static class Druid
                 return;
 
         // Prowl
-        if (Me.HaveBuff("Cat Form") && !_pullFromAfar)
+        if (Me.HaveBuff("Cat Form") && !_pullFromAfar && ObjectManager.Target.GetDistance > 15f && ObjectManager.Target.GetDistance < 25f
+            && _settings.StealthEngage)
             if (Cast(Prowl))
                 return;
 
         // Pull Bear/Cat
-        if (Me.HaveBuff("Bear Form") || Me.HaveBuff("Cat Form") || !_pullFromAfar)
+        if (Me.HaveBuff("Bear Form") || Me.HaveBuff("Dire Bear Form") || Me.HaveBuff("Cat Form") || !_pullFromAfar)
         {
             Main.settingRange = _meleRange;
 
             // Prowl approach
-            if (Me.HaveBuff("Prowl") && ObjectManager.Target.GetDistance > 6f)
+            if (Me.HaveBuff("Prowl") && ObjectManager.Target.GetDistance > 3f && !_isStealthApproching)
             {
+                Main.Log("PROWL APPROACH", Color.YellowGreen);
+                _stealthApproachTimer.Start();
                 _isStealthApproching = true;
-                var pos = 1;
-                if (ObjectManager.Me.IsAlive && ObjectManager.Target.IsAlive && pos == 1)
+                if (ObjectManager.Me.IsAlive && ObjectManager.Target.IsAlive)
                 {
-                    Vector3 position = ToolBox.BackofVector3(ObjectManager.Target.Position, ObjectManager.Target, 5f);
-                    //MovementManager.Go(PathFinder.FindPath(position), false);
-                    MovementManager.MoveTo(position);
 
-                    while (MovementManager.InMovement && Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
-                    && ObjectManager.Target.GetDistance > 6f)
+                    while (Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
+                    && (ObjectManager.Target.GetDistance > 4f || !Claw.IsSpellUsable) 
+                    && !ToolBox.CheckIfEnemiesOnPull(ObjectManager.Target, _pullRange) && Fight.InFight
+                    && _stealthApproachTimer.ElapsedMilliseconds <= 7000)
                     {
+                        Vector3 position = ToolBox.BackofVector3(ObjectManager.Target.Position, ObjectManager.Target, 2.5f);
+                        MovementManager.MoveTo(position);
+                        Main.Log(ObjectManager.Target.GetDistance.ToString(), Color.BurlyWood);
                         // Wait follow path
-                        Thread.Sleep(1000);
-                        pos = 0;
+                        Thread.Sleep(50);
                     }
+                    if (Me.Energy > 80)
+                        if (Cast(Pounce))
+                            MovementManager.StopMove();
+
+                    if (!Pounce.KnownSpell || Me.Energy <= 80)
+                    {
+                        Cast(Ravage);
+                        if (Cast(Shred) || Cast(Rake) || Cast(Claw))
+                            MovementManager.StopMove();
+                    }
+
+                    if (_stealthApproachTimer.ElapsedMilliseconds > 7000)
+                        _pullFromAfar = true;
+
+                    ToolBox.CheckAutoAttack(Attack);
+                    _isStealthApproching = false;
                 }
-                Main.LogDebug("Approcahing");
             }
+            return;
         }
-        
+
         // Pull from distance
-        if (_pullFromAfar && ObjectManager.Target.GetDistance <= _pullRange && !Me.HaveBuff("Bear Form"))
-        {
-            MovementManager.StopMoveTo(false, 500);
-            if (Cast(FaerieFire) || Cast(Wrath))
-            {
-                Thread.Sleep(2000);
+        if (_pullFromAfar && ObjectManager.Target.GetDistance <= _pullRange)
+            if (PullSpell())
                 return;
-            }
-        }
     }
 
     internal static void CombatRotation()
@@ -261,6 +329,17 @@ public static class Druid
             _meleeTimer.Stop();
         }
 
+        // Innervate
+        if (_settings.UseInnervate && Me.HealthPercent < 50 && Me.ManaPercentage < 10)
+            if (Cast(Innervate))
+                return;
+
+        // Barkskin + Regrowth + Rejuvenation
+        if (_settings.UseBarkskin && Barkskin.KnownSpell && Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth") 
+            && Me.Mana > _bigHealComboCost + ToolBox.GetSpellCost("Barkskin"))
+            if (Cast(Barkskin) && Cast(Regrowth) && Cast(Rejuvenation))
+                return;
+
         // Regrowth + Rejuvenation
         if (Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth") && Me.Mana > _bigHealComboCost)
             if (Cast(Regrowth) && Cast(Rejuvenation))
@@ -282,13 +361,14 @@ public static class Druid
                 return;
 
         // Catorm
-        if (!Me.HaveBuff("Cat Form"))
+        if (!Me.HaveBuff("Cat Form") && ObjectManager.GetNumberAttackPlayer() < 2)
             if (Cast(CatForm))
                 return;
 
         // Bear Form
-        if (!Me.HaveBuff("Bear Form") && !CatForm.KnownSpell)
-            if (Cast(BearForm))
+        if (!Me.HaveBuff("Bear Form") && !Me.HaveBuff("Dire Bear Form") 
+            && (!CatForm.KnownSpell || ObjectManager.GetNumberAttackPlayer() > 1))
+            if (Cast(DireBearForm) || Cast(BearForm))
                 return;
 
         #region Cat Form Rotation
@@ -298,20 +378,62 @@ public static class Druid
         if (Me.HaveBuff("Cat Form"))
         {
             Main.settingRange = _meleRange;
-            // Rip logic
-            if (!_target.HaveBuff("Rip"))
+
+            // Shred (when behind)
+            if (_target.HaveBuff("Pounce"))
+                if (Cast(Shred))
+                    return;
+
+            // Faerie Fire
+            if (!_target.HaveBuff("Faerie Fire (Feral)") && FaerieFireFeral.KnownSpell && !_target.HaveBuff("Pounce"))
             {
-                if (Me.ComboPoint >= 3 && _target.HealthPercent > 50)
+                Lua.RunMacroText("/cast Faerie Fire (Feral)()");
+                return;
+            }
+
+            // Rip
+            if (!_target.HaveBuff("Rip") && !_target.HaveBuff("Pounce"))
+            {
+                if (Me.ComboPoint >= 3 && _target.HealthPercent > 60)
                     if (Cast(Rip))
                         return;
 
-                if (Me.ComboPoint >= 1 && _target.HealthPercent <= 50)
+                if (Me.ComboPoint >= 1 && _target.HealthPercent <= 60)
                     if (Cast(Rip))
                         return;
             }
 
+            // Ferocious Bite
+            if (FerociousBite.KnownSpell && !_target.HaveBuff("Pounce"))
+            {
+                if (Me.ComboPoint >= 3 && _target.HealthPercent > 60)
+                    if (Cast(FerociousBite))
+                        return;
+
+                if (Me.ComboPoint >= 1 && _target.HealthPercent <= 60)
+                    if (Cast(FerociousBite))
+                        return;
+            }
+
+            // Rake
+            if (!_target.HaveBuff("Rake") && !_target.HaveBuff("Pounce"))
+                if (Cast(Rake))
+                    return;
+
+            // Tiger's Fury
+            if (!Me.HaveBuff("Tiger's Fury") && _settings.UseTigersFury && Me.ComboPoint < 1 && !_target.HaveBuff("Pounce"))
+                if (Cast(TigersFury))
+                    return;
+
+            // Mangle
+            if (Me.ComboPoint < 5 && !_target.HaveBuff("Pounce") && MangleCat.KnownSpell)
+            {
+                Lua.RunMacroText("/cast Mangle (Cat)()");
+                return;
+            }
+
             // Claw
-            if (Me.ComboPoint < 5)
+            if (Me.ComboPoint < 5 && !_target.HaveBuff("Pounce"))
                 if (Cast(Claw))
                     return;
         }
@@ -322,9 +444,19 @@ public static class Druid
 
         // **************** BEAR FORM ROTATION ****************
 
-        if (Me.HaveBuff("Bear Form"))
+        if (Me.HaveBuff("Bear Form") || Me.HaveBuff("Dire Bear Form"))
         {
             Main.settingRange = _meleRange;
+
+            // Frenzied Regeneration
+            if (Me.HealthPercent < 50)
+                if (Cast(FrenziedRegeneration))
+                    return;
+
+            // Faerie Fire
+            if (!_target.HaveBuff("Faerie Fire (Feral)") && FaerieFireFeral.KnownSpell)
+                Lua.RunMacroText("/cast Faerie Fire (Feral)()");
+
             // Swipe
             if (ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(8f))
                 if (Cast(Swipe))
@@ -346,7 +478,7 @@ public static class Druid
                     return;
 
             // Maul
-            if (!MaulOn())
+            if (!MaulOn() && (!_fightingACaster || Me.Rage > 30))
                 if (Cast(Maul))
                     return;
         }
@@ -357,7 +489,7 @@ public static class Druid
         
         // **************** HUMAN FORM ROTATION ****************
 
-        if (!Me.HaveBuff("Bear Form") && !Me.HaveBuff("Cat Form"))
+        if (!Me.HaveBuff("Bear Form") && !Me.HaveBuff("Cat Form") && !Me.HaveBuff("Dire Bear Form"))
         {
             // Moonfire
             if (!_target.HaveBuff("Moonfire") && Me.ManaPercentage > 35 && _target.HealthPercent > 30 && Me.Level >= 8)
@@ -397,7 +529,9 @@ public static class Druid
     private static Spell Rejuvenation = new Spell("Rejuvenation");
     private static Spell Thorns = new Spell("Thorns");
     private static Spell BearForm = new Spell("Bear Form");
+    private static Spell DireBearForm = new Spell("Dire Bear Form");
     private static Spell CatForm = new Spell("Cat Form");
+    private static Spell TravelForm = new Spell("Travel Form");
     private static Spell Maul = new Spell("Maul");
     private static Spell DemoralizingRoar = new Spell("Demoralizing Roar");
     private static Spell Enrage = new Spell("Enrage");
@@ -405,13 +539,46 @@ public static class Druid
     private static Spell Bash = new Spell("Bash");
     private static Spell Swipe = new Spell("Swipe");
     private static Spell FaerieFire = new Spell("Faerie Fire");
+    private static Spell FaerieFireFeral = new Spell("Faerie Fire (Feral)");
     private static Spell Claw = new Spell("Claw");
     private static Spell Prowl = new Spell("Prowl");
     private static Spell Rip = new Spell("Rip");
+    private static Spell Shred = new Spell("Shred");
+    private static Spell RemoveCurse = new Spell("Remove Curse");
+    private static Spell Rake = new Spell("Rake");
+    private static Spell TigersFury = new Spell("Tiger's Fury");
+    private static Spell AbolishPoison = new Spell("Abolish Poison");
+    private static Spell Ravage = new Spell("Ravage");
+    private static Spell FerociousBite = new Spell("Ferocious Bite");
+    private static Spell Pounce = new Spell("Pounce");
+    private static Spell FrenziedRegeneration = new Spell("Frenzied Regeneration");
+    private static Spell Innervate = new Spell("Innervate");
+    private static Spell Barkskin = new Spell("Barkskin");
+    private static Spell MangleCat = new Spell("Mangle (Cat)");
+    private static Spell MangleBear = new Spell("Mangle (Bear)");
+    private static Spell Maim = new Spell("Maim");
 
     private static bool MaulOn()
     {
         return Lua.LuaDoString<bool>("maulon = false; if IsCurrentSpell('Maul') then maulon = true end", "maulon");
+    }
+
+    private static bool PullSpell()
+    {
+        Main.settingRange = _pullRange;
+        MovementManager.StopMoveTo(false, 500);
+        if (Me.HaveBuff("Cat Form") && FaerieFireFeral.KnownSpell)
+        {
+            Lua.RunMacroText("/cast Faerie Fire (Feral)()");
+            Thread.Sleep(2000);
+            return true;
+        }
+        else if (Cast(FaerieFireFeral) || Cast(FaerieFire) || Cast(Wrath))
+        {
+            Thread.Sleep(2000);
+            return true;
+        }
+        return false;
     }
 
     private static bool Cast(Spell s)

@@ -13,6 +13,7 @@ public static class Paladin
     private static int _manaSavePercent;
     private static Stopwatch _purifyTimer = new Stopwatch();
     private static Stopwatch _cleanseTimer = new Stopwatch();
+    private static WoWLocalPlayer Me = ObjectManager.Me;
 
     public static void Initialize()
     {
@@ -45,11 +46,11 @@ public static class Paladin
 		{
 			try
 			{
-				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
+				if (!Products.InPause && !Me.IsDeadMe)
                 {
                     BuffRotation();
 
-                    if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable)
+                    if (Fight.InFight && Me.Target > 0UL && ObjectManager.Target.IsAttackable)
                     {
                         CombatRotation();
                     }
@@ -66,23 +67,28 @@ public static class Paladin
 
     internal static void BuffRotation()
     {
-        if (ObjectManager.Me.HealthPercent < 50 && !Fight.InFight
-            && !ObjectManager.Me.IsMounted)
+        // Holy Light
+        if (Me.HealthPercent < 50 && !Fight.InFight
+            && !Me.IsMounted)
             Cast(HolyLight);
 
-        if (ObjectManager.Me.HealthPercent < 75 && !Fight.InFight && ZEPaladinSettings.CurrentSetting.FlashHealBetweenFights
-            && !ObjectManager.Me.IsMounted)
+        // Flash of Light
+        if (Me.HealthPercent < 75 && !Fight.InFight && ZEPaladinSettings.CurrentSetting.FlashHealBetweenFights
+            && !Me.IsMounted)
             Cast(FlashOfLight);
 
-        if (ObjectManager.Me.IsMounted && CrusaderAura.KnownSpell && !ObjectManager.Me.HaveBuff("Crusader Aura") && !Fight.InFight)
+        // Crusader Aura
+        if (Me.IsMounted && CrusaderAura.KnownSpell && !Me.HaveBuff("Crusader Aura") && !Fight.InFight)
             Cast(CrusaderAura);
 
-        if (ZEPaladinSettings.CurrentSetting.UseBlessingOfWisdom && !ObjectManager.Me.HaveBuff("Blessing of Wisdom")
-            && !ObjectManager.Me.IsMounted)
+        // Blessing of Wisdom
+        if (ZEPaladinSettings.CurrentSetting.UseBlessingOfWisdom && !Me.HaveBuff("Blessing of Wisdom")
+            && !Me.IsMounted)
             Cast(BlessingOfWisdom);
 
-        if (!ZEPaladinSettings.CurrentSetting.UseBlessingOfWisdom && !ObjectManager.Me.HaveBuff("Blessing of Might")
-            && !ObjectManager.Me.IsMounted)
+        // Blessing of Might
+        if (!ZEPaladinSettings.CurrentSetting.UseBlessingOfWisdom && !Me.HaveBuff("Blessing of Might")
+            && !Me.IsMounted)
             Cast(BlessingOfMight);
     }
 
@@ -91,6 +97,7 @@ public static class Paladin
     {
         ToolBox.CheckAutoAttack(Attack);
 
+        // Purify
         if (ToolBox.HasPoisonDebuff() || ToolBox.HasDiseaseDebuff() && 
             (_purifyTimer.ElapsedMilliseconds > 10000 || _purifyTimer.ElapsedMilliseconds <= 0))
         {
@@ -98,75 +105,101 @@ public static class Paladin
             Cast(Purify);
         }
 
+        // Cleanse
         if (ToolBox.HasMagicDebuff() && (_cleanseTimer.ElapsedMilliseconds > 10000 || _cleanseTimer.ElapsedMilliseconds <= 0))
         {
             _cleanseTimer.Restart();
             Cast(Cleanse);
         }
 
-        if ((ObjectManager.GetNumberAttackPlayer() > 1 && !ObjectManager.Me.HaveBuff("Devotion Aura")) || (!ObjectManager.Me.HaveBuff("Devotion Aura") && !SanctityAura.KnownSpell))
+        // Devotion Aura multi
+        if ((ObjectManager.GetNumberAttackPlayer() > 1 && ZEPaladinSettings.CurrentSetting.DevoAuraOnMulti) && 
+            !Me.HaveBuff("Devotion Aura"))
             Cast(DevotionAura);
 
-        if (!ObjectManager.Me.HaveBuff("Sanctity Aura") && SanctityAura.KnownSpell && ObjectManager.GetNumberAttackPlayer() <= 1)
+        // Devotion Aura
+        if (!Me.HaveBuff("Devotion Aura") && !SanctityAura.KnownSpell && !RetributionAura.KnownSpell)
+            Cast(DevotionAura);
+
+        // Sanctity Aura
+        if (!Me.HaveBuff("Sanctity Aura") && SanctityAura.KnownSpell && ObjectManager.GetNumberAttackPlayer() <= 1)
             Cast(SanctityAura);
 
-        if (ObjectManager.Me.HealthPercent < 10)
+        // Retribution Aura
+        if (!Me.HaveBuff("Retribution Aura") && !SanctityAura.KnownSpell && RetributionAura.KnownSpell 
+            && ObjectManager.GetNumberAttackPlayer() <= 1)
+            Cast(SanctityAura);
+
+        // Lay on Hands
+        if (Me.HealthPercent < 10)
             Cast(LayOnHands);
 
-        if (ObjectManager.Me.ManaPercentage > _manaSavePercent && ObjectManager.GetNumberAttackPlayer() > 1)
+        // Avenging Wrath
+        if (Me.ManaPercentage > _manaSavePercent && ObjectManager.GetNumberAttackPlayer() > 1)
             Cast(AvengingWrath);
 
-        if (ObjectManager.Me.HealthPercent < 50 && ObjectManager.Me.ManaPercentage > _manaSavePercent)
+        // Hammer of Justice
+        if (Me.HealthPercent < 50 && Me.ManaPercentage > _manaSavePercent)
             Cast(HammerOfJustice);
         
+        // Exorcism
         if (ObjectManager.Target.CreatureTypeTarget == "Undead" || ObjectManager.Target.CreatureTypeTarget == "Demon"
             && ZEPaladinSettings.CurrentSetting.UseExorcism)
             Cast(Exorcism);
             
-        if (ObjectManager.Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.GetDistance < 10)
+        // Judgement (Crusader)
+        if (Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.GetDistance < 10)
         {
             Cast(Judgement);
             Thread.Sleep(200);
         }
 
-        if ((ObjectManager.Me.HaveBuff("Seal of Righteousness") || ObjectManager.Me.HaveBuff("Seal of Command")) 
+        // Judgement
+        if ((Me.HaveBuff("Seal of Righteousness") || Me.HaveBuff("Seal of Command")) 
             && ObjectManager.Target.GetDistance < 10  
-            && (ObjectManager.Me.ManaPercentage >= _manaSavePercent || ObjectManager.Me.HaveBuff("Seal of the Crusader")))
+            && (Me.ManaPercentage >= _manaSavePercent || Me.HaveBuff("Seal of the Crusader")))
             Cast(Judgement);
 
-        if (!ObjectManager.Target.HaveBuff("Judgement of the Crusader") && !ObjectManager.Me.HaveBuff("Seal of the Crusader")
-            && ObjectManager.Me.ManaPercentage > _manaSavePercent - 20 && ObjectManager.Target.IsAlive)
+        // Seal of the Crusader
+        if (!ObjectManager.Target.HaveBuff("Judgement of the Crusader") && !Me.HaveBuff("Seal of the Crusader")
+            && Me.ManaPercentage > _manaSavePercent - 20 && ObjectManager.Target.IsAlive)
             Cast(SealOfTheCrusader);
 
-        if (!ObjectManager.Me.HaveBuff("Seal of Righteousness") && !ObjectManager.Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
-            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || ObjectManager.Me.ManaPercentage > _manaSavePercent)
+        // Seal of Righteousness
+        if (!Me.HaveBuff("Seal of Righteousness") && !Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
+            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || Me.ManaPercentage > _manaSavePercent)
             && (!ZEPaladinSettings.CurrentSetting.UseSealOfCommand || !SealOfCommand.KnownSpell))
             Cast(SealOfRighteousness);
 
-        if (!ObjectManager.Me.HaveBuff("Seal of Command") && !ObjectManager.Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
-            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || ObjectManager.Me.ManaPercentage > _manaSavePercent)
+        // Seal of Command
+        if (!Me.HaveBuff("Seal of Command") && !Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
+            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || Me.ManaPercentage > _manaSavePercent)
             && ZEPaladinSettings.CurrentSetting.UseSealOfCommand && SealOfCommand.KnownSpell)
             Cast(SealOfCommand);
 
-        if (!ObjectManager.Me.HaveBuff("Seal of Righteousness") && !ObjectManager.Me.HaveBuff("Seal of the Crusader") &&
-            !ObjectManager.Me.HaveBuff("Seal of Command") && !SealOfCommand.IsSpellUsable && !SealOfRighteousness.IsSpellUsable
-            && SealOfCommand.KnownSpell && ObjectManager.Me.Mana < _manaSavePercent)
+        // Seal of Command Rank 1
+        if (!Me.HaveBuff("Seal of Righteousness") && !Me.HaveBuff("Seal of the Crusader") &&
+            !Me.HaveBuff("Seal of Command") && !SealOfCommand.IsSpellUsable && !SealOfRighteousness.IsSpellUsable
+            && SealOfCommand.KnownSpell && Me.Mana < _manaSavePercent)
             Lua.RunMacroText("/cast Seal of Command(Rank 1)");
 
-        if (ObjectManager.Me.HealthPercent < 50)
+        // Holy Light / Flash of Light
+        if (Me.HealthPercent < 50)
         {
             if (!HolyLight.IsSpellUsable)
             {
-                if (ObjectManager.Me.HealthPercent < 20)
+                if (Me.HealthPercent < 20)
                     Cast(DivineShield);
                 Cast(FlashOfLight);
             }
             Cast(HolyLight);
         }
 
-        if (ObjectManager.Me.ManaPercentage > 10)
+        // Crusader Strike
+        if (Me.ManaPercentage > 10)
             Cast(CrusaderStrike);
 
+        // Hammer of Wrath
         if (ZEPaladinSettings.CurrentSetting.UseHammerOfWrath)
             Cast(HammerOfWrath);
     }

@@ -16,6 +16,11 @@ public class ZEDruidSettings : Settings
         AlwaysPull = false;
         UseEnrage = true;
         UseSwipe = true;
+        UseTigersFury = true;
+        StealthEngage = true;
+        UseBarkskin = true;
+        UseTravelForm = false;
+        UseInnervate = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCDruid "
@@ -29,6 +34,24 @@ public class ZEDruidSettings : Settings
     [Description("Always pull with a range spell")]
     public bool AlwaysPull { get; set; }
 
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Use Travel Form")]
+    [Description("Use Travel Form (Triggers more shapeshifts)")]
+    public bool UseTravelForm { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(true)]
+    [DisplayName("Use Innervate")]
+    [Description("Use Innervate")]
+    public bool UseInnervate { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(true)]
+    [DisplayName("Use Barkskin")]
+    [Description("Use Barkskin before healing in dangerous situations")]
+    public bool UseBarkskin { get; set; }
+
     [Category("Bear Form")]
     [DefaultValue(true)]
     [DisplayName("Always use Enrage")]
@@ -40,6 +63,18 @@ public class ZEDruidSettings : Settings
     [DisplayName("Use Swipe")]
     [Description("Use Swipe on multi aggro")]
     public bool UseSwipe { get; set; }
+
+    [Category("Cat Form")]
+    [DefaultValue(true)]
+    [DisplayName("Use Tiger's Fury")]
+    [Description("Use Tiger's Fury")]
+    public bool UseTigersFury { get; set; }
+
+    [Category("Cat Form")]
+    [DefaultValue(true)]
+    [DisplayName("Stealth engage")]
+    [Description("Try to engage fights using Prowl and going behind the target (can be buggy)")]
+    public bool StealthEngage { get; set; }
 
     public bool Save()
     {

@@ -4,6 +4,8 @@ using robotManager.Helpful;
 using robotManager.Products;
 using System;
 using System.Drawing;
+using wManager.Events;
+using System.ComponentModel;
 
 public class Main : ICustomClass
 {
@@ -26,9 +28,20 @@ public class Main : ICustomClass
         Log("Started. Discovering class and finding rotation...");
         var type = Type.GetType(wowClass);
 
-        if (type != null)
+        // Fight end
+        FightEvents.OnFightEnd += (ulong guid) =>
+        {
+            wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
+        };
+
+        // Fight start
+        FightEvents.OnFightStart += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
             wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = false;
+        };
+
+        if (type != null)
+        {
             _isLaunched = true;
             type.GetMethod("Initialize").Invoke(null, null);
         }
@@ -41,11 +54,11 @@ public class Main : ICustomClass
 
     public void Dispose()
     {
+        wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
         var type = Type.GetType(wowClass);
         if (type != null)
             type.GetMethod("Dispose").Invoke(null, null);
         _isLaunched = false;
-        wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
     }
 
     public void ShowConfiguration()
@@ -60,22 +73,27 @@ public class Main : ICustomClass
 
     public static void LogFight(string message)
     {
-        Logging.Write($"[WholesomeFCTBC - {wowClass}]: { message}", Logging.LogType.Fight, Color.ForestGreen);
+        Logging.Write($"[Wholesome-FC-TBC - {wowClass}]: { message}", Logging.LogType.Fight, Color.ForestGreen);
     }
 
     public static void LogError(string message)
     {
-        Logging.Write($"[WholesomeFCTBC - {wowClass}]: {message}", Logging.LogType.Error, Color.DarkRed);
+        Logging.Write($"[Wholesome-FC-TBC - {wowClass}]: {message}", Logging.LogType.Error, Color.DarkRed);
     }
 
     public static void Log(string message)
     {
-        Logging.Write($"[WholesomeFCTBC - {wowClass}]: {message}");
+        Logging.Write($"[Wholesome-FC-TBC - {wowClass}]: {message}");
+    }
+
+    public static void Log(string message, Color c)
+    {
+        Logging.Write($"[Wholesome-FC-TBC - {wowClass}]: {message}", Logging.LogType.Normal, c);
     }
 
     public static void LogDebug(string message)
     {
         if (_debug)
-            Logging.WriteDebug($"[WholesomeFCTBC - {wowClass}]: { message}");
+            Logging.WriteDebug($"[Wholesome-FC-TBC - {wowClass}]: { message}");
     }
 }

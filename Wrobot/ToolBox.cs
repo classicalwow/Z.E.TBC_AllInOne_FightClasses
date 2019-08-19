@@ -412,11 +412,11 @@ public class ToolBox
 
     #region Movement
     
+    // get the position behind the target
     public static Vector3 BackofVector3(Vector3 from, WoWUnit targetObject, float radius)
     {
         if (from != null && from != Vector3.Empty)
         {
-            //abit ugly
             float rotation = -Math.DegreeToRadian(Math.RadianToDegree(targetObject.Rotation) + 90);
             return new Vector3((System.Math.Sin(rotation) * radius) + from.X, (System.Math.Cos(rotation) * radius) + from.Y, from.Z);
         }

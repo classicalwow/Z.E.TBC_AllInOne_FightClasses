@@ -19,6 +19,7 @@ public class ZEPaladinSettings : Settings
         UseSealOfCommand = false;
         UseExorcism = false;
         UseHammerOfWrath = false;
+        DevoAuraOnMulti = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCPaladin "
@@ -61,6 +62,12 @@ public class ZEPaladinSettings : Settings
     [DisplayName("Use Seal of Command")]
     [Description("Use Seal of Command instead of Seal of Righteousness")]
     public bool UseSealOfCommand { get; set; }
+
+    [Category("Combat")]
+    [DefaultValue(true)]
+    [DisplayName("Devotion Aura on multi aggro")]
+    [Description("Use Devotion Aura on multi aggro")]
+    public bool DevoAuraOnMulti { get; set; }
 
     public bool Save()
     {

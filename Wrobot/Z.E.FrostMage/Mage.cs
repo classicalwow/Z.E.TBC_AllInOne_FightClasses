@@ -95,6 +95,7 @@ public static class Mage
             {
                 if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
+                    Main.Log(wManager.wManagerSetting.CurrentSetting.CalcuCombatRange.ToString(), System.Drawing.Color.Firebrick);
                     if (!Fight.InFight)
                         BuffRotation();
 
