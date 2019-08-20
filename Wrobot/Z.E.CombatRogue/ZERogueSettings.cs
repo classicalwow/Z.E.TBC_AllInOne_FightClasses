@@ -31,7 +31,7 @@ public class ZERogueSettings : Settings
     [Category("Misc")]
     [DefaultValue(true)]
     [DisplayName("Stealth approach")]
-    [Description("Always try to approach enemies in Stealth")]
+    [Description("Always try to approach enemies in Stealth (can be buggy)")]
     public bool StealthApproach { get; set; }
 
     public bool Save()

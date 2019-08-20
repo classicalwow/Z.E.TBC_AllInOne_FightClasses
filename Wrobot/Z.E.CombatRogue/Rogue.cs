@@ -152,7 +152,7 @@ public static class Rogue
 
         // Stealth
         if (!Me.HaveBuff("Stealth") && !_pullFromAfar && ObjectManager.Target.GetDistance > 15f 
-            && ObjectManager.Target.GetDistance < 25f && _settings.StealthApproach && false) // !!!!!!!!!!!
+            && ObjectManager.Target.GetDistance < 25f && _settings.StealthApproach && Backstab.KnownSpell)
             if (Cast(Stealth))
                 return;
 
@@ -176,7 +176,8 @@ public static class Rogue
                     Thread.Sleep(50);
                 }
 
-                // CAST HERE
+                if (Cast(Backstab))
+                    MovementManager.StopMove();
 
                 if (_stealthApproachTimer.ElapsedMilliseconds > 7000)
                     _pullFromAfar = true;
@@ -185,6 +186,10 @@ public static class Rogue
                 _isStealthApproching = false;
             }
         }
+
+        // Auto
+        if (ObjectManager.Target.GetDistance < 6f)
+            ToolBox.CheckAutoAttack(Attack);
     }
 
     internal static void CombatRotation()
@@ -245,6 +250,7 @@ public static class Rogue
     private static Spell Eviscerate = new Spell("Eviscerate");
     private static Spell SinisterStrike = new Spell("Sinister Strike");
     private static Spell Stealth = new Spell("Stealth");
+    private static Spell Backstab = new Spell("Backstab");
 
     internal static bool Cast(Spell s)
     {
