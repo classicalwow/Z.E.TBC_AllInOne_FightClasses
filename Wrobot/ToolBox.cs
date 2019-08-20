@@ -50,7 +50,7 @@ public class ToolBox
     public static void CheckAutoAttack(Spell attack)
     {
         bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') then isAutoRepeat = true end", "isAutoRepeat");
-        if (!_autoAttacking && ObjectManager.GetNumberAttackPlayer() > 0)
+        if (!_autoAttacking && ObjectManager.Target.IsAlive)
         {
             Main.LogDebug("Re-activating attack");
             attack.Launch();

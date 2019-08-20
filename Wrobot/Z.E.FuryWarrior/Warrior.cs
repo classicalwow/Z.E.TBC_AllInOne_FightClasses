@@ -9,7 +9,6 @@ using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
 using System.Collections.Generic;
 using wManager.Wow.Bot.Tasks;
-using System.Drawing;
 
 public static class Warrior
 {
@@ -17,7 +16,6 @@ public static class Warrior
     private static float _pullRange = 25f;
     internal static Stopwatch _pullMeleeTimer = new Stopwatch();
     internal static Stopwatch _meleeTimer = new Stopwatch();
-    internal static Vector3 _fireTotemPosition = null;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     internal static ZEWarriorSettings _settings;
     private static bool _fightingACaster = false;

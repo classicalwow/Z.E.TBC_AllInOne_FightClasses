@@ -65,6 +65,8 @@
     <Compile Include="Z.E.FrostMage\ZEMageSettings.cs" />
     <Compile Include="Z.E.FeralDruid\Druid.cs" />
     <Compile Include="Z.E.FeralDruid\ZEDruidSettings.cs" />
+    <Compile Include="Z.E.CombatRogue\Rogue.cs" />
+    <Compile Include="Z.E.CombatRogue\ZERogueSettings.cs" />
     <Compile Include="Z.E.FuryWarrior\Warrior.cs" />
     <Compile Include="Z.E.FuryWarrior\ZEWarriorSettings.cs" />
     <Compile Include="Z.E.RetPaladin\Paladin.cs" />

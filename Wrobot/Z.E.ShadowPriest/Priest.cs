@@ -152,8 +152,7 @@ public static class Priest
             }
 
             // OOC ShadowForm
-            if (!Me.HaveBuff("ShadowForm") && Shadowform.KnownSpell && Shadowform.IsSpellUsable
-                && ObjectManager.GetNumberAttackPlayer() < 1)
+            if (!Me.HaveBuff("ShadowForm") && ObjectManager.GetNumberAttackPlayer() < 1)
                 if (Cast(Shadowform))
                     return;
         }
@@ -161,6 +160,11 @@ public static class Priest
 
     internal static void Pull()
     {
+        // Pull ShadowForm
+        if (!Me.HaveBuff("ShadowForm"))
+            if (Cast(Shadowform))
+                return;
+
         // Power Word Shield
         if (!ToolBox.HasDebuff("Weakened Soul") && _settings.UseShieldOnPull
             && !Me.HaveBuff("Power Word: Shield"))
@@ -211,6 +215,11 @@ public static class Priest
         int _mindBlastCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Mind Blast\"); return start + duration - GetTime();");
         int _innerFocusCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Inner Focus\"); return start + duration - GetTime();");
         bool _shoulBeInterrupted = ToolBox.EnemyCasting();
+
+        // Power Word Shield on multi aggro
+        if (!Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul && ObjectManager.GetNumberAttackPlayer() > 1)
+            if (Cast(PowerWordShield))
+                return;
 
         // Power Word Shield
         if (Me.HealthPercent < 70 && !Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul)

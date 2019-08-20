@@ -8,9 +8,7 @@ using wManager.Wow.Class;
 using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
 using System.Collections.Generic;
-using wManager.Wow.Bot.Tasks;
 using System.ComponentModel;
-using robotManager.FiniteStateMachine;
 using System.Drawing;
 
 public static class Druid
@@ -191,6 +189,11 @@ public static class Druid
                 return;
             }
 
+            // Omen of Clarity
+            if (!Me.HaveBuff("Omen of Clarity"))
+                if (Cast(OmenOfClarity))
+                    return;
+
             // Travel Form
             if (!Me.HaveBuff("Travel Form") && _settings.UseTravelForm && Me.ManaPercentage > 50
                 && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent)
@@ -228,6 +231,7 @@ public static class Druid
         {
             Main.Log("Going in Melee range (pull)");
             Main.settingRange = _meleRange;
+            ToolBox.CheckAutoAttack(Attack);
             _pullMeleeTimer.Reset();
         }
 
@@ -254,7 +258,6 @@ public static class Druid
             // Prowl approach
             if (Me.HaveBuff("Prowl") && ObjectManager.Target.GetDistance > 3f && !_isStealthApproching)
             {
-                Main.Log("PROWL APPROACH", Color.YellowGreen);
                 _stealthApproachTimer.Start();
                 _isStealthApproching = true;
                 if (ObjectManager.Me.IsAlive && ObjectManager.Target.IsAlive)
@@ -263,19 +266,19 @@ public static class Druid
                     while (Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
                     && (ObjectManager.Target.GetDistance > 4f || !Claw.IsSpellUsable) 
                     && !ToolBox.CheckIfEnemiesOnPull(ObjectManager.Target, _pullRange) && Fight.InFight
-                    && _stealthApproachTimer.ElapsedMilliseconds <= 7000)
+                    && _stealthApproachTimer.ElapsedMilliseconds <= 7000 && Me.HaveBuff("Prowl"))
                     {
                         Vector3 position = ToolBox.BackofVector3(ObjectManager.Target.Position, ObjectManager.Target, 2.5f);
                         MovementManager.MoveTo(position);
-                        Main.Log(ObjectManager.Target.GetDistance.ToString(), Color.BurlyWood);
                         // Wait follow path
                         Thread.Sleep(50);
                     }
+
                     if (Me.Energy > 80)
                         if (Cast(Pounce))
                             MovementManager.StopMove();
 
-                    if (!Pounce.KnownSpell || Me.Energy <= 80)
+                    if (!Pounce.KnownSpell || Me.Energy <= 80 || !Me.HaveBuff("Prowl"))
                     {
                         Cast(Ravage);
                         if (Cast(Shred) || Cast(Rake) || Cast(Claw))
@@ -557,6 +560,7 @@ public static class Druid
     private static Spell MangleCat = new Spell("Mangle (Cat)");
     private static Spell MangleBear = new Spell("Mangle (Bear)");
     private static Spell Maim = new Spell("Maim");
+    private static Spell OmenOfClarity = new Spell("Omen of Clarity");
 
     private static bool MaulOn()
     {

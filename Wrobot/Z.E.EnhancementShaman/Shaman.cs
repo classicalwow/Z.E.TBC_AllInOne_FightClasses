@@ -164,7 +164,7 @@ public static class Shaman
                 return;
 
         // Pull with Lightning Bolt
-        if (ObjectManager.Target.GetDistance <= _pullRange + 1)
+        if (ObjectManager.Target.GetDistance <= _pullRange)
         {
             bool cast = false;
             if (_settings.PullRankOneLightningBolt && LightningBolt.IsSpellUsable)
