@@ -245,7 +245,7 @@ public static class Shaman
             if (Cast(CureDisease))
                 return;
 
-        // Ligntning Shield
+        // Lightning Shield
         if (!_lowMana && !Me.HaveBuff("Lightning Shield") && !Me.HaveBuff("Water Shield") && _settings.UseLightningShield 
             && (!WaterShield.KnownSpell || !_settings.UseWaterShield))
             if (Cast(LightningShield))

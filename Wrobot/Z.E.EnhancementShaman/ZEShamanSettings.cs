@@ -61,7 +61,7 @@ public class ZEShamanSettings : Settings
     [Category("Combat Rotation")]
     [DefaultValue(false)]
     [DisplayName("Use Stoneskin Totem")]
-    [Description("Use Stoneskin Totem instead of Strenght of Earth Totem")]
+    [Description("Use Stoneskin Totem instead of Strength of Earth Totem")]
     public bool UseStoneSkinTotem { get; set; }
 
     [Category("Combat Rotation")]

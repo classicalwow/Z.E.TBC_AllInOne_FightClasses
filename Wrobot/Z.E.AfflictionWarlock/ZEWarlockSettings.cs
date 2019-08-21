@@ -85,7 +85,7 @@ public class ZEWarlockSettings : Settings
     [Category("Misc")]
     [DefaultValue(true)]
     [DisplayName("Put pet in passive when out of combat")]
-    [Description("Puts pet in passive when out of combat (can be useful if you wan to ignore fights when traveling)")]
+    [Description("Puts pet in passive when out of combat (can be useful if you want to ignore fights when traveling)")]
     public bool PetInPassiveWhenOOC { get; set; }
 
     [Category("Misc")]

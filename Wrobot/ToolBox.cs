@@ -423,5 +423,27 @@ public class ToolBox
         return new Vector3(0, 0, 0);
     }
 
+    // Determines if me is behind the Target
+    public static bool MeBehindTarget()
+    {
+        var target = ObjectManager.Target;
+
+        float Pi = (float)System.Math.PI;
+        bool backLeft = false;
+        bool backRight = false;
+        float target_x = ObjectManager.Target.Position.X;
+        float target_y = ObjectManager.Target.Position.Y;
+        float target_r = ObjectManager.Target.Rotation;
+        float player_x = ObjectManager.Me.Position.X;
+        float player_y = ObjectManager.Me.Position.Y;
+        float d = (float)System.Math.Atan2((target_y - player_y), (target_x - player_x));
+        float r = d - target_r;
+
+        if (r < 0) r = r + (Pi * 2);
+        if (r > 1.5 * Pi) backLeft = true;
+        if (r < 0.5 * Pi) backRight = true;
+        if (backLeft || backRight) return true; else return false;
+    }
+
     #endregion
 }

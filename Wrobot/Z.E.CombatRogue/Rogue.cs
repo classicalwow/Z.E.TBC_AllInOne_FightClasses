@@ -31,6 +31,7 @@ public static class Rogue
         ZERogueSettings.Load();
         _settings = ZERogueSettings.CurrentSetting;
 
+        // Fight End
         FightEvents.OnFightEnd += (ulong guid) =>
         {
             _meleeTimer.Reset();
@@ -48,6 +49,34 @@ public static class Rogue
             if (_isStealthApproching &&
             !point.ToString().Equals(ToolBox.BackofVector3(ObjectManager.Target.Position, ObjectManager.Target, 2.5f).ToString()))
                 cancelable.Cancel = true;
+        };
+
+        // Fight Loop - Go behind target when gouged
+        FightEvents.OnFightLoop += (WoWUnit unit, CancelEventArgs cancelable) =>
+        {
+            if ((ObjectManager.Target.HaveBuff("Gouge"))
+            && !MovementManager.InMovement && Me.IsAlive && !Me.IsCast)
+            {
+                if (Me.IsAlive && ObjectManager.Target.IsAlive)
+                {
+                    Vector3 position = ToolBox.BackofVector3(ObjectManager.Target.Position, ObjectManager.Target, 2.5f);
+                    MovementManager.Go(PathFinder.FindPath(position), false);
+
+                    while (MovementManager.InMovement && Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
+                    && (ObjectManager.Target.HaveBuff("Gouge")))
+                    {
+                        // Wait follow path
+                        Thread.Sleep(500);
+                    }
+                }
+            }
+        };
+
+        // BL Hook
+        OthersEvents.OnAddBlackListGuid += (ulong guid, int timeInMilisec, bool isSessionBlacklist, CancelEventArgs cancelable) =>
+        {
+            Main.Log("BL : " + guid + " ms : " + timeInMilisec + " is session: " + isSessionBlacklist);
+            cancelable.Cancel = true;
         };
 
         Rotation();
@@ -152,12 +181,17 @@ public static class Rogue
 
         // Stealth
         if (!Me.HaveBuff("Stealth") && !_pullFromAfar && ObjectManager.Target.GetDistance > 15f 
-            && ObjectManager.Target.GetDistance < 25f && _settings.StealthApproach && Backstab.KnownSpell)
+            /*&& ObjectManager.Target.GetDistance < 25f*/ && _settings.StealthApproach && Backstab.KnownSpell)
+            if (Cast(Stealth))
+                return;
+
+        // Un-Stealth
+        if (Me.HaveBuff("Stealth") && _pullFromAfar && ObjectManager.Target.GetDistance > 15f)
             if (Cast(Stealth))
                 return;
 
         // Stealth approach
-        if (Me.HaveBuff("Stealth") && ObjectManager.Target.GetDistance > 3f && !_isStealthApproching)
+        if (Me.HaveBuff("Stealth") && ObjectManager.Target.GetDistance > 3f && !_isStealthApproching && !_pullFromAfar)
         {
             Main.settingRange = _meleRange;
             _stealthApproachTimer.Start();
@@ -166,30 +200,52 @@ public static class Rogue
             {
 
                 while (Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
-                && (ObjectManager.Target.GetDistance > 4f || !SinisterStrike.IsSpellUsable)
+                && (ObjectManager.Target.GetDistance > 4f)
                 && !ToolBox.CheckIfEnemiesOnPull(ObjectManager.Target, _pullRange) && Fight.InFight
-                && _stealthApproachTimer.ElapsedMilliseconds <= 7000 && Me.HaveBuff("Stealth"))
+                && _stealthApproachTimer.ElapsedMilliseconds <= 25000 && Me.HaveBuff("Stealth"))
                 {
+                    // deactivate autoattack
+                    ToggleAutoAttack(false);
+
                     Vector3 position = ToolBox.BackofVector3(ObjectManager.Target.Position, ObjectManager.Target, 2.5f);
                     MovementManager.MoveTo(position);
                     // Wait follow path
                     Thread.Sleep(50);
                 }
 
-                if (Cast(Backstab))
-                    MovementManager.StopMove();
-
-                if (_stealthApproachTimer.ElapsedMilliseconds > 7000)
+                if (ToolBox.CheckIfEnemiesOnPull(ObjectManager.Target, _pullRange) && Me.HaveBuff("Stealth"))
+                {
                     _pullFromAfar = true;
+                    if (Cast(Stealth))
+                        return;
+                }
+                
+                // Opener
+                if (ToolBox.MeBehindTarget())
+                {
+                    if (Cast(Backstab))
+                        MovementManager.StopMove();
+                }
+                else
+                {
+                    if (Cast(Gouge))
+                        MovementManager.StopMove();
+                }
 
-                ToolBox.CheckAutoAttack(Attack);
+                if (_stealthApproachTimer.ElapsedMilliseconds > 25000)
+                {
+                    Main.Log("_stealthApproachTimer time out");
+                    _pullFromAfar = true;
+                }
+
+                ToggleAutoAttack(true);
                 _isStealthApproching = false;
             }
         }
 
         // Auto
-        if (ObjectManager.Target.GetDistance < 6f)
-            ToolBox.CheckAutoAttack(Attack);
+        if (ObjectManager.Target.GetDistance < 6f && !Me.HaveBuff("Stealth"))
+            ToggleAutoAttack(true);
     }
 
     internal static void CombatRotation()
@@ -199,7 +255,7 @@ public static class Rogue
         WoWUnit _target = ObjectManager.Target;
 
         // Check Auto-Attacking
-        ToolBox.CheckAutoAttack(Attack);
+        ToggleAutoAttack(true);
 
         // Check if interruptable enemy is in list
         if (_shouldBeInterrupted)
@@ -223,6 +279,16 @@ public static class Rogue
             _meleeTimer.Stop();
         }
 
+        // Evasion
+        if (Me.HealthPercent < 30 && !Me.HaveBuff("Evasion"))
+            if (Cast(Evasion))
+                return;
+
+        // Backstab in combat
+        if (_target.HaveBuff("Gouge"))
+            if (Cast(Backstab))
+                return;
+
         // Eviscerate logic
         if ((Me.ComboPoint > 0 && _target.HealthPercent < 30)
             || (Me.ComboPoint > 1 && _target.HealthPercent < 45)
@@ -232,7 +298,7 @@ public static class Rogue
                 return;
 
         // Sinister Strike
-        if (Me.ComboPoint < 5)
+        if (Me.ComboPoint < 5 && !_target.HaveBuff("Gouge"))
             if (Cast(SinisterStrike))
                 return;
     }
@@ -251,14 +317,37 @@ public static class Rogue
     private static Spell SinisterStrike = new Spell("Sinister Strike");
     private static Spell Stealth = new Spell("Stealth");
     private static Spell Backstab = new Spell("Backstab");
+    private static Spell Gouge = new Spell("Gouge");
+    private static Spell Evasion = new Spell("Evasion");
 
     internal static bool Cast(Spell s)
     {
+        if (!s.KnownSpell)
+            return false;
+
         Main.LogDebug("In cast for " + s.Name);
-        if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
+        if (!s.IsSpellUsable || Me.IsCast)
             return false;
         
         s.Launch();
         return true;
+    }
+
+    private static void ToggleAutoAttack(bool activate)
+    {
+        bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') " +
+            "then isAutoRepeat = true end", "isAutoRepeat");
+
+        if (!_autoAttacking && activate && !ObjectManager.Target.HaveBuff("Gouge"))
+        {
+            Main.Log("Turning auto attack ON");
+            ToolBox.CheckAutoAttack(Attack);
+        }
+
+        if (!activate && _autoAttacking)
+        {
+            Main.Log("Turning auto attack OFF");
+            Attack.Launch();
+        }
     }
 }
