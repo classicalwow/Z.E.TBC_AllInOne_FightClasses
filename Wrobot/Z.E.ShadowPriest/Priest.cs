@@ -215,6 +215,7 @@ public static class Priest
         int _mindBlastCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Mind Blast\"); return start + duration - GetTime();");
         int _innerFocusCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Inner Focus\"); return start + duration - GetTime();");
         bool _shoulBeInterrupted = ToolBox.EnemyCasting();
+        WoWUnit _target = ObjectManager.Target;
 
         // Power Word Shield on multi aggro
         if (!Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul && ObjectManager.GetNumberAttackPlayer() > 1)
@@ -275,13 +276,13 @@ public static class Priest
         }
 
         // Vampiric Touch
-        if (ObjectManager.Target.GetDistance <= _maxRange && !ObjectManager.Target.HaveBuff("Vampiric Touch") 
-            && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.HealthPercent > _wandThreshold)
+        if (_target.GetDistance <= _maxRange && !_target.HaveBuff("Vampiric Touch") 
+            && _myManaPC > _innerManaSaveThreshold && _target.HealthPercent > _wandThreshold)
             if (Cast(VampiricTouch))
                 return;
 
         // Vampiric Embrace
-        if (!ObjectManager.Target.HaveBuff("Vampiric Embrace") && _myManaPC > _innerManaSaveThreshold)
+        if (!_target.HaveBuff("Vampiric Embrace") && _myManaPC > _innerManaSaveThreshold)
             if (Cast(VampiricEmbrace))
                 return;
 
@@ -291,20 +292,20 @@ public static class Priest
                 return;
 
         // Shadow Word Pain
-        if (_myManaPC > 10 && ObjectManager.Target.GetDistance < _maxRange && ObjectManager.Target.HealthPercent > 15
-            && !ObjectManager.Target.HaveBuff("Shadow Word: Pain"))
+        if (_myManaPC > 10 && _target.GetDistance < _maxRange && _target.HealthPercent > 15
+            && !_target.HaveBuff("Shadow Word: Pain"))
             if (Cast(ShadowWordPain))
                 return;
 
         // Inner Fire
         if (!Me.HaveBuff("Inner Fire") && _settings.UseInnerFire && InnerFire.KnownSpell
-            && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.HealthPercent > _wandThreshold)
+            && _myManaPC > _innerManaSaveThreshold && _target.HealthPercent > _wandThreshold)
             if (Cast(InnerFire))
                 return;
 
         // Shadowguard
         if (!Me.HaveBuff("Shadowguard") && _myManaPC > _innerManaSaveThreshold
-            && _settings.UseShadowGuard && ObjectManager.Target.HealthPercent > _wandThreshold)
+            && _settings.UseShadowGuard && _target.HealthPercent > _wandThreshold)
             if (Cast(Shadowguard))
                 return;
 
@@ -314,14 +315,15 @@ public static class Priest
                 return;
 
         // Shadow Word Death
-        if (_myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange 
-            && _settings.UseShadowWordDeath && ObjectManager.Target.HealthPercent < 15)
+        if (_myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange 
+            && _settings.UseShadowWordDeath && _target.HealthPercent < 15)
             if (Cast(ShadowWordDeath))
                 return;
 
         // Mind Blast + Inner Focus
-        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange
-            && ObjectManager.Target.HealthPercent > 50 && !Me.HaveBuff("Power Word: Shield") && _mindBlastCD <= 0)
+        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange
+            && _target.HealthPercent > 50 && !Me.HaveBuff("Power Word: Shield") && _mindBlastCD <= 0
+            && _target.HealthPercent > _wandThreshold)
         {
             if (InnerFocus.KnownSpell && _innerFocusCD <= 0)
                 Cast(InnerFocus);
@@ -331,8 +333,8 @@ public static class Priest
         }
 
         // Shadow Form Mind Blast + Inner Focus
-        if (_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange
-            && _mindBlastCD <= 0 && ObjectManager.Target.HealthPercent > _wandThreshold)
+        if (_inShadowForm && _myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange
+            && _mindBlastCD <= 0 && _target.HealthPercent > _wandThreshold)
         {
             if (InnerFocus.KnownSpell && _innerFocusCD <= 0)
                 Cast(InnerFocus);
@@ -351,24 +353,24 @@ public static class Priest
 
         // Mind FLay
         if (Me.HaveBuff("Power Word: Shield") && MindFlay.IsDistanceGood 
-            && _myManaPC > _innerManaSaveThreshold)
+            && _myManaPC > _innerManaSaveThreshold && _target.HealthPercent > _wandThreshold)
             if (Cast(MindFlay, false))
                 return;
 
         // Low level Smite
-        if (Me.Level < 5 && (ObjectManager.Target.HealthPercent > 30 || Me.ManaPercentage > 80) && _myManaPC > _innerManaSaveThreshold 
-            && ObjectManager.Target.GetDistance < _maxRange)
+        if (Me.Level < 5 && (_target.HealthPercent > 30 || Me.ManaPercentage > 80) && _myManaPC > _innerManaSaveThreshold 
+            && _target.GetDistance < _maxRange)
             if (Cast(Smite, false))
                 return;
 
         // Smite
-        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && ObjectManager.Target.GetDistance < _maxRange
+        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange
             && Me.Level >= 5)
             if (Cast(Smite, false))
                 return;
 
         // Use Wand
-        if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _maxRange + 2)
+        if (!_usingWand && _iCanUseWand && _target.GetDistance <= _maxRange + 2)
             if (Cast(UseWand, false))
                 return;
 

@@ -15,6 +15,7 @@ public class ZERogueSettings : Settings
     {
         AlwaysPull = false;
         StealthApproach = true;
+        StealthWhenPoisoned = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCRogue "
@@ -33,6 +34,12 @@ public class ZERogueSettings : Settings
     [DisplayName("Stealth approach")]
     [Description("Always try to approach enemies in Stealth (can be buggy)")]
     public bool StealthApproach { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Stealth even if poisoned")]
+    [Description("Try going in stealth even if affected by poison")]
+    public bool StealthWhenPoisoned { get; set; }
 
     public bool Save()
     {

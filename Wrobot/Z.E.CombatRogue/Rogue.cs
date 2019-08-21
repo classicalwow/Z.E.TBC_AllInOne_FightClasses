@@ -76,7 +76,8 @@ public static class Rogue
         OthersEvents.OnAddBlackListGuid += (ulong guid, int timeInMilisec, bool isSessionBlacklist, CancelEventArgs cancelable) =>
         {
             Main.Log("BL : " + guid + " ms : " + timeInMilisec + " is session: " + isSessionBlacklist);
-            cancelable.Cancel = true;
+            if (_isStealthApproching)
+                cancelable.Cancel = true;
         };
 
         Rotation();
@@ -181,7 +182,8 @@ public static class Rogue
 
         // Stealth
         if (!Me.HaveBuff("Stealth") && !_pullFromAfar && ObjectManager.Target.GetDistance > 15f 
-            /*&& ObjectManager.Target.GetDistance < 25f*/ && _settings.StealthApproach && Backstab.KnownSpell)
+            && ObjectManager.Target.GetDistance < 25f && _settings.StealthApproach && Backstab.KnownSpell
+            && (!ToolBox.HasPoisonDebuff() || _settings.StealthWhenPoisoned))
             if (Cast(Stealth))
                 return;
 
@@ -279,14 +281,24 @@ public static class Rogue
             _meleeTimer.Stop();
         }
 
+        // Kick interrupt
+        if (_shouldBeInterrupted)
+            if (Cast(Kick))
+                return;
+
         // Evasion
-        if (Me.HealthPercent < 30 && !Me.HaveBuff("Evasion"))
+        if (Me.HealthPercent < 30 && !Me.HaveBuff("Evasion") && _target.HealthPercent > 50)
             if (Cast(Evasion))
                 return;
 
         // Backstab in combat
         if (_target.HaveBuff("Gouge"))
             if (Cast(Backstab))
+                return;
+
+        // Slice and Dice
+        if (!Me.HaveBuff("Slice and Dice") && Me.ComboPoint > 0 && _target.HealthPercent > 40)
+            if (Cast(SliceAndDice))
                 return;
 
         // Eviscerate logic
@@ -319,6 +331,8 @@ public static class Rogue
     private static Spell Backstab = new Spell("Backstab");
     private static Spell Gouge = new Spell("Gouge");
     private static Spell Evasion = new Spell("Evasion");
+    private static Spell Kick = new Spell("Kick");
+    private static Spell SliceAndDice = new Spell("Slice and Dice");
 
     internal static bool Cast(Spell s)
     {
