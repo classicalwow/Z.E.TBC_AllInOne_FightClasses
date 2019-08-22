@@ -252,6 +252,13 @@ public class ToolBox
 
     #region Items
 
+    // Return Main hand weapon type as a string
+    public static string GetMHWeaponType()
+    {
+        return Lua.LuaDoString<string>(@"local _, _, _, _, _, _, weapontype = 
+                                            GetItemInfo(GetInventoryItemLink('player', 16)); return weapontype;");
+    }
+
     // Check if range weapon (wand, bow, gun) equipped
     public static bool HaveRangedWeaponEquipped()
     {

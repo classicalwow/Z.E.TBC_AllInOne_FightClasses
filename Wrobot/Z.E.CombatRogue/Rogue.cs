@@ -57,8 +57,7 @@ public static class Rogue
         // Fight Loop - Go behind target when gouged
         FightEvents.OnFightLoop += (WoWUnit unit, CancelEventArgs cancelable) =>
         {
-            if ((ObjectManager.Target.HaveBuff("Gouge"))
-            && !MovementManager.InMovement && Me.IsAlive && !Me.IsCast)
+            if (IsTargetStunned() && !MovementManager.InMovement && Me.IsAlive && !Me.IsCast)
             {
                 if (Me.IsAlive && ObjectManager.Target.IsAlive)
                 {
@@ -66,7 +65,7 @@ public static class Rogue
                     MovementManager.Go(PathFinder.FindPath(position), false);
 
                     while (MovementManager.InMovement && Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
-                    && (ObjectManager.Target.HaveBuff("Gouge")))
+                    && IsTargetStunned())
                     {
                         // Wait follow path
                         Thread.Sleep(500);
@@ -103,7 +102,6 @@ public static class Rogue
             {
                 if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    PoisonWeapon();
                     // Buff rotation
                     if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
                     {
@@ -134,6 +132,7 @@ public static class Rogue
     {
         if (!Me.IsMounted && !Me.IsCast)
         {
+            PoisonWeapon();
         }
     }
 
@@ -236,8 +235,21 @@ public static class Rogue
                 }
                 else
                 {
-                    if (Cast(Gouge) || Cast(SinisterStrike))
-                        MovementManager.StopMove();
+                    if (CheapShot.KnownSpell)
+                    {
+                        if (Cast(CheapShot))
+                            MovementManager.StopMove();
+                    }
+                    else if (HaveDaggerInMH() && Gouge.KnownSpell)
+                    {
+                        if (Cast(Gouge))
+                            MovementManager.StopMove();
+                    }
+                    else
+                    {
+                        if (Cast(SinisterStrike))
+                            MovementManager.StopMove();
+                    }
                 }
 
                 if (_stealthApproachTimer.ElapsedMilliseconds > 25000)
@@ -286,10 +298,34 @@ public static class Rogue
             Main.settingRange = _meleRange;
             _meleeTimer.Stop();
         }
+        
+        // Vanish
+        /*if (Me.HealthPercent < 10)
+            if (Cast(Vanish))
+            {
+                Main.Log("Stopping Fight after vanish");
+                Fight.StopFight();
+                return;
+            }*/
 
         // Kick interrupt
         if (_shouldBeInterrupted)
             if (Cast(Kick))
+                return;
+
+        // Adrenaline Rush
+        if (ObjectManager.GetNumberAttackPlayer() > 1 && !Me.HaveBuff("Adrenaline Rush"))
+            if (Cast(AdrenalineRush))
+                return;
+
+        // Blade Flurry
+        if (ObjectManager.GetNumberAttackPlayer() > 1 && !Me.HaveBuff("Blade Flurry"))
+            if (Cast(BladeFlurry))
+                return;
+
+        // Riposte
+        if (Riposte.IsSpellUsable && _target.CreatureTypeTarget.Equals("Humanoid"))
+            if (Cast(Riposte))
                 return;
 
         // Evasion
@@ -298,7 +334,7 @@ public static class Rogue
                 return;
 
         // Backstab in combat
-        if (_target.HaveBuff("Gouge"))
+        if (IsTargetStunned() && ToolBox.GetMHWeaponType().Equals("Daggers"))
             if (Cast(Backstab))
                 return;
 
@@ -316,8 +352,9 @@ public static class Rogue
                 return;
 
         // Sinister Strike
-        if (Me.ComboPoint < 5 && !_target.HaveBuff("Gouge") && 
-            (!_fightingACaster || (Me.Energy > (ToolBox.GetSpellCost("Sinister Strike") + ToolBox.GetSpellCost("Kick")))))
+        if (Me.ComboPoint < 5 && !IsTargetStunned() && 
+            (!_fightingACaster || !Kick.KnownSpell || 
+            (Me.Energy > (ToolBox.GetSpellCost("Sinister Strike") + ToolBox.GetSpellCost("Kick")))))
             if (Cast(SinisterStrike))
                 return;
     }
@@ -341,6 +378,11 @@ public static class Rogue
     private static Spell Kick = new Spell("Kick");
     private static Spell Garrote = new Spell("Garrote");
     private static Spell SliceAndDice = new Spell("Slice and Dice");
+    private static Spell Vanish = new Spell("Vanish");
+    private static Spell CheapShot = new Spell("Cheap Shot");
+    private static Spell Riposte = new Spell("Riposte");
+    private static Spell BladeFlurry = new Spell("Blade Flurry");
+    private static Spell AdrenalineRush = new Spell("Adrenaline Rush");
 
     internal static bool Cast(Spell s)
     {
@@ -371,6 +413,16 @@ public static class Rogue
             Main.Log("Turning auto attack OFF");
             Attack.Launch();
         }
+    }
+
+    private static bool IsTargetStunned()
+    {
+        return ObjectManager.Target.HaveBuff("Gouge") || ObjectManager.Target.HaveBuff("Cheap Shot");
+    }
+
+    private static bool HaveDaggerInMH()
+    {
+        return ToolBox.GetMHWeaponType().Equals("Daggers");
     }
 
     private static void PoisonWeapon()
