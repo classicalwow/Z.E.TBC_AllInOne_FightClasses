@@ -16,6 +16,7 @@ public class ZERogueSettings : Settings
         AlwaysPull = false;
         StealthApproach = true;
         StealthWhenPoisoned = false;
+        SprintWhenAvail = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCRogue "
@@ -40,6 +41,12 @@ public class ZERogueSettings : Settings
     [DisplayName("Stealth even if poisoned")]
     [Description("Try going in stealth even if affected by poison")]
     public bool StealthWhenPoisoned { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(true)]
+    [DisplayName("Sprint when available")]
+    [Description("Use Sprint when available")]
+    public bool SprintWhenAvail { get; set; }
 
     public bool Save()
     {

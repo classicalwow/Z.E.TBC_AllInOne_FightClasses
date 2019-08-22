@@ -133,6 +133,10 @@ public static class Rogue
         if (!Me.IsMounted && !Me.IsCast)
         {
             PoisonWeapon();
+
+            if (_settings.SprintWhenAvail)
+                if (Cast(Sprint))
+                    return;
         }
     }
 
@@ -383,6 +387,7 @@ public static class Rogue
     private static Spell Riposte = new Spell("Riposte");
     private static Spell BladeFlurry = new Spell("Blade Flurry");
     private static Spell AdrenalineRush = new Spell("Adrenaline Rush");
+    private static Spell Sprint = new Spell("Sprint");
 
     internal static bool Cast(Spell s)
     {
