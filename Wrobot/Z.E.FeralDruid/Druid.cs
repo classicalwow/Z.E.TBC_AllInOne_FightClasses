@@ -88,6 +88,14 @@ public static class Druid
                 cancelable.Cancel = true;
         };
 
+        // BL Hook
+        OthersEvents.OnAddBlackListGuid += (ulong guid, int timeInMilisec, bool isSessionBlacklist, CancelEventArgs cancelable) =>
+        {
+            Main.LogDebug("BL : " + guid + " ms : " + timeInMilisec + " is session: " + isSessionBlacklist);
+            if (Me.HaveBuff("Prowl"))
+                cancelable.Cancel = true;
+        };
+
         Rotation();
     }
 

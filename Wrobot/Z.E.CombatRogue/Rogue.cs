@@ -75,9 +75,12 @@ public static class Rogue
         // BL Hook
         OthersEvents.OnAddBlackListGuid += (ulong guid, int timeInMilisec, bool isSessionBlacklist, CancelEventArgs cancelable) =>
         {
-            Main.Log("BL : " + guid + " ms : " + timeInMilisec + " is session: " + isSessionBlacklist);
-            if (_isStealthApproching)
+            Main.LogDebug("BL : " + guid + " ms : " + timeInMilisec + " is session: " + isSessionBlacklist);
+            if (Me.HaveBuff("Stealth"))
+            {
+                Main.Log("Cancelling Blacklist event");
                 cancelable.Cancel = true;
+            }
         };
 
         Rotation();
@@ -225,12 +228,12 @@ public static class Rogue
                 // Opener
                 if (ToolBox.MeBehindTarget())
                 {
-                    if (Cast(Backstab))
+                    if (Cast(Garrote) || Cast(Backstab))
                         MovementManager.StopMove();
                 }
                 else
                 {
-                    if (Cast(Gouge))
+                    if (Cast(Gouge) || Cast(SinisterStrike))
                         MovementManager.StopMove();
                 }
 
@@ -297,7 +300,7 @@ public static class Rogue
                 return;
 
         // Slice and Dice
-        if (!Me.HaveBuff("Slice and Dice") && Me.ComboPoint > 0 && _target.HealthPercent > 40)
+        if (!Me.HaveBuff("Slice and Dice") && Me.ComboPoint > 1 && _target.HealthPercent > 40)
             if (Cast(SliceAndDice))
                 return;
 
@@ -332,6 +335,7 @@ public static class Rogue
     private static Spell Gouge = new Spell("Gouge");
     private static Spell Evasion = new Spell("Evasion");
     private static Spell Kick = new Spell("Kick");
+    private static Spell Garrote = new Spell("Garrote");
     private static Spell SliceAndDice = new Spell("Slice and Dice");
 
     internal static bool Cast(Spell s)

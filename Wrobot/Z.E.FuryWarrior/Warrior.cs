@@ -339,10 +339,12 @@ public static class Warrior
 
     internal static bool Cast(Spell s)
     {
-        Main.LogDebug("In cast for " + s.Name);
+        //Main.LogDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;
-        
+
+        Main.LogDebug("Target %HP is " + ObjectManager.Target.HealthPercent);
+        Main.LogDebug("Launching " + s.Name);
         s.Launch();
         return true;
     }
