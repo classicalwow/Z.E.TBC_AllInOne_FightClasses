@@ -368,7 +368,6 @@ public class ToolBox
         {
             if (list.Contains(item.Name))
             {
-                Main.Log("Found: " + item.Name + " with index " + list.IndexOf(item.Name));
                 int itemIndex = list.IndexOf(item.Name);
                 if (itemIndex >= index)
                     _bestItem = item.Name;

@@ -53,7 +53,7 @@ public static class Rogue
         {
             _myBestBandage = ToolBox.GetBestMatchingItem(Bandages());
             if (_myBestBandage != null)
-                Main.Log("Found best bandage : " + _myBestBandage);
+                Main.LogDebug("Found best bandage : " + _myBestBandage);
         };
 
         // We override movement to target when approaching in Stealth
@@ -87,9 +87,9 @@ public static class Rogue
         // BL Hook
         OthersEvents.OnAddBlackListGuid += (ulong guid, int timeInMilisec, bool isSessionBlacklist, CancelEventArgs cancelable) =>
         {
-            Main.LogDebug("BL : " + guid + " ms : " + timeInMilisec + " is session: " + isSessionBlacklist);
             if (Me.HaveBuff("Stealth"))
             {
+                Main.LogDebug("BL : " + guid + " ms : " + timeInMilisec + " is session: " + isSessionBlacklist);
                 Main.Log("Cancelling Blacklist event");
                 cancelable.Cancel = true;
             }
