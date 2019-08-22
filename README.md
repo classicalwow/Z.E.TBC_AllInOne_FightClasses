@@ -277,7 +277,7 @@ Tab: Vendor (Selling or Buying)
 -	Choose whether to use the Soul Stone
 
 #### Recommendations:
-The Warlock is an excellent grinder with formidable survivability. Stamina and Intellect are both paramount stats. Getting yourself a wand as soon as possible should also be your priority. How you set your Food/Drink threshold defines how risky the class will play. If you find the bot putting itself in dangerous situations too much, raise the Food/Drink threshold. Make sure to take some time to craft your rotation using the options depending on your level, gear and spot difficulty.
+The Warlock is an excellent grinder with formidable survivability. Stamina and Intellect are both paramount stats. Getting yourself a wand as soon as possible should also be your priority. How you set your Food/Drink threshold defines how risky the class will play. If you find the bot putting itself in dangerous situations too often, raise the Food/Drink threshold. Make sure to take some time to craft your rotation using the options depending on your level, gear and spot difficulty.
 
 #### Recommended settings:
 Tab: Food / Drink
@@ -323,6 +323,37 @@ Tab: Vendor (Selling or Buying)
 - Food Amount : 20
 - Drink Amount : 60
 
+--------------------
+
+### Z.E. Combat Rogue
+
+#### Features:
+-	Uses Stealth
+-   Uses appropriate opening
+- 	Smart pulls. Will only approach when no enemies are around the target. Otherwise, uses a range weapon to pull the enemy in 
+-   Interrupts caster
+-   Uses and refreshes weapon poisons
+-   Uses High CDs on multi aggro
+-   Ripostes against humanoids
+-   Will detect the type of weapon you have in your main hand and choose skills accordingly
+
+#### Options:
+-	Option to always range pull
+-   Choose whether to approach in Stealth
+-   Choose whether to use Garrote as an opener
+-   Choose to still enter Stealth even if poisoned
+-   Option to use Sprint as soon as available
+-   Option to use Blind + Bandages during combat (Garrote should be off, and weapons poisons should all be instant)
+
+#### Recommendations:
+The combat Rogue, despite is high DPS, is amongst the hardest classes to level. He is very gear dependant. You should always try to get him good weapons and equipment. Using bandages and poisons appropriately will help you in the long run. The weapon you'll specialize in is up to your personal preference.
+
+#### Recommended settings:
+Tab: Food / Drink
+- Food: 50% to 99%
+
+Tab: Vendor (Selling or Buying)
+- Food Amount : 60
 
 --------------------
 
