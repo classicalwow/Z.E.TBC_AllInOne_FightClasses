@@ -27,6 +27,7 @@ public static class Rogue
     private static bool _isStealthApproching;
     public static uint MHPoison;
     public static uint OHPoison;
+    private static string _myBestBandage = null;
 
     public static void Initialize()
     {
@@ -43,7 +44,16 @@ public static class Rogue
             _fightingACaster = false;
             _pullFromAfar = false;
             _isStealthApproching = false;
+            _myBestBandage = null;
             Main.settingRange = _meleRange;
+        };
+
+        // Fight Start
+        FightEvents.OnFightStart += (WoWUnit unit, CancelEventArgs cancelable) =>
+        {
+            _myBestBandage = ToolBox.GetBestMatchingItem(Bandages());
+            if (_myBestBandage != null)
+                Main.Log("Found best bandage : " + _myBestBandage);
         };
 
         // We override movement to target when approaching in Stealth
@@ -134,7 +144,7 @@ public static class Rogue
         {
             PoisonWeapon();
 
-            if (_settings.SprintWhenAvail)
+            if (_settings.SprintWhenAvail && Me.HealthPercent > 80)
                 if (Cast(Sprint))
                     return;
         }
@@ -234,7 +244,14 @@ public static class Rogue
                 // Opener
                 if (ToolBox.MeBehindTarget())
                 {
-                    if (Cast(Garrote) || Cast(Backstab))
+                    if (_settings.UseGarrote)
+                        if (Cast(Garrote))
+                            MovementManager.StopMove();
+                    if (Cast(Backstab))
+                        MovementManager.StopMove();
+                    if (Cast(CheapShot))
+                        MovementManager.StopMove();
+                    if (Cast(SinisterStrike))
                         MovementManager.StopMove();
                 }
                 else
@@ -332,9 +349,30 @@ public static class Rogue
             if (Cast(Riposte))
                 return;
 
+        // Bandage
+        if (_target.HaveBuff("Blind"))
+        {
+            MovementManager.StopMoveTo(true, 500);
+            ItemsManager.UseItemByNameOrId(_myBestBandage);
+            Main.Log("Using " + _myBestBandage);
+            Usefuls.WaitIsCasting();
+            return;
+        }
+
+        // Blind
+        if (Me.HealthPercent < 40 && !ToolBox.HasDebuff("Recently Bandaged") && _myBestBandage != null
+            && _settings.UseBlindBandage)
+            if (Cast(Blind))
+                return;
+
         // Evasion
         if (Me.HealthPercent < 30 && !Me.HaveBuff("Evasion") && _target.HealthPercent > 50)
             if (Cast(Evasion))
+                return;
+
+        // Cloak of Shadows
+        if (Me.HealthPercent < 30 && !Me.HaveBuff("Cloak of Shadows") && _target.HealthPercent > 50)
+            if (Cast(CloakOfShadows))
                 return;
 
         // Backstab in combat
@@ -388,6 +426,8 @@ public static class Rogue
     private static Spell BladeFlurry = new Spell("Blade Flurry");
     private static Spell AdrenalineRush = new Spell("Adrenaline Rush");
     private static Spell Sprint = new Spell("Sprint");
+    private static Spell CloakOfShadows = new Spell("Cloak of Shadows");
+    private static Spell Blind = new Spell("Blind");
 
     internal static bool Cast(Spell s)
     {
@@ -402,12 +442,32 @@ public static class Rogue
         return true;
     }
 
+    public static List<string> Bandages()
+    {
+        return new List<string>
+            {
+                "Linen Bandage",
+                "Heavy Linen Bandage",
+                "Wool Bandage",
+                "Heavy Wool Bandage",
+                "Silk Bandage",
+                "Heavy Silk Bandage",
+                "Mageweave Bandage",
+                "Heavy Mageweave Bandage",
+                "Runecloth Bandage",
+                "Heavy Runecloth Bandage",
+                "Netherweave Bandage",
+                "Heavy Netherweave Bandage"
+            };
+    }
+
     private static void ToggleAutoAttack(bool activate)
     {
         bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') " +
             "then isAutoRepeat = true end", "isAutoRepeat");
 
-        if (!_autoAttacking && activate && !ObjectManager.Target.HaveBuff("Gouge"))
+        if (!_autoAttacking && activate && !ObjectManager.Target.HaveBuff("Gouge") 
+            && !ObjectManager.Target.HaveBuff("Blind"))
         {
             Main.Log("Turning auto attack ON");
             ToolBox.CheckAutoAttack(Attack);

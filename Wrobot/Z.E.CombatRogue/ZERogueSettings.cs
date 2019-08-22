@@ -17,6 +17,8 @@ public class ZERogueSettings : Settings
         StealthApproach = true;
         StealthWhenPoisoned = false;
         SprintWhenAvail = true;
+        UseBlindBandage = true;
+        UseGarrote = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCRogue "
@@ -30,13 +32,19 @@ public class ZERogueSettings : Settings
     [Description("Always pull with a range weapon")]
     public bool AlwaysPull { get; set; }
 
-    [Category("Misc")]
+    [Category("Fight engage")]
     [DefaultValue(true)]
     [DisplayName("Stealth approach")]
     [Description("Always try to approach enemies in Stealth (can be buggy)")]
     public bool StealthApproach { get; set; }
 
-    [Category("Misc")]
+    [Category("Fight engage")]
+    [DefaultValue(true)]
+    [DisplayName("Use Garrote")]
+    [Description("Use Garrote when opening behind the target")]
+    public bool UseGarrote { get; set; }
+
+    [Category("Fight engage")]
     [DefaultValue(false)]
     [DisplayName("Stealth even if poisoned")]
     [Description("Try going in stealth even if affected by poison")]
@@ -47,6 +55,13 @@ public class ZERogueSettings : Settings
     [DisplayName("Sprint when available")]
     [Description("Use Sprint when available")]
     public bool SprintWhenAvail { get; set; }
+
+    [Category("Combat")]
+    [DefaultValue(true)]
+    [DisplayName("Use Blind + Bandage")]
+    [Description("Use Blind followed by your best bandage in your bags during combat " +
+        "(If true, you should avoid using poisons, as they will break Blind)")]
+    public bool UseBlindBandage { get; set; }
 
     public bool Save()
     {
