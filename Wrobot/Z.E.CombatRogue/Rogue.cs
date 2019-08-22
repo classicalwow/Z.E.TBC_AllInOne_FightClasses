@@ -10,6 +10,7 @@ using wManager.Wow.ObjectManager;
 using System.Collections.Generic;
 using wManager.Wow.Bot.Tasks;
 using System.ComponentModel;
+using System.Linq;
 
 public static class Rogue
 {
@@ -24,6 +25,8 @@ public static class Rogue
     private static List<string> _casterEnemies = new List<string>();
     private static bool _pullFromAfar = false;
     private static bool _isStealthApproching;
+    public static uint MHPoison;
+    public static uint OHPoison;
 
     public static void Initialize()
     {
@@ -92,14 +95,15 @@ public static class Rogue
     }
 
     internal static void Rotation()
-	{
+    {
         Main.Log("Started");
-		while (Main._isLaunched)
-		{
-			try
-			{
-				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
+        while (Main._isLaunched)
+        {
+            try
+            {
+                if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
+                    PoisonWeapon();
                     // Buff rotation
                     if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
                     {
@@ -107,7 +111,7 @@ public static class Rogue
                     }
 
                     // Pull & Combat rotation
-                    if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable 
+                    if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable
                         && ObjectManager.Target.IsAlive)
                     {
                         if (ObjectManager.GetNumberAttackPlayer() < 1 && !ObjectManager.Target.InCombatFlagOnly)
@@ -116,13 +120,13 @@ public static class Rogue
                             CombatRotation();
                     }
                 }
-			}
-			catch (Exception arg)
-			{
-				Logging.WriteError("ERROR: " + arg, true);
-			}
-			Thread.Sleep(Usefuls.Latency + 10);
-		}
+            }
+            catch (Exception arg)
+            {
+                Logging.WriteError("ERROR: " + arg, true);
+            }
+            Thread.Sleep(Usefuls.Latency + 10);
+        }
         Main.Log("Stopped.");
     }
 
@@ -130,7 +134,6 @@ public static class Rogue
     {
         if (!Me.IsMounted && !Me.IsCast)
         {
-
         }
     }
 
@@ -184,7 +187,7 @@ public static class Rogue
             _fightingACaster = true;
 
         // Stealth
-        if (!Me.HaveBuff("Stealth") && !_pullFromAfar && ObjectManager.Target.GetDistance > 15f 
+        if (!Me.HaveBuff("Stealth") && !_pullFromAfar && ObjectManager.Target.GetDistance > 15f
             && ObjectManager.Target.GetDistance < 25f && _settings.StealthApproach && Backstab.KnownSpell
             && (!ToolBox.HasPoisonDebuff() || _settings.StealthWhenPoisoned))
             if (Cast(Stealth))
@@ -224,7 +227,7 @@ public static class Rogue
                     if (Cast(Stealth))
                         return;
                 }
-                
+
                 // Opener
                 if (ToolBox.MeBehindTarget())
                 {
@@ -313,7 +316,8 @@ public static class Rogue
                 return;
 
         // Sinister Strike
-        if (Me.ComboPoint < 5 && !_target.HaveBuff("Gouge"))
+        if (Me.ComboPoint < 5 && !_target.HaveBuff("Gouge") && 
+            (!_fightingACaster || (Me.Energy > (ToolBox.GetSpellCost("Sinister Strike") + ToolBox.GetSpellCost("Kick")))))
             if (Cast(SinisterStrike))
                 return;
     }
@@ -346,7 +350,7 @@ public static class Rogue
         Main.LogDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || Me.IsCast)
             return false;
-        
+
         s.Launch();
         return true;
     }
@@ -368,4 +372,95 @@ public static class Rogue
             Attack.Launch();
         }
     }
+
+    private static void PoisonWeapon()
+    {
+        bool hasMainHandEnchant = Lua.LuaDoString<bool>
+            (@"local hasMainHandEnchant, _, _, _, _, _, _, _, _ = GetWeaponEnchantInfo()
+            if (hasMainHandEnchant) then 
+               return '1'
+            else
+               return '0'
+            end");
+
+        bool hasOffHandEnchant = Lua.LuaDoString<bool>
+            (@"local _, _, _, _, hasOffHandEnchant, _, _, _, _ = GetWeaponEnchantInfo()
+            if (hasOffHandEnchant) then 
+               return '1'
+            else
+               return '0'
+            end");
+
+        bool hasoffHandWeapon = Lua.LuaDoString<bool>(@"local hasWeapon = OffhandHasWeapon()
+            return hasWeapon");
+
+        if (!hasMainHandEnchant)
+        {
+            IEnumerable<uint> DP = DeadlyPoisonDictionary
+                .Where(i => i.Key <= Me.Level && ItemsManager.HasItemById(i.Value))
+                .OrderByDescending(i => i.Key)
+                .Select(i => i.Value);
+
+            IEnumerable<uint> IP = InstantPoisonDictionary
+                .Where(i => i.Key <= Me.Level && ItemsManager.HasItemById(i.Value))
+                .OrderByDescending(i => i.Key)
+                .Select(i => i.Value);
+
+            if (DP.Any() || IP.Any())
+            {
+                MovementManager.StopMoveTo(true, 1000);
+                MHPoison = DP.Any() ? DP.First() : IP.First();
+                ItemsManager.UseItem(MHPoison);
+                Thread.Sleep(10);
+                Lua.RunMacroText("/use 16");
+                Usefuls.WaitIsCasting();
+                return;
+            }
+        }
+        if (!hasOffHandEnchant && hasoffHandWeapon)
+        {
+
+            IEnumerable<uint> IP = InstantPoisonDictionary
+                .Where(i => i.Key <= Me.Level && ItemsManager.HasItemById(i.Value))
+                .OrderByDescending(i => i.Key)
+                .Select(i => i.Value);
+
+            if (IP.Any())
+            {
+                MovementManager.StopMoveTo(true, 1000);
+                OHPoison = IP.First();
+                ItemsManager.UseItem(OHPoison);
+                Thread.Sleep(10);
+                Lua.RunMacroText("/use 17");
+                Usefuls.WaitIsCasting();
+                return;
+            }
+        }
+    }
+
+    private static Dictionary<int, uint> InstantPoisonDictionary = new Dictionary<int, uint>
+    {
+        { 20, 6947 },
+        { 28, 6949 },
+        { 36, 6950 },
+        { 44, 8926 },
+        { 52, 8927 },
+        { 60, 8928 },
+        { 68, 21927 },
+        { 73, 43230 },
+        { 79, 43231 },
+    };
+
+    private static Dictionary<int, uint> DeadlyPoisonDictionary = new Dictionary<int, uint>
+    {
+        { 30, 2892 },
+        { 38, 2893 },
+        { 46, 8984 },
+        { 54, 8985 },
+        { 60, 20844 },
+        { 62, 22053 },
+        { 70, 22054 },
+        { 76, 43232 },
+        { 80, 43233 },
+    };
 }
