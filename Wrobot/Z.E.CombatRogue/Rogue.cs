@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using wManager.Wow.Bot.Tasks;
 using System.ComponentModel;
 using System.Linq;
+using robotManager.FiniteStateMachine;
 
 public static class Rogue
 {
@@ -28,6 +29,7 @@ public static class Rogue
     public static uint MHPoison;
     public static uint OHPoison;
     private static string _myBestBandage = null;
+    private static readonly BackgroundWorker _pulseThread = new BackgroundWorker();
 
     public static void Initialize()
     {
@@ -87,7 +89,7 @@ public static class Rogue
         // BL Hook
         OthersEvents.OnAddBlackListGuid += (ulong guid, int timeInMilisec, bool isSessionBlacklist, CancelEventArgs cancelable) =>
         {
-            if (Me.HaveBuff("Stealth"))
+            if (Me.HaveBuff("Stealth") && !_pullFromAfar)
             {
                 Main.LogDebug("BL : " + guid + " ms : " + timeInMilisec + " is session: " + isSessionBlacklist);
                 Main.Log("Cancelling Blacklist event");
@@ -224,7 +226,7 @@ public static class Rogue
                 while (Conditions.InGameAndConnectedAndAliveAndProductStartedNotInPause
                 && (ObjectManager.Target.GetDistance > 4f)
                 && !ToolBox.CheckIfEnemiesOnPull(ObjectManager.Target, _pullRange) && Fight.InFight
-                && _stealthApproachTimer.ElapsedMilliseconds <= 25000 && Me.HaveBuff("Stealth"))
+                && _stealthApproachTimer.ElapsedMilliseconds <= 15000 && Me.HaveBuff("Stealth"))
                 {
                     // deactivate autoattack
                     ToggleAutoAttack(false);
@@ -274,7 +276,7 @@ public static class Rogue
                     }
                 }
 
-                if (_stealthApproachTimer.ElapsedMilliseconds > 25000)
+                if (_stealthApproachTimer.ElapsedMilliseconds > 15000)
                 {
                     Main.Log("_stealthApproachTimer time out");
                     _pullFromAfar = true;
@@ -468,7 +470,7 @@ public static class Rogue
             "then isAutoRepeat = true end", "isAutoRepeat");
 
         if (!_autoAttacking && activate && !ObjectManager.Target.HaveBuff("Gouge") 
-            && !ObjectManager.Target.HaveBuff("Blind"))
+            && (!ObjectManager.Target.HaveBuff("Blind") || ToolBox.HasDebuff("Recently Bandaged")))
         {
             Main.Log("Turning auto attack ON");
             ToolBox.CheckAutoAttack(Attack);

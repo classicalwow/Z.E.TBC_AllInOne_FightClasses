@@ -21,7 +21,7 @@ public class ZERogueSettings : Settings
         UseGarrote = true;
 
         ConfigWinForm(
-            new System.Drawing.Point(400, 400), "WholesomeTBCRogue "
+            new System.Drawing.Point(500, 400), "WholesomeTBCRogue "
             + Translate.Get("Settings")
         );
     }
@@ -59,8 +59,8 @@ public class ZERogueSettings : Settings
     [Category("Combat")]
     [DefaultValue(true)]
     [DisplayName("Use Blind + Bandage")]
-    [Description("Use Blind followed by your best bandage in your bags during combat " +
-        "(If true, you should avoid using poisons, as they will break Blind)")]
+    [Description("Use Blind + the best bandage in your bags during combat " +
+        "(If true, you should avoid using poisons and bleed effects, as they will break Blind)")]
     public bool UseBlindBandage { get; set; }
 
     public bool Save()

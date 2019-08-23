@@ -60,7 +60,10 @@ public static class Mage
                     && (ObjectManager.Target.HaveBuff("Frostbite") || ObjectManager.Target.HaveBuff("Frost Nova")))
                     {
                         // Wait follow path
-                        Thread.Sleep(2000);
+                        Thread.Sleep(200);
+                        if (ZEMageSettings.CurrentSetting.BlinkWhenBackup)
+                            if (Cast(Blink))
+                                Main.Log("Blink away");
                         pos = 0;
                     }
                 }
@@ -95,7 +98,6 @@ public static class Mage
             {
                 if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    Main.Log(wManager.wManagerSetting.CurrentSetting.CalcuCombatRange.ToString(), System.Drawing.Color.Firebrick);
                     if (!Fight.InFight)
                         BuffRotation();
 
@@ -280,7 +282,7 @@ public static class Mage
             return false;
         }
 
-        if ((_usingWand && !castEvenIfWanding) || _isBackingUp)
+        if ((_usingWand && !castEvenIfWanding) || (_isBackingUp && !s.Name.Equals("Blink")))
         {
             Main.LogDebug("Didn't cast because we were backing up or wanding");
             return false;
@@ -341,6 +343,7 @@ public static class Mage
     private static Spell CounterSpell = new Spell("Counterspell");
     private static Spell ConeOfCold = new Spell("Cone of Cold");
     private static Spell Evocation = new Spell("Evocation");
+    private static Spell Blink = new Spell("Blink");
     private static Spell ColdSnap = new Spell("Cold Snap");
     private static Spell Polymorph = new Spell("Polymorph");
     private static Spell IceBarrier = new Spell("Ice Barrier");

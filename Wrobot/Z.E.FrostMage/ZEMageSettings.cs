@@ -16,6 +16,7 @@ public class ZEMageSettings : Settings
         UseConeOfCold = true;
         WandThreshold = 30;
         IcyVeinMultiPull = true;
+        BlinkWhenBackup = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCMage "
@@ -40,6 +41,12 @@ public class ZEMageSettings : Settings
     [DisplayName("Only use Icy Veins on multipull")]
     [Description("Only use Icy Veins when 2 or more enemy are pulled")]
     public bool IcyVeinMultiPull { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(true)]
+    [DisplayName("Blink when backing up")]
+    [Description("Use Blink when backing up from the target")]
+    public bool BlinkWhenBackup { get; set; }
 
     public bool Save()
     {
