@@ -144,7 +144,8 @@ public static class Rogue
         {
             PoisonWeapon();
 
-            if (_settings.SprintWhenAvail && Me.HealthPercent > 80)
+            // Sprint
+            if (_settings.SprintWhenAvail && Me.HealthPercent > 80 && MovementManager.InMovement)
                 if (Cast(Sprint))
                     return;
         }
