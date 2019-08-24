@@ -64,7 +64,8 @@ public static class Priest
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    Main.settingRange = _goInMFRange ? 17f : _maxRange - 2;
+                    if (Main.settingRange != _meleeRange)
+                        Main.settingRange = _goInMFRange ? 17f : _maxRange - 2;
                     if (!Fight.InFight)
                     {
                         BuffRotation();
@@ -323,8 +324,7 @@ public static class Priest
 
         // Mind Blast + Inner Focus
         if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange
-            && _target.HealthPercent > 50 && !Me.HaveBuff("Power Word: Shield") && _mindBlastCD <= 0
-            && _target.HealthPercent > _wandThreshold)
+            && _target.HealthPercent > 50 && _mindBlastCD <= 0 && (_target.HealthPercent > _wandThreshold || !_iCanUseWand))
         {
             if (InnerFocus.KnownSpell && _innerFocusCD <= 0)
                 Cast(InnerFocus);
@@ -366,17 +366,20 @@ public static class Priest
 
         // Smite
         if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange
-            && Me.Level >= 5)
+            && Me.Level >= 5 && _target.HealthPercent > 20 && (_target.HealthPercent > _settings.WandThreshold || !_iCanUseWand))
             if (Cast(Smite, false))
                 return;
 
         // Use Wand
         if (!_usingWand && _iCanUseWand && _target.GetDistance <= _maxRange + 2)
+        {
+            Main.settingRange = _maxRange;
             if (Cast(UseWand, false))
                 return;
+        }
 
         // Go in melee because nothing else to do
-        if (!_usingWand && !_iCanUseWand && Main.settingRange != _meleeRange)
+        if (!_usingWand && !_iCanUseWand && Main.settingRange != _meleeRange && _target.IsAlive)
         {
             Main.Log("Going in melee");
             Main.settingRange = _meleeRange;

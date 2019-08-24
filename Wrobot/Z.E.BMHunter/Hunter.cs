@@ -108,7 +108,8 @@ public static class Hunter
                     && ObjectManager.Pet.IsValid)
                 {
                     // Pet Growl
-                    if (ObjectManager.Target.Target == Me.Guid && Me.InCombatFlagOnly && !_settings.AutoGrowl)
+                    if (ObjectManager.Target.Target == Me.Guid && Me.InCombatFlagOnly && !_settings.AutoGrowl
+                        && !ObjectManager.Pet.HaveBuff("Feed Pet Effect"))
                         ToolBox.PetSpellCast("Growl");
                 }
             }
