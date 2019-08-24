@@ -27,6 +27,7 @@ public static class Warrior
         Main.Log("Initialized");
         ZEWarriorSettings.Load();
         _settings = ZEWarriorSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
 
         FightEvents.OnFightEnd += (ulong guid) =>
         {

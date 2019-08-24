@@ -17,12 +17,15 @@ public static class Mage
     private static bool _isBackingUp = false;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     private static bool _iCanUseWand = false;
+    private static ZEMageSettings _settings;
 
     public static void Initialize()
     {
         Main.settingRange = _range;
         Main.Log("Initialized.");
         ZEMageSettings.Load();
+        _settings = ZEMageSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
 
         // Fight end
         FightEvents.OnFightEnd += (ulong guid) =>
@@ -61,7 +64,7 @@ public static class Mage
                     {
                         // Wait follow path
                         Thread.Sleep(200);
-                        if (ZEMageSettings.CurrentSetting.BlinkWhenBackup)
+                        if (_settings.BlinkWhenBackup)
                             if (Cast(Blink))
                                 Main.Log("Blink away");
                         pos = 0;
@@ -157,7 +160,7 @@ public static class Mage
                 return;
 
         // Frost Bolt
-        if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > ZEMageSettings.CurrentSetting.WandThreshold
+        if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > _settings.WandThreshold
             || ObjectManager.GetNumberAttackPlayer() > 1 || Me.HealthPercent < 30 || !_iCanUseWand))
             if (Cast(Frostbolt))
                 return;
@@ -202,8 +205,8 @@ public static class Mage
                 return;
 
         // Icy Veins
-        if ((ObjectManager.GetNumberAttackPlayer() > 1 && ZEMageSettings.CurrentSetting.IcyVeinMultiPull)
-            || !ZEMageSettings.CurrentSetting.IcyVeinMultiPull)
+        if ((ObjectManager.GetNumberAttackPlayer() > 1 && _settings.IcyVeinMultiPull)
+            || !_settings.IcyVeinMultiPull)
             if (Cast(IcyVeins))
                 return;
 
@@ -231,12 +234,12 @@ public static class Mage
                 return;
 
         // Cone of Cold
-        if (_target.GetDistance < 10 && ZEMageSettings.CurrentSetting.UseConeOfCold && !_isBackingUp)
+        if (_target.GetDistance < 10 && _settings.UseConeOfCold && !_isBackingUp)
             if (Cast(ConeOfCold))
                 return;
 
         // Frost Bolt
-        if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > ZEMageSettings.CurrentSetting.WandThreshold
+        if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > _settings.WandThreshold
             || ObjectManager.GetNumberAttackPlayer() > 1 || Me.HealthPercent < 30 || !_iCanUseWand))
             if (Cast(Frostbolt, true))
                 return;

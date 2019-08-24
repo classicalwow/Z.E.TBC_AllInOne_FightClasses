@@ -14,7 +14,7 @@ Hi guys. After weeks of development and testing, I’m proud to present to you my 
 -	Z.E. Shadow Priest
 -	Z.E. Combat Rogue
 
-Those fight classes are meant for leveling/grinding purpose (1-70). I do not recommend you use them for dungeons/raids or PvP. They are designed around smooth grinding, prioritizing combat uptime over high DPS. Please read their description carefully before using them.
+This file only works with the English client of the game. Those fight classes are meant for leveling/grinding purpose (1-70). I do not recommend you use them for dungeons/raids or PvP. They are designed around smooth grinding, prioritizing combat uptime over high DPS. Please read their description carefully before using them.
 This AIO is free to use and share, although I have set up a Paypal donation link in case you are happy with my work and want to encourage me via a donation.
 
 [Paypal link](https://www.paypal.com/paypalme2/zerowrobot?locale.x=fr_FR)
@@ -28,6 +28,20 @@ Project Wholesome Discord: https://discord.gg/NEq4VA6
 ### How to install
 
 Copy the .dll file into your FightClass folder, and then select it in the General Settings tab of wRobot. The AIO will automatically detect your class and launch the appropriate Fight Class.
+
+### Automatic Talent Assignation
+
+This AIO FightClass can automatically assign talents.
+The option is deactivated by default. It must be manually activated in the settings.
+Each class comes with a default recommended talent build. If you use the recommended build,
+Make sure to reset your talents in the game beforehand. Talent checks will be done at the start of
+the Fight Class, and then every 5 minutes.
+
+You also have the option to input your own talent build. In order to do so, please
+use http://calculators.iradei.eu/talents/ and then copy the code that comes after the URL once
+your build is done. 
+Talents will be learned in order from left to 
+right. Therefore, several talent codes can be set in the settings for sequential learning.
 
 --------------------
 
@@ -114,11 +128,13 @@ Tab: Vendor (Selling or Buying)
 -	Removes curses
 -	Uses a set of high CD spells on multi aggro
 -	Uses Ice Lance once available
+-   Blinks when backing up from target
 
 #### Options:
 -	You can set the HP percentage threshold under which the class will use a wand
 -	Choose whether to use Cone of Cold in your rotation
 -	Choose whether to use Icy Veins on multi aggro
+-   Choose whether to use BLink when backing up
 
 #### Recommendations:
 Get yourself a wand as soon as possible for best performances. The Frost Mage is amongst the slowest classes for leveling. Not because it lacks DPS, but because it will be drinking every 2-3 fights. On the bright side, Food and Drinks are free. Your gear will strongly affect your performance. A larger mana pool will greatly increase its sustenance when grinding. Make sure you automate selling your items so you don’t end up lacking room to conjure your food.
@@ -336,6 +352,7 @@ Tab: Vendor (Selling or Buying)
 -   Uses High CDs on multi aggro
 -   Ripostes against humanoids
 -   Will detect the type of weapon you have in your main hand and choose skills accordingly
+-   The default talent build for this class specializes in Swords
 
 #### Options:
 -	Option to always range pull

@@ -28,6 +28,8 @@ public static class Warlock
         Main.Log("Initialized");
         ZEWarlockSettings.Load();
         _settings = ZEWarlockSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
+
         Main.settingRange = _maxRange;
         _petPulseThread.DoWork += PetThread;
         _petPulseThread.RunWorkerAsync();

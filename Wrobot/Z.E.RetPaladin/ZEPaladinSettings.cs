@@ -13,6 +13,9 @@ public class ZEPaladinSettings : Settings
 
     private ZEPaladinSettings()
     {
+        UseDefaultTalents = true;
+        AssignTalents = false;
+        TalentCodes = new string[] { };
         ManaSaveLimitPercent = 50;
         FlashHealBetweenFights = true;
         UseBlessingOfWisdom = false;
@@ -26,6 +29,24 @@ public class ZEPaladinSettings : Settings
             + Translate.Get("Settings")
         );
     }
+
+    [Category("Talents")]
+    [DisplayName("Talents Codes")]
+    [Description("Use a talent calculator to generate your own codes: https://talentcalculator.org/tbc/. " +
+        "Do not modify if you are not sure.")]
+    public string[] TalentCodes { get; set; }
+
+    [Category("Talents")]
+    [DefaultValue(true)]
+    [DisplayName("Use default talents")]
+    [Description("If True, Make sure your talents match the default talents, or reset your talents.")]
+    public bool UseDefaultTalents { get; set; }
+
+    [Category("Talents")]
+    [DefaultValue(false)]
+    [DisplayName("Auto assign talents")]
+    [Description("Will automatically assign your talent points.")]
+    public bool AssignTalents { get; set; }
 
     [Category("Combat")]
     [DefaultValue(50)]

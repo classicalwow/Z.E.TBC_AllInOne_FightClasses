@@ -29,6 +29,7 @@ public static class Hunter
         _petPulseThread.RunWorkerAsync();
         ZEBMHunterSettings.Load();
         _settings = ZEBMHunterSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
 
         // Set Steady Shot delay
         if (_settings.RangedWeaponSpeed > 2000)

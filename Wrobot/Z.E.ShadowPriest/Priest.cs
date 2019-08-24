@@ -27,6 +27,7 @@ public static class Priest
         Main.Log("Initialized");
         ZEPriestSettings.Load();
         _settings = ZEPriestSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
         _wandThreshold = _settings.WandThreshold > 100 ? 50 : _settings.WandThreshold;
 
         // Fight end
@@ -152,7 +153,7 @@ public static class Priest
             }
 
             // OOC ShadowForm
-            if (!Me.HaveBuff("ShadowForm") && ObjectManager.GetNumberAttackPlayer() < 1)
+            if (!Me.HaveBuff("ShadowForm") && ObjectManager.GetNumberAttackPlayer() < 1 && Shadowform.IsSpellUsable)
                 if (Cast(Shadowform))
                     return;
         }

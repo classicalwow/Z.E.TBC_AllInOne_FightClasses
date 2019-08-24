@@ -14,12 +14,16 @@ public static class Paladin
     private static Stopwatch _purifyTimer = new Stopwatch();
     private static Stopwatch _cleanseTimer = new Stopwatch();
     private static WoWLocalPlayer Me = ObjectManager.Me;
+    private static ZEPaladinSettings _settings;
 
     public static void Initialize()
     {
         Main.Log("Initialized");
         ZEPaladinSettings.Load();
-        _manaSavePercent = ZEPaladinSettings.CurrentSetting.ManaSaveLimitPercent;
+        _settings = ZEPaladinSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
+
+        _manaSavePercent = _settings.ManaSaveLimitPercent;
         if (_manaSavePercent < 20)
             _manaSavePercent = 20;
 
@@ -60,7 +64,7 @@ public static class Paladin
 			{
 				Logging.WriteError("ERROR: " + arg, true);
 			}
-			Thread.Sleep(20);
+			Thread.Sleep(50);
 		}
         Main.Log("Stopped.");
     }
@@ -68,28 +72,43 @@ public static class Paladin
     internal static void BuffRotation()
     {
         // Holy Light
-        if (Me.HealthPercent < 50 && !Fight.InFight
-            && !Me.IsMounted)
+        if (Me.HealthPercent < 50 && !Fight.InFight && !Me.IsMounted && HolyLight.IsSpellUsable)
+        {
+            Lua.RunMacroText("/target player");
             Cast(HolyLight);
+            Lua.RunMacroText("/cleartarget");
+        }
 
         // Flash of Light
-        if (Me.HealthPercent < 75 && !Fight.InFight && ZEPaladinSettings.CurrentSetting.FlashHealBetweenFights
-            && !Me.IsMounted)
+        if (Me.HealthPercent < 75 && !Fight.InFight && _settings.FlashHealBetweenFights
+            && !Me.IsMounted && FlashOfLight.IsSpellUsable)
+        {
+            Lua.RunMacroText("/target player");
             Cast(FlashOfLight);
+            Lua.RunMacroText("/cleartarget");
+        }
 
         // Crusader Aura
         if (Me.IsMounted && CrusaderAura.KnownSpell && !Me.HaveBuff("Crusader Aura") && !Fight.InFight)
             Cast(CrusaderAura);
 
         // Blessing of Wisdom
-        if (ZEPaladinSettings.CurrentSetting.UseBlessingOfWisdom && !Me.HaveBuff("Blessing of Wisdom")
-            && !Me.IsMounted)
+        if (_settings.UseBlessingOfWisdom && !Me.HaveBuff("Blessing of Wisdom")
+            && !Me.IsMounted && BlessingOfWisdom.IsSpellUsable)
+        {
+            Lua.RunMacroText("/target player");
             Cast(BlessingOfWisdom);
+            Lua.RunMacroText("/cleartarget");
+        }
 
         // Blessing of Might
-        if (!ZEPaladinSettings.CurrentSetting.UseBlessingOfWisdom && !Me.HaveBuff("Blessing of Might")
-            && !Me.IsMounted)
+        if (!_settings.UseBlessingOfWisdom && !Me.HaveBuff("Blessing of Might")
+            && !Me.IsMounted && BlessingOfMight.IsSpellUsable)
+        {
+            Lua.RunMacroText("/target player");
             Cast(BlessingOfMight);
+            Lua.RunMacroText("/cleartarget");
+        }
     }
 
 
@@ -98,22 +117,27 @@ public static class Paladin
         ToolBox.CheckAutoAttack(Attack);
 
         // Purify
-        if (ToolBox.HasPoisonDebuff() || ToolBox.HasDiseaseDebuff() && 
+        if ((ToolBox.HasPoisonDebuff() || ToolBox.HasDiseaseDebuff()) && Purify.IsSpellUsable &&
             (_purifyTimer.ElapsedMilliseconds > 10000 || _purifyTimer.ElapsedMilliseconds <= 0))
         {
             _purifyTimer.Restart();
+            Lua.RunMacroText("/target player");
             Cast(Purify);
+            Lua.RunMacroText("/cleartarget");
         }
 
         // Cleanse
-        if (ToolBox.HasMagicDebuff() && (_cleanseTimer.ElapsedMilliseconds > 10000 || _cleanseTimer.ElapsedMilliseconds <= 0))
+        if (ToolBox.HasMagicDebuff() && (_cleanseTimer.ElapsedMilliseconds > 10000 || _cleanseTimer.ElapsedMilliseconds <= 0)
+            && Cleanse.IsSpellUsable)
         {
             _cleanseTimer.Restart();
+            Lua.RunMacroText("/target player");
             Cast(Cleanse);
+            Lua.RunMacroText("/cleartarget");
         }
 
         // Devotion Aura multi
-        if ((ObjectManager.GetNumberAttackPlayer() > 1 && ZEPaladinSettings.CurrentSetting.DevoAuraOnMulti) && 
+        if ((ObjectManager.GetNumberAttackPlayer() > 1 && _settings.DevoAuraOnMulti) && 
             !Me.HaveBuff("Devotion Aura"))
             Cast(DevotionAura);
 
@@ -144,7 +168,7 @@ public static class Paladin
         
         // Exorcism
         if (ObjectManager.Target.CreatureTypeTarget == "Undead" || ObjectManager.Target.CreatureTypeTarget == "Demon"
-            && ZEPaladinSettings.CurrentSetting.UseExorcism)
+            && _settings.UseExorcism)
             Cast(Exorcism);
             
         // Judgement (Crusader)
@@ -168,13 +192,13 @@ public static class Paladin
         // Seal of Righteousness
         if (!Me.HaveBuff("Seal of Righteousness") && !Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
             (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || Me.ManaPercentage > _manaSavePercent)
-            && (!ZEPaladinSettings.CurrentSetting.UseSealOfCommand || !SealOfCommand.KnownSpell))
+            && (!_settings.UseSealOfCommand || !SealOfCommand.KnownSpell))
             Cast(SealOfRighteousness);
 
         // Seal of Command
         if (!Me.HaveBuff("Seal of Command") && !Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
             (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || Me.ManaPercentage > _manaSavePercent)
-            && ZEPaladinSettings.CurrentSetting.UseSealOfCommand && SealOfCommand.KnownSpell)
+            && _settings.UseSealOfCommand && SealOfCommand.KnownSpell)
             Cast(SealOfCommand);
 
         // Seal of Command Rank 1
@@ -200,7 +224,7 @@ public static class Paladin
             Cast(CrusaderStrike);
 
         // Hammer of Wrath
-        if (ZEPaladinSettings.CurrentSetting.UseHammerOfWrath)
+        if (_settings.UseHammerOfWrath)
             Cast(HammerOfWrath);
     }
 

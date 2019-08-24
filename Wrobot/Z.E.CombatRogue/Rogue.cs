@@ -36,6 +36,7 @@ public static class Rogue
         Main.Log("Initialized");
         ZERogueSettings.Load();
         _settings = ZERogueSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
 
         // Fight End
         FightEvents.OnFightEnd += (ulong guid) =>

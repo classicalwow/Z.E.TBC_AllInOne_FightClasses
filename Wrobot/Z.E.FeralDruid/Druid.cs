@@ -34,6 +34,7 @@ public static class Druid
         Main.settingRange = _pullRange;
         ZEDruidSettings.Load();
         _settings = ZEDruidSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
 
         // Fight end
         FightEvents.OnFightEnd += (ulong guid) =>
@@ -198,7 +199,7 @@ public static class Druid
             }
 
             // Omen of Clarity
-            if (!Me.HaveBuff("Omen of Clarity"))
+            if (!Me.HaveBuff("Omen of Clarity") && OmenOfClarity.IsSpellUsable)
                 if (Cast(OmenOfClarity))
                     return;
 

@@ -33,6 +33,7 @@ public static class Shaman
         Main.Log("Initialized");
         ZEShamanSettings.Load();
         _settings = ZEShamanSettings.CurrentSetting;
+        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
         _ghostWolfTimer.Start();
 
         FightEvents.OnFightEnd += (ulong guid) =>

@@ -1,5 +1,8 @@
 ﻿using robotManager.Helpful;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using wManager.Wow.Class;
@@ -443,7 +446,7 @@ public class ToolBox
     {
         if (from != null && from != Vector3.Empty)
         {
-            float rotation = -Math.DegreeToRadian(Math.RadianToDegree(targetObject.Rotation) + 90);
+            float rotation = -robotManager.Helpful.Math.DegreeToRadian(robotManager.Helpful.Math.RadianToDegree(targetObject.Rotation) + 90);
             return new Vector3((System.Math.Sin(rotation) * radius) + from.X, (System.Math.Cos(rotation) * radius) + from.Y, from.Z);
         }
         return new Vector3(0, 0, 0);

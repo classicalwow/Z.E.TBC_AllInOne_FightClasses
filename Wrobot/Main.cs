@@ -9,18 +9,16 @@ using System.ComponentModel;
 
 public class Main : ICustomClass
 {
-    private static string wowClass = ObjectManager.Me.WowClass.ToString();
+    public static string wowClass = ObjectManager.Me.WowClass.ToString();
     public static float settingRange = 5f;
     public static bool _isLaunched;
     private static bool _debug = true;
     private static bool _saveCalcuCombatRangeSetting = wManager.wManagerSetting.CurrentSetting.CalcuCombatRange;
+    private static readonly BackgroundWorker _talentThread = new BackgroundWorker();
 
     public float Range
 	{
-		get
-        {
-            return settingRange;
-        }
+		get { return settingRange; }
     }
 
     public void Initialize()
@@ -28,21 +26,25 @@ public class Main : ICustomClass
         Log("Started. Discovering class and finding rotation...");
         var type = Type.GetType(wowClass);
 
-        // Fight end
-        FightEvents.OnFightEnd += (ulong guid) =>
-        {
-            wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
-        };
-
-        // Fight start
-        FightEvents.OnFightStart += (WoWUnit unit, CancelEventArgs cancelable) =>
-        {
-            wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = false;
-        };
-
         if (type != null)
         {
             _isLaunched = true;
+
+            // Fight end
+            FightEvents.OnFightEnd += (ulong guid) =>
+            {
+                wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
+            };
+
+            // Fight start
+            FightEvents.OnFightStart += (WoWUnit unit, CancelEventArgs cancelable) =>
+            {
+                wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = false;
+            };
+            
+            _talentThread.DoWork += Talents.DoTalentPulse;
+            _talentThread.RunWorkerAsync();
+
             type.GetMethod("Initialize").Invoke(null, null);
         }
         else
@@ -55,10 +57,12 @@ public class Main : ICustomClass
     public void Dispose()
     {
         wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
+        _talentThread.DoWork -= Talents.DoTalentPulse;
+        _talentThread.Dispose();
+        _isLaunched = false;
         var type = Type.GetType(wowClass);
         if (type != null)
             type.GetMethod("Dispose").Invoke(null, null);
-        _isLaunched = false;
     }
 
     public void ShowConfiguration()
