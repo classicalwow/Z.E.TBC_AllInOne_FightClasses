@@ -213,12 +213,10 @@ public static class Warlock
 
             // Health Funnel
             if (ObjectManager.Pet.HealthPercent < 50 && Me.HealthPercent > 40 && ObjectManager.Pet.GetDistance < 19
-                && !ObjectManager.Pet.InCombatFlagOnly)
+                && !ObjectManager.Pet.InCombatFlagOnly && HealthFunnel.KnownSpell)
             {
                 if (PetAndConsumables.MyWarlockPet().Equals("Voidwalker"))
-                {
                     ToolBox.PetSpellCast("Consume Shadows");
-                }
 
                 ToolBox.StopWandWaitGCD(UseWand, ShadowBolt);
                 if (Cast(HealthFunnel))
@@ -242,6 +240,7 @@ public static class Warlock
             if (!Me.HaveBuff("Soulstone Resurrection") && CreateSoulstone.KnownSpell && 
                 ToolBox.GetItemCooldown(PetAndConsumables.SoulStones()) <= 0)
             {
+                MovementManager.StopMove();
                 Lua.RunMacroText("/target player");
                 PetAndConsumables.UseSoulstone();
                 Usefuls.WaitIsCasting();
@@ -306,7 +305,7 @@ public static class Warlock
         bool _overLowManaThreshold = _myManaPC > _innerManaSaveThreshold;
 
         // Multi aggro
-        if (ObjectManager.GetNumberAttackPlayer() > 1 && 
+        if (ObjectManager.GetNumberAttackPlayer() > 1 && Fear.KnownSpell &&
             (_addCheckTimer.ElapsedMilliseconds > 3000 || _addCheckTimer.ElapsedMilliseconds <= 0))
         {
             _addCheckTimer.Restart();

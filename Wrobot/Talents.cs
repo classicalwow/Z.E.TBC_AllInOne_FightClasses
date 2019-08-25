@@ -12,8 +12,9 @@ public class Talents
 {
     private static bool _isAssigning = false;
     private static bool _isInitialized = false;
+    public static bool _isRunning = false;
     public static string[] _talentsCodes = new string[] { };
-    private static int _talentTimer = 60000 * 5; // 5 minutes
+    private static int _talentTimer = 60000 * 2; // 2 minutes
 
     // Talent initialization
     public static void InitTalents(bool assignTalents, bool useDefaultTalents, string[] customTalentsCodes)
@@ -172,15 +173,16 @@ public class Talents
     // Talent pulse
     public static void DoTalentPulse(object sender, DoWorkEventArgs args)
     {
-        while (Main._isLaunched)
+        _isRunning = true;
+        while (Main._isLaunched && _isRunning)
         {
             Thread.Sleep(3000);
             try
             {
-                if (Conditions.InGameAndConnectedAndProductStartedNotInPause && !ObjectManager.Me.InCombatFlagOnly 
-                    && ObjectManager.Me.IsAlive && Main._isLaunched && !_isAssigning && _isInitialized)
+                if (Conditions.InGameAndConnectedAndProductStartedNotInPause /*&& !ObjectManager.Me.InCombatFlagOnly */
+                    && ObjectManager.Me.IsAlive && Main._isLaunched && !_isAssigning && _isInitialized && _isRunning)
                 {
-                    Main.LogDebug("Assigning Talents");
+                    Main.Log("Assigning Talents", Color.SteelBlue);
                     _isAssigning = true;
                     AssignTalents(_talentsCodes);
                     _isAssigning = false;
@@ -192,6 +194,7 @@ public class Talents
             }
             Thread.Sleep(_talentTimer);
         }
+        _isRunning = false;
     }
 
     // Talent assignation 

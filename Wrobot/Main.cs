@@ -42,8 +42,11 @@ public class Main : ICustomClass
                 wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = false;
             };
             
-            _talentThread.DoWork += Talents.DoTalentPulse;
-            _talentThread.RunWorkerAsync();
+            if (!Talents._isRunning)
+            {
+                _talentThread.DoWork += Talents.DoTalentPulse;
+                _talentThread.RunWorkerAsync();
+            }
 
             type.GetMethod("Initialize").Invoke(null, null);
         }
@@ -57,12 +60,13 @@ public class Main : ICustomClass
     public void Dispose()
     {
         wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
-        _talentThread.DoWork -= Talents.DoTalentPulse;
-        _talentThread.Dispose();
         _isLaunched = false;
         var type = Type.GetType(wowClass);
         if (type != null)
             type.GetMethod("Dispose").Invoke(null, null);
+        _talentThread.DoWork -= Talents.DoTalentPulse;
+        _talentThread.Dispose();
+        Talents._isRunning = false;
     }
 
     public void ShowConfiguration()

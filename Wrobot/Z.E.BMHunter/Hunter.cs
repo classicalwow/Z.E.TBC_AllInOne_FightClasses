@@ -178,6 +178,9 @@ public static class Hunter
 
     internal static void CombatRotation()
     {
+        if (ObjectManager.Target.GetDistance > 10f && !_isBackingUp)
+            ReenableAutoshot();
+
         // Aspect of the viper
         if (AspectViper.KnownSpell && AspectViper.IsSpellUsable && !Me.HaveBuff("Aspect of the Viper")
             && Me.ManaPercentage < 30)
