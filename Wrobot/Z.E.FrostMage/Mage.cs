@@ -66,7 +66,7 @@ public static class Mage
                         Thread.Sleep(200);
                         if (_settings.BlinkWhenBackup)
                             if (Cast(Blink))
-                                Main.Log("Blink away");
+                                Main.LogDebug("Blink away");
                         pos = 0;
                     }
                 }
@@ -129,7 +129,12 @@ public static class Mage
         _foodManager.CheckIfHaveManaStone();
 
         // Frost Armor
-        if (!Me.HaveBuff("Frost Armor"))
+        if (!Me.HaveBuff("Ice Armor"))
+            if (Cast(IceArmor))
+                return;
+
+        // Frost Armor
+        if (!Me.HaveBuff("Frost Armor") && !IceArmor.KnownSpell)
             if (Cast(FrostArmor))
                 return;
 
@@ -353,4 +358,5 @@ public static class Mage
     private static Spell SummonWaterElemental = new Spell("Summon Water Elemental");
     private static Spell IceLance = new Spell("Ice Lance");
     private static Spell RemoveCurse = new Spell("Remove Curse");
+    private static Spell IceArmor = new Spell("Ice Armor");
 }

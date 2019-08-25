@@ -14,7 +14,7 @@ public class Talents
     private static bool _isInitialized = false;
     public static bool _isRunning = false;
     public static string[] _talentsCodes = new string[] { };
-    private static int _talentTimer = 60000 * 2; // 2 minutes
+    private static int _talentTimer = 60000 * 5; // 5 minutes
 
     // Talent initialization
     public static void InitTalents(bool assignTalents, bool useDefaultTalents, string[] customTalentsCodes)
@@ -182,7 +182,7 @@ public class Talents
                 if (Conditions.InGameAndConnectedAndProductStartedNotInPause /*&& !ObjectManager.Me.InCombatFlagOnly */
                     && ObjectManager.Me.IsAlive && Main._isLaunched && !_isAssigning && _isInitialized && _isRunning)
                 {
-                    Main.Log("Assigning Talents", Color.SteelBlue);
+                    Main.LogDebug("Assigning Talents");
                     _isAssigning = true;
                     AssignTalents(_talentsCodes);
                     _isAssigning = false;
@@ -265,7 +265,7 @@ public class Talents
                         int _currentRank = Lua.LuaDoString<int>("_, _, _, _, currentRank, _, _, _ = GetTalentInfo(" + k + ", " + _talentNumber + "); return currentRank;");
                         int _realMaxRank = Lua.LuaDoString<int>("_, _, _, _, _, maxRank, _, _ = GetTalentInfo(" + k + ", " + _talentNumber + "); return maxRank;");
 
-                        int _pointsToAssignInTalent = System.Convert.ToInt16(TalentCodeTrees[k - 1].Substring(i, 1));
+                        int _pointsToAssignInTalent = Convert.ToInt16(TalentCodeTrees[k - 1].Substring(i, 1));
 
                         if (_currentRank > _pointsToAssignInTalent && TalentCodes.Last().Equals(talentsCode))
                         {
