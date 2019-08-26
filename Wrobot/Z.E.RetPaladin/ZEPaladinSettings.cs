@@ -13,6 +13,7 @@ public class ZEPaladinSettings : Settings
 
     private ZEPaladinSettings()
     {
+        ThreadSleepCycle = 10;
         UseDefaultTalents = true;
         AssignTalents = false;
         TalentCodes = new string[] { };
@@ -29,6 +30,12 @@ public class ZEPaladinSettings : Settings
             + Translate.Get("Settings")
         );
     }
+
+    [Category("Performance")]
+    [DefaultValue(10)]
+    [DisplayName("Refresh rate (ms)")]
+    [Description("Set this value higher if you have low CPU performance. In doubt, do not change this value.")]
+    public int ThreadSleepCycle { get; set; }
 
     [Category("Talents")]
     [DisplayName("Talents Codes")]

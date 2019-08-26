@@ -15,7 +15,7 @@ public static class Priest
     private static float _maxRange = 28f;
     private static float _meleeRange = 5f;
     private static bool _usingWand = false;
-    private static bool _iCanUseWand = false;
+    private static bool _iCanUseWand = ToolBox.HaveRangedWeaponEquipped();
     private static int _innerManaSaveThreshold = 20;
     private static int _wandThreshold;
     private static bool _goInMFRange = false;
@@ -29,6 +29,7 @@ public static class Priest
         _settings = ZEPriestSettings.CurrentSetting;
         Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
         _wandThreshold = _settings.WandThreshold > 100 ? 50 : _settings.WandThreshold;
+        Main.settingRange = _maxRange;
 
         // Fight end
         FightEvents.OnFightEnd += (ulong guid) =>
@@ -84,7 +85,7 @@ public static class Priest
 			{
 				Logging.WriteError("ERROR: " + arg, true);
 			}
-			Thread.Sleep(Usefuls.Latency + 20);
+			Thread.Sleep(Usefuls.Latency + _settings.ThreadSleepCycle);
 		}
         Main.Log("Stopped.");
     }

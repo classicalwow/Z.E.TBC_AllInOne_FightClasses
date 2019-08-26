@@ -17,7 +17,7 @@ public static class Warlock
     private static float _meleeRange = 27f;
     private static bool _usingWand = false;
     private static int _innerManaSaveThreshold = 20;
-    private static bool _iCanUseWand = false;
+    private static bool _iCanUseWand = ToolBox.HaveRangedWeaponEquipped();
     private static ZEWarlockSettings _settings;
     private static readonly BackgroundWorker _petPulseThread = new BackgroundWorker();
     private static Stopwatch _addCheckTimer = new Stopwatch();
@@ -122,7 +122,7 @@ public static class Warlock
 			{
 				Logging.WriteError("ERROR: " + arg, true);
 			}
-			Thread.Sleep(Usefuls.Latency + 20);
+			Thread.Sleep(Usefuls.Latency + _settings.ThreadSleepCycle);
 		}
         Main.Log("Stopped.");
     }

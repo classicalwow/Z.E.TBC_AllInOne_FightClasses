@@ -16,7 +16,7 @@ public static class Mage
     private static bool _usingWand = false;
     private static bool _isBackingUp = false;
     private static WoWLocalPlayer Me = ObjectManager.Me;
-    private static bool _iCanUseWand = false;
+    private static bool _iCanUseWand = ToolBox.HaveRangedWeaponEquipped();
     private static ZEMageSettings _settings;
 
     public static void Initialize()
@@ -117,7 +117,7 @@ public static class Mage
             {
                 Logging.WriteError("ERROR: " + arg, true);
             }
-            Thread.Sleep(Usefuls.Latency + 10);
+            Thread.Sleep(Usefuls.Latency + _settings.ThreadSleepCycle);
         }
         Main.Log("Stopped.");
     }

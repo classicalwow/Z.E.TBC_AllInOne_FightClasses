@@ -13,6 +13,7 @@ public class ZEPriestSettings : Settings
 
     private ZEPriestSettings()
     {
+        ThreadSleepCycle = 10;
         WandThreshold = 40;
         UseInnerFire = true;
         UseShieldOnPull = true;
@@ -28,6 +29,12 @@ public class ZEPriestSettings : Settings
             + Translate.Get("Settings")
         );
     }
+
+    [Category("Performance")]
+    [DefaultValue(10)]
+    [DisplayName("Refresh rate (ms)")]
+    [Description("Set this value higher if you have low CPU performance. In doubt, do not change this value.")]
+    public int ThreadSleepCycle { get; set; }
 
     [Category("Talents")]
     [DisplayName("Talents Codes")]

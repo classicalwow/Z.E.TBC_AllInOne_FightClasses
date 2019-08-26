@@ -64,7 +64,7 @@ public static class Paladin
 			{
 				Logging.WriteError("ERROR: " + arg, true);
 			}
-			Thread.Sleep(50);
+			Thread.Sleep(Usefuls.Latency + _settings.ThreadSleepCycle);
 		}
         Main.Log("Stopped.");
     }

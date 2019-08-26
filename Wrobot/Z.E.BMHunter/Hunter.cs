@@ -171,7 +171,7 @@ public static class Hunter
 			{
 				Logging.WriteError("ERROR: " + arg, true);
 			}
-			Thread.Sleep(10 + Usefuls.Latency);
+			Thread.Sleep(_settings.ThreadSleepCycle + Usefuls.Latency);
 		}
         Main.Log("Stopped.");
 	}

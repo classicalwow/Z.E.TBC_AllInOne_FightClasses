@@ -134,7 +134,7 @@ public static class Druid
 			{
 				Logging.WriteError("ERROR: " + arg, true);
 			}
-			Thread.Sleep(Usefuls.Latency + 20);
+			Thread.Sleep(Usefuls.Latency + _settings.ThreadSleepCycle);
 		}
         Main.Log("Stopped.");
     }
