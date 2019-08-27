@@ -251,6 +251,14 @@ public class ToolBox
         return Talents.Where(t => t.Value == highestTalents).FirstOrDefault().Key;
     }
 
+    // Returns the latency
+    public static int GetLatency()
+    {
+        int worldLatency = Lua.LuaDoString<int>($"local down, up, lagHome, lagWorld = GetNetStats(); return lagWorld");
+        int homeLatency = Lua.LuaDoString<int>($"local down, up, lagHome, lagWorld = GetNetStats(); return lagHome");
+        return worldLatency + homeLatency;
+    }
+
     #endregion
 
     #region Items

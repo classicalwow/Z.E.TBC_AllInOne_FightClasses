@@ -85,7 +85,7 @@ public static class Priest
 			{
 				Logging.WriteError("ERROR: " + arg, true);
 			}
-			Thread.Sleep(Usefuls.Latency + _settings.ThreadSleepCycle);
+			Thread.Sleep(ToolBox.GetLatency() + _settings.ThreadSleepCycle);
 		}
         Main.Log("Stopped.");
     }
