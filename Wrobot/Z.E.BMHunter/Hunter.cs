@@ -178,7 +178,9 @@ public static class Hunter
 
     internal static void CombatRotation()
     {
-        if (ObjectManager.Target.GetDistance > 10f && !_isBackingUp)
+        WoWUnit Target = ObjectManager.Target;
+
+        if (Target.GetDistance > 10f && !_isBackingUp)
             ReenableAutoshot();
 
         // Aspect of the viper
@@ -197,14 +199,14 @@ public static class Hunter
             AspectMonkey.Launch();
 
         // Bestial Wrath
-        if (BestialWrath.KnownSpell && BestialWrath.IsSpellUsable && ObjectManager.Target.GetDistance < 34f
-            && ObjectManager.Target.HealthPercent >= 60 && Me.ManaPercentage > 10 && BestialWrath.IsSpellUsable
+        if (BestialWrath.KnownSpell && BestialWrath.IsSpellUsable && Target.GetDistance < 34f
+            && Target.HealthPercent >= 60 && Me.ManaPercentage > 10 && BestialWrath.IsSpellUsable
             && ((_settings.BestialWrathOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !_settings.BestialWrathOnMulti))
             BestialWrath.Launch();
 
         // Rapid Fire
-        if (RapidFire.KnownSpell && RapidFire.IsSpellUsable && ObjectManager.Target.GetDistance < 34f
-            && ObjectManager.Target.HealthPercent >= 80.0
+        if (RapidFire.KnownSpell && RapidFire.IsSpellUsable && Target.GetDistance < 34f
+            && Target.HealthPercent >= 80.0
             && ((_settings.RapidFireOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !_settings.RapidFireOnMulti))
             RapidFire.Launch();
 
@@ -213,11 +215,11 @@ public static class Hunter
             KillCommand.Launch();
         
         // Raptor Strike
-        if (RaptorStrike.KnownSpell && RaptorStrike.IsSpellUsable && ObjectManager.Target.GetDistance < 6f && !RaptorStrikeOn())
+        if (RaptorStrike.KnownSpell && RaptorStrike.IsSpellUsable && Target.GetDistance < 6f && !RaptorStrikeOn())
             RaptorStrike.Launch();
         
         // Mongoose Bite
-        if (MongooseBite.KnownSpell && MongooseBite.IsSpellUsable && ObjectManager.Target.GetDistance < 6f)
+        if (MongooseBite.KnownSpell && MongooseBite.IsSpellUsable && Target.GetDistance < 6f)
             MongooseBite.Launch();
         
         // Feign Death
@@ -239,7 +241,7 @@ public static class Hunter
 		
         // Hunter's Mark
 		if (HuntersMark.KnownSpell && HuntersMark.IsSpellUsable && ObjectManager.Pet.IsValid && !HuntersMark.TargetHaveBuff 
-            && ObjectManager.Target.GetDistance > 13f && ObjectManager.Target.IsAlive)
+            && Target.GetDistance > 13f && Target.IsAlive)
 			HuntersMark.Launch();
         
         // Steady Shot
@@ -250,21 +252,21 @@ public static class Hunter
         }
 
         // Serpent Sting
-        if (SerpentSting.KnownSpell && SerpentSting.IsSpellUsable && !ObjectManager.Target.HaveBuff("Serpent Sting") 
-            && ObjectManager.Target.GetDistance < 34f && ToolBox.CanBleed(Me.TargetObject) 
-            && ObjectManager.Target.HealthPercent >= 80 && Me.ManaPercentage > 50u && !SteadyShot.KnownSpell
-            && ObjectManager.Target.GetDistance > 13f)
+        if (SerpentSting.KnownSpell && SerpentSting.IsSpellUsable && !Target.HaveBuff("Serpent Sting") 
+            && Target.GetDistance < 34f && ToolBox.CanBleed(Me.TargetObject) 
+            && Target.HealthPercent >= 80 && Me.ManaPercentage > 50u && !SteadyShot.KnownSpell
+            && Target.GetDistance > 13f)
 			SerpentSting.Launch();
 		
         // Intimidation
-		if (Intimidation.KnownSpell && Intimidation.IsSpellUsable && ObjectManager.Target.GetDistance < 34f 
-            && ObjectManager.Target.GetDistance > 10f && ObjectManager.Target.HealthPercent >= 20 && Me.ManaPercentage > 10
+		if (Intimidation.KnownSpell && Intimidation.IsSpellUsable && Target.GetDistance < 34f 
+            && Target.GetDistance > 10f && Target.HealthPercent >= 20 && Me.ManaPercentage > 10
             && Intimidation.IsSpellUsable)
 			Intimidation.Launch();
 		
         // Arcane Shot
-		if (ArcaneShot.KnownSpell && ArcaneShot.IsSpellUsable && ObjectManager.Target.GetDistance < 34f 
-            && ObjectManager.Target.HealthPercent >= 30 && Me.ManaPercentage > 80
+		if (ArcaneShot.KnownSpell && ArcaneShot.IsSpellUsable && Target.GetDistance < 34f 
+            && Target.HealthPercent >= 30 && Me.ManaPercentage > 80
             && !SteadyShot.KnownSpell)
 			ArcaneShot.Launch();
     }

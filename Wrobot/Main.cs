@@ -11,6 +11,7 @@ public class Main : ICustomClass
 {
     public static string wowClass = ObjectManager.Me.WowClass.ToString();
     public static float settingRange = 5f;
+    public static int _humanReflexTime = 300;
     public static bool _isLaunched;
     private static bool _debug = true;
     private static bool _saveCalcuCombatRangeSetting = wManager.wManagerSetting.CurrentSetting.CalcuCombatRange;

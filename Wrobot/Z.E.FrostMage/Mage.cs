@@ -185,17 +185,20 @@ public static class Mage
     {
         Lua.LuaDoString("PetAttack();", false);
         bool _hasCurse = ToolBox.HasCurseDebuff();
-        WoWUnit _target = ObjectManager.Target;
+        WoWUnit Target = ObjectManager.Target;
         _usingWand = Lua.LuaDoString<bool>("isAutoRepeat = false; local name = GetSpellInfo(5019); " +
             "if IsAutoRepeatSpell(name) then isAutoRepeat = true end", "isAutoRepeat");
 
         // Remove Curse
         if (_hasCurse)
+        {
+            Thread.Sleep(Main._humanReflexTime);
             if (Cast(RemoveCurse))
                 return;
+        }
 
         // Summon Water Elemental
-        if (_target.HealthPercent > 95 || ObjectManager.GetNumberAttackPlayer() > 1)
+        if (Target.HealthPercent > 95 || ObjectManager.GetNumberAttackPlayer() > 1)
             if (Cast(SummonWaterElemental))
                 return;
 
@@ -224,38 +227,38 @@ public static class Mage
         }
 
         // Ice Lance
-        if (_target.HaveBuff("Frostbite") || _target.HaveBuff("Frost Nova"))
+        if (Target.HaveBuff("Frostbite") || Target.HaveBuff("Frost Nova"))
             if (Cast(IceLance))
                 return;
 
         // Frost Nova
-        if (_target.GetDistance < _meleeRange + 2 && _target.HealthPercent > 5 && !_target.HaveBuff("Frostbite"))
+        if (Target.GetDistance < _meleeRange + 2 && Target.HealthPercent > 5 && !Target.HaveBuff("Frostbite"))
             if (Cast(FrostNova))
                 return;
 
         // Fire Blast
-        if (_target.GetDistance < 20f && _target.HealthPercent > 30f)
+        if (Target.GetDistance < 20f && Target.HealthPercent > 30f)
             if (Cast(FireBlast))
                 return;
 
         // Cone of Cold
-        if (_target.GetDistance < 10 && _settings.UseConeOfCold && !_isBackingUp)
+        if (Target.GetDistance < 10 && _settings.UseConeOfCold && !_isBackingUp)
             if (Cast(ConeOfCold))
                 return;
 
         // Frost Bolt
-        if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > _settings.WandThreshold
+        if (Target.GetDistance < _range + 1 && Me.Level >= 6 && (Target.HealthPercent > _settings.WandThreshold
             || ObjectManager.GetNumberAttackPlayer() > 1 || Me.HealthPercent < 30 || !_iCanUseWand))
             if (Cast(Frostbolt, true))
                 return;
 
         // Low level Frost Bolt
-        if (_target.GetDistance < _range + 1 && _target.HealthPercent > 30 && Me.Level < 6)
+        if (Target.GetDistance < _range + 1 && Target.HealthPercent > 30 && Me.Level < 6)
             if (Cast(Frostbolt, true))
                 return;
 
         // Low level FireBall
-        if (_target.GetDistance < _range + 1 && !Frostbolt.KnownSpell && _target.HealthPercent > 30)
+        if (Target.GetDistance < _range + 1 && !Frostbolt.KnownSpell && Target.HealthPercent > 30)
             if (Cast(Fireball, true))
                 return;
         

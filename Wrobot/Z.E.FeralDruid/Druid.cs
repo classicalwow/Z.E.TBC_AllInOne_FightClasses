@@ -314,7 +314,7 @@ public static class Druid
     {
         bool _shouldBeInterrupted = ToolBox.EnemyCasting();
         bool _inMeleeRange = ObjectManager.Target.GetDistance < 6f;
-        WoWUnit _target = ObjectManager.Target;
+        WoWUnit Target = ObjectManager.Target;
 
         // Check Auto-Attacking
         ToolBox.CheckAutoAttack(Attack);
@@ -323,8 +323,8 @@ public static class Druid
         if (_shouldBeInterrupted)
         {
             _fightingACaster = true;
-            if (!_casterEnemies.Contains(_target.Name))
-                _casterEnemies.Add(_target.Name);
+            if (!_casterEnemies.Contains(Target.Name))
+                _casterEnemies.Add(Target.Name);
         }
 
         // Melee ?
@@ -348,27 +348,30 @@ public static class Druid
 
         // Barkskin + Regrowth + Rejuvenation
         if (_settings.UseBarkskin && Barkskin.KnownSpell && Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth") 
-            && Me.Mana > _bigHealComboCost + ToolBox.GetSpellCost("Barkskin"))
+            && Me.Mana > _bigHealComboCost + ToolBox.GetSpellCost("Barkskin") && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(Barkskin) && Cast(Regrowth) && Cast(Rejuvenation))
                 return;
 
         // Regrowth + Rejuvenation
-        if (Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth") && Me.Mana > _bigHealComboCost)
+        if (Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth") && Me.Mana > _bigHealComboCost
+            && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(Regrowth) && Cast(Rejuvenation))
                 return;
 
         // Regrowth
-        if (Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth") && Me.Mana > _smallHealComboCost)
+        if (Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth") && Me.Mana > _smallHealComboCost
+            && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(Regrowth))
                 return;
 
         // Rejuvenation
-        if (Me.HealthPercent < 50 && !Me.HaveBuff("Rejuvenation") && !Regrowth.KnownSpell)
+        if (Me.HealthPercent < 50 && !Me.HaveBuff("Rejuvenation") && !Regrowth.KnownSpell
+            && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(Rejuvenation))
                 return;
 
         // Healing Touch
-        if (Me.HealthPercent < 30 && !Regrowth.KnownSpell)
+        if (Me.HealthPercent < 30 && !Regrowth.KnownSpell && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(HealingTouch))
                 return;
 
@@ -392,60 +395,60 @@ public static class Druid
             Main.settingRange = _meleRange;
 
             // Shred (when behind)
-            if (_target.HaveBuff("Pounce"))
+            if (Target.HaveBuff("Pounce"))
                 if (Cast(Shred))
                     return;
 
             // Faerie Fire
-            if (!_target.HaveBuff("Faerie Fire (Feral)") && FaerieFireFeral.KnownSpell && !_target.HaveBuff("Pounce"))
+            if (!Target.HaveBuff("Faerie Fire (Feral)") && FaerieFireFeral.KnownSpell && !Target.HaveBuff("Pounce"))
             {
                 Lua.RunMacroText("/cast Faerie Fire (Feral)()");
                 return;
             }
 
             // Rip
-            if (!_target.HaveBuff("Rip") && !_target.HaveBuff("Pounce"))
+            if (!Target.HaveBuff("Rip") && !Target.HaveBuff("Pounce"))
             {
-                if (Me.ComboPoint >= 3 && _target.HealthPercent > 60)
+                if (Me.ComboPoint >= 3 && Target.HealthPercent > 60)
                     if (Cast(Rip))
                         return;
 
-                if (Me.ComboPoint >= 1 && _target.HealthPercent <= 60)
+                if (Me.ComboPoint >= 1 && Target.HealthPercent <= 60)
                     if (Cast(Rip))
                         return;
             }
 
             // Ferocious Bite
-            if (FerociousBite.KnownSpell && !_target.HaveBuff("Pounce"))
+            if (FerociousBite.KnownSpell && !Target.HaveBuff("Pounce"))
             {
-                if (Me.ComboPoint >= 3 && _target.HealthPercent > 60)
+                if (Me.ComboPoint >= 3 && Target.HealthPercent > 60)
                     if (Cast(FerociousBite))
                         return;
 
-                if (Me.ComboPoint >= 1 && _target.HealthPercent <= 60)
+                if (Me.ComboPoint >= 1 && Target.HealthPercent <= 60)
                     if (Cast(FerociousBite))
                         return;
             }
 
             // Rake
-            if (!_target.HaveBuff("Rake") && !_target.HaveBuff("Pounce"))
+            if (!Target.HaveBuff("Rake") && !Target.HaveBuff("Pounce"))
                 if (Cast(Rake))
                     return;
 
             // Tiger's Fury
-            if (!Me.HaveBuff("Tiger's Fury") && _settings.UseTigersFury && Me.ComboPoint < 1 && !_target.HaveBuff("Pounce"))
+            if (!Me.HaveBuff("Tiger's Fury") && _settings.UseTigersFury && Me.ComboPoint < 1 && !Target.HaveBuff("Pounce"))
                 if (Cast(TigersFury))
                     return;
 
             // Mangle
-            if (Me.ComboPoint < 5 && !_target.HaveBuff("Pounce") && MangleCat.KnownSpell)
+            if (Me.ComboPoint < 5 && !Target.HaveBuff("Pounce") && MangleCat.KnownSpell)
             {
                 Lua.RunMacroText("/cast Mangle (Cat)()");
                 return;
             }
 
             // Claw
-            if (Me.ComboPoint < 5 && !_target.HaveBuff("Pounce"))
+            if (Me.ComboPoint < 5 && !Target.HaveBuff("Pounce"))
                 if (Cast(Claw))
                     return;
         }
@@ -466,7 +469,7 @@ public static class Druid
                     return;
 
             // Faerie Fire
-            if (!_target.HaveBuff("Faerie Fire (Feral)") && FaerieFireFeral.KnownSpell)
+            if (!Target.HaveBuff("Faerie Fire (Feral)") && FaerieFireFeral.KnownSpell)
                 Lua.RunMacroText("/cast Faerie Fire (Feral)()");
 
             // Swipe
@@ -476,8 +479,11 @@ public static class Druid
 
             // Interrupt with Bash
             if (_shouldBeInterrupted)
+            {
+                Thread.Sleep(Main._humanReflexTime);
                 if (Cast(Bash))
                     return;
+            }
 
             // Enrage
             if (_settings.UseEnrage)
@@ -485,7 +491,7 @@ public static class Druid
                     return;
 
             // Demoralizing Roar
-            if (!_target.HaveBuff("Demoralizing Roar") && _target.GetDistance < 9f)
+            if (!Target.HaveBuff("Demoralizing Roar") && Target.GetDistance < 9f)
                 if (Cast(DemoralizingRoar))
                     return;
 
@@ -504,22 +510,22 @@ public static class Druid
         if (!Me.HaveBuff("Bear Form") && !Me.HaveBuff("Cat Form") && !Me.HaveBuff("Dire Bear Form"))
         {
             // Moonfire
-            if (!_target.HaveBuff("Moonfire") && Me.ManaPercentage > 35 && _target.HealthPercent > 30 && Me.Level >= 8)
+            if (!Target.HaveBuff("Moonfire") && Me.ManaPercentage > 35 && Target.HealthPercent > 30 && Me.Level >= 8)
                 if (Cast(Moonfire))
                     return;
 
             // Wrath
-            if (_target.GetDistance <= _pullRange && Me.ManaPercentage > 45 && _target.HealthPercent > 30 && Me.Level >= 8)
+            if (Target.GetDistance <= _pullRange && Me.ManaPercentage > 45 && Target.HealthPercent > 30 && Me.Level >= 8)
                 if (Cast(Wrath))
                     return;
 
             // Moonfire Low level DPS
-            if (!_target.HaveBuff("Moonfire") && Me.ManaPercentage > 50 && _target.HealthPercent > 30 && Me.Level < 8)
+            if (!Target.HaveBuff("Moonfire") && Me.ManaPercentage > 50 && Target.HealthPercent > 30 && Me.Level < 8)
                 if (Cast(Moonfire))
                     return;
 
             // Wrath Low level DPS
-            if (_target.GetDistance <= _pullRange && Me.ManaPercentage > 60 && _target.HealthPercent > 30 && Me.Level < 8)
+            if (Target.GetDistance <= _pullRange && Me.ManaPercentage > 60 && Target.HealthPercent > 30 && Me.Level < 8)
                 if (Cast(Wrath))
                     return;
         }

@@ -218,7 +218,7 @@ public static class Priest
         int _mindBlastCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Mind Blast\"); return start + duration - GetTime();");
         int _innerFocusCD = Lua.LuaDoString<int>("local start, duration, enabled = GetSpellCooldown(\"Inner Focus\"); return start + duration - GetTime();");
         bool _shoulBeInterrupted = ToolBox.EnemyCasting();
-        WoWUnit _target = ObjectManager.Target;
+        WoWUnit Target = ObjectManager.Target;
 
         // Power Word Shield on multi aggro
         if (!Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul && ObjectManager.GetNumberAttackPlayer() > 1)
@@ -231,7 +231,8 @@ public static class Priest
                 return;
 
         // Renew
-        if (Me.HealthPercent < 60 && !Me.HaveBuff("Renew") && !_inShadowForm)
+        if (Me.HealthPercent < 60 && !Me.HaveBuff("Renew") && !_inShadowForm
+             && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(Renew))
                 return;
 
@@ -241,29 +242,35 @@ public static class Priest
                 return;
 
         // Flash Heal
-        if (Me.HealthPercent < 50)
+        if (Me.HealthPercent < 50 && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(FlashHeal))
                 return;
 
         // Heal
-        if (Me.HealthPercent < 50)
+        if (Me.HealthPercent < 50 && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(Heal))
                 return;
 
         // Lesser Heal
-        if (Me.HealthPercent < 50 && !FlashHeal.KnownSpell)
+        if (Me.HealthPercent < 50 && !FlashHeal.KnownSpell && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(LesserHeal))
                 return;
 
         // Silence
         if (_shoulBeInterrupted)
+        {
+            Thread.Sleep(Main._humanReflexTime);
             if (Cast(Silence))
                 return;
+        }
 
         // Cure Disease
         if (_hasDisease && !_inShadowForm)
+        {
+            Thread.Sleep(Main._humanReflexTime);
             if (Cast(CureDisease))
                 return;
+        }
 
         // Dispel Magic self
         if (_hasMagicDebuff && _myManaPC > 10 && DispelMagic.KnownSpell && DispelMagic.IsSpellUsable
@@ -271,6 +278,7 @@ public static class Priest
         {
             if (_usingWand)
                 ToolBox.StopWandWaitGCD(UseWand, Smite);
+            Thread.Sleep(Main._humanReflexTime);
             Lua.RunMacroText("/target player");
             Lua.RunMacroText("/cast Dispel Magic");
             _dispelTimer.Restart();
@@ -279,13 +287,13 @@ public static class Priest
         }
 
         // Vampiric Touch
-        if (_target.GetDistance <= _maxRange && !_target.HaveBuff("Vampiric Touch") 
-            && _myManaPC > _innerManaSaveThreshold && _target.HealthPercent > _wandThreshold)
+        if (Target.GetDistance <= _maxRange && !Target.HaveBuff("Vampiric Touch") 
+            && _myManaPC > _innerManaSaveThreshold && Target.HealthPercent > _wandThreshold)
             if (Cast(VampiricTouch))
                 return;
 
         // Vampiric Embrace
-        if (!_target.HaveBuff("Vampiric Embrace") && _myManaPC > _innerManaSaveThreshold)
+        if (!Target.HaveBuff("Vampiric Embrace") && _myManaPC > _innerManaSaveThreshold)
             if (Cast(VampiricEmbrace))
                 return;
 
@@ -295,20 +303,20 @@ public static class Priest
                 return;
 
         // Shadow Word Pain
-        if (_myManaPC > 10 && _target.GetDistance < _maxRange && _target.HealthPercent > 15
-            && !_target.HaveBuff("Shadow Word: Pain"))
+        if (_myManaPC > 10 && Target.GetDistance < _maxRange && Target.HealthPercent > 15
+            && !Target.HaveBuff("Shadow Word: Pain"))
             if (Cast(ShadowWordPain))
                 return;
 
         // Inner Fire
         if (!Me.HaveBuff("Inner Fire") && _settings.UseInnerFire && InnerFire.KnownSpell
-            && _myManaPC > _innerManaSaveThreshold && _target.HealthPercent > _wandThreshold)
+            && _myManaPC > _innerManaSaveThreshold && Target.HealthPercent > _wandThreshold)
             if (Cast(InnerFire))
                 return;
 
         // Shadowguard
         if (!Me.HaveBuff("Shadowguard") && _myManaPC > _innerManaSaveThreshold
-            && _settings.UseShadowGuard && _target.HealthPercent > _wandThreshold)
+            && _settings.UseShadowGuard && Target.HealthPercent > _wandThreshold)
             if (Cast(Shadowguard))
                 return;
 
@@ -318,14 +326,14 @@ public static class Priest
                 return;
 
         // Shadow Word Death
-        if (_myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange 
-            && _settings.UseShadowWordDeath && _target.HealthPercent < 15)
+        if (_myManaPC > _innerManaSaveThreshold && Target.GetDistance < _maxRange 
+            && _settings.UseShadowWordDeath && Target.HealthPercent < 15)
             if (Cast(ShadowWordDeath))
                 return;
 
         // Mind Blast + Inner Focus
-        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange
-            && _target.HealthPercent > 50 && _mindBlastCD <= 0 && (_target.HealthPercent > _wandThreshold || !_iCanUseWand))
+        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && Target.GetDistance < _maxRange
+            && Target.HealthPercent > 50 && _mindBlastCD <= 0 && (Target.HealthPercent > _wandThreshold || !_iCanUseWand))
         {
             if (InnerFocus.KnownSpell && _innerFocusCD <= 0)
                 Cast(InnerFocus);
@@ -335,8 +343,8 @@ public static class Priest
         }
 
         // Shadow Form Mind Blast + Inner Focus
-        if (_inShadowForm && _myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange
-            && _mindBlastCD <= 0 && _target.HealthPercent > _wandThreshold)
+        if (_inShadowForm && _myManaPC > _innerManaSaveThreshold && Target.GetDistance < _maxRange
+            && _mindBlastCD <= 0 && Target.HealthPercent > _wandThreshold)
         {
             if (InnerFocus.KnownSpell && _innerFocusCD <= 0)
                 Cast(InnerFocus);
@@ -355,24 +363,24 @@ public static class Priest
 
         // Mind FLay
         if (Me.HaveBuff("Power Word: Shield") && MindFlay.IsDistanceGood 
-            && _myManaPC > _innerManaSaveThreshold && _target.HealthPercent > _wandThreshold)
+            && _myManaPC > _innerManaSaveThreshold && Target.HealthPercent > _wandThreshold)
             if (Cast(MindFlay, false))
                 return;
 
         // Low level Smite
-        if (Me.Level < 5 && (_target.HealthPercent > 30 || Me.ManaPercentage > 80) && _myManaPC > _innerManaSaveThreshold 
-            && _target.GetDistance < _maxRange)
+        if (Me.Level < 5 && (Target.HealthPercent > 30 || Me.ManaPercentage > 80) && _myManaPC > _innerManaSaveThreshold 
+            && Target.GetDistance < _maxRange)
             if (Cast(Smite, false))
                 return;
 
         // Smite
-        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && _target.GetDistance < _maxRange
-            && Me.Level >= 5 && _target.HealthPercent > 20 && (_target.HealthPercent > _settings.WandThreshold || !_iCanUseWand))
+        if (!_inShadowForm && _myManaPC > _innerManaSaveThreshold && Target.GetDistance < _maxRange
+            && Me.Level >= 5 && Target.HealthPercent > 20 && (Target.HealthPercent > _settings.WandThreshold || !_iCanUseWand))
             if (Cast(Smite, false))
                 return;
 
         // Use Wand
-        if (!_usingWand && _iCanUseWand && _target.GetDistance <= _maxRange + 2)
+        if (!_usingWand && _iCanUseWand && Target.GetDistance <= _maxRange + 2)
         {
             Main.settingRange = _maxRange;
             if (Cast(UseWand, false))
@@ -380,7 +388,7 @@ public static class Priest
         }
 
         // Go in melee because nothing else to do
-        if (!_usingWand && !_iCanUseWand && Main.settingRange != _meleeRange && _target.IsAlive)
+        if (!_usingWand && !_iCanUseWand && Main.settingRange != _meleeRange && Target.IsAlive)
         {
             Main.Log("Going in melee");
             Main.settingRange = _meleeRange;

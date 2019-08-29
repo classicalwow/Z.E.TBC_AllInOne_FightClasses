@@ -297,7 +297,7 @@ public static class Rogue
     {
         bool _shouldBeInterrupted = ToolBox.EnemyCasting();
         bool _inMeleeRange = ObjectManager.Target.GetDistance < 6f;
-        WoWUnit _target = ObjectManager.Target;
+        WoWUnit Target = ObjectManager.Target;
 
         // Check Auto-Attacking
         ToggleAutoAttack(true);
@@ -335,8 +335,11 @@ public static class Rogue
 
         // Kick interrupt
         if (_shouldBeInterrupted)
-            if (Cast(Kick))
+        {
+            Thread.Sleep(Main._humanReflexTime);
+            if (Cast(Kick) || Cast(Gouge) || Cast(KidneyShot))
                 return;
+        }
 
         // Adrenaline Rush
         if (ObjectManager.GetNumberAttackPlayer() > 1 && !Me.HaveBuff("Adrenaline Rush"))
@@ -349,12 +352,12 @@ public static class Rogue
                 return;
 
         // Riposte
-        if (Riposte.IsSpellUsable && _target.CreatureTypeTarget.Equals("Humanoid"))
+        if (Riposte.IsSpellUsable && Target.CreatureTypeTarget.Equals("Humanoid"))
             if (Cast(Riposte))
                 return;
 
         // Bandage
-        if (_target.HaveBuff("Blind"))
+        if (Target.HaveBuff("Blind"))
         {
             MovementManager.StopMoveTo(true, 500);
             ItemsManager.UseItemByNameOrId(_myBestBandage);
@@ -370,12 +373,12 @@ public static class Rogue
                 return;
 
         // Evasion
-        if (Me.HealthPercent < 30 && !Me.HaveBuff("Evasion") && _target.HealthPercent > 50)
+        if (Me.HealthPercent < 30 && !Me.HaveBuff("Evasion") && Target.HealthPercent > 50)
             if (Cast(Evasion))
                 return;
 
         // Cloak of Shadows
-        if (Me.HealthPercent < 30 && !Me.HaveBuff("Cloak of Shadows") && _target.HealthPercent > 50)
+        if (Me.HealthPercent < 30 && !Me.HaveBuff("Cloak of Shadows") && Target.HealthPercent > 50)
             if (Cast(CloakOfShadows))
                 return;
 
@@ -385,15 +388,15 @@ public static class Rogue
                 return;
 
         // Slice and Dice
-        if (!Me.HaveBuff("Slice and Dice") && Me.ComboPoint > 1 && _target.HealthPercent > 40)
+        if (!Me.HaveBuff("Slice and Dice") && Me.ComboPoint > 1 && Target.HealthPercent > 40)
             if (Cast(SliceAndDice))
                 return;
 
         // Eviscerate logic
-        if ((Me.ComboPoint > 0 && _target.HealthPercent < 30)
-            || (Me.ComboPoint > 1 && _target.HealthPercent < 45)
-            || (Me.ComboPoint > 2 && _target.HealthPercent < 60)
-            || (Me.ComboPoint > 3 && _target.HealthPercent < 70))
+        if ((Me.ComboPoint > 0 && Target.HealthPercent < 30)
+            || (Me.ComboPoint > 1 && Target.HealthPercent < 45)
+            || (Me.ComboPoint > 2 && Target.HealthPercent < 60)
+            || (Me.ComboPoint > 3 && Target.HealthPercent < 70))
             if (Cast(Eviscerate))
                 return;
 
@@ -432,6 +435,7 @@ public static class Rogue
     private static Spell Sprint = new Spell("Sprint");
     private static Spell CloakOfShadows = new Spell("Cloak of Shadows");
     private static Spell Blind = new Spell("Blind");
+    private static Spell KidneyShot = new Spell("Kidney Shot");
 
     internal static bool Cast(Spell s)
     {

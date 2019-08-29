@@ -114,6 +114,8 @@ public static class Paladin
 
     internal static void CombatRotation()
     {
+        WoWUnit Target = ObjectManager.Target;
+
         ToolBox.CheckAutoAttack(Attack);
 
         // Purify
@@ -121,6 +123,7 @@ public static class Paladin
             (_purifyTimer.ElapsedMilliseconds > 10000 || _purifyTimer.ElapsedMilliseconds <= 0))
         {
             _purifyTimer.Restart();
+            Thread.Sleep(Main._humanReflexTime);
             Lua.RunMacroText("/target player");
             Cast(Purify);
             Lua.RunMacroText("/cleartarget");
@@ -131,6 +134,7 @@ public static class Paladin
             && Cleanse.IsSpellUsable)
         {
             _cleanseTimer.Restart();
+            Thread.Sleep(Main._humanReflexTime);
             Lua.RunMacroText("/target player");
             Cast(Cleanse);
             Lua.RunMacroText("/cleartarget");
@@ -167,12 +171,12 @@ public static class Paladin
             Cast(HammerOfJustice);
         
         // Exorcism
-        if (ObjectManager.Target.CreatureTypeTarget == "Undead" || ObjectManager.Target.CreatureTypeTarget == "Demon"
+        if (Target.CreatureTypeTarget == "Undead" || Target.CreatureTypeTarget == "Demon"
             && _settings.UseExorcism)
             Cast(Exorcism);
             
         // Judgement (Crusader)
-        if (Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.GetDistance < 10)
+        if (Me.HaveBuff("Seal of the Crusader") && Target.GetDistance < 10)
         {
             Cast(Judgement);
             Thread.Sleep(200);
@@ -180,24 +184,24 @@ public static class Paladin
 
         // Judgement
         if ((Me.HaveBuff("Seal of Righteousness") || Me.HaveBuff("Seal of Command")) 
-            && ObjectManager.Target.GetDistance < 10  
+            && Target.GetDistance < 10
             && (Me.ManaPercentage >= _manaSavePercent || Me.HaveBuff("Seal of the Crusader")))
             Cast(Judgement);
 
         // Seal of the Crusader
-        if (!ObjectManager.Target.HaveBuff("Judgement of the Crusader") && !Me.HaveBuff("Seal of the Crusader")
-            && Me.ManaPercentage > _manaSavePercent - 20 && ObjectManager.Target.IsAlive)
+        if (!Target.HaveBuff("Judgement of the Crusader") && !Me.HaveBuff("Seal of the Crusader")
+            && Me.ManaPercentage > _manaSavePercent - 20 && Target.IsAlive && _settings.UseSealOfTheCrusader)
             Cast(SealOfTheCrusader);
 
         // Seal of Righteousness
-        if (!Me.HaveBuff("Seal of Righteousness") && !Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
-            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || Me.ManaPercentage > _manaSavePercent)
+        if (!Me.HaveBuff("Seal of Righteousness") && !Me.HaveBuff("Seal of the Crusader") && Target.IsAlive &&
+            (Target.HaveBuff("Judgement of the Crusader") || Me.ManaPercentage > _manaSavePercent || !_settings.UseSealOfTheCrusader)
             && (!_settings.UseSealOfCommand || !SealOfCommand.KnownSpell))
             Cast(SealOfRighteousness);
 
         // Seal of Command
-        if (!Me.HaveBuff("Seal of Command") && !Me.HaveBuff("Seal of the Crusader") && ObjectManager.Target.IsAlive &&
-            (ObjectManager.Target.HaveBuff("Judgement of the Crusader") || Me.ManaPercentage > _manaSavePercent)
+        if (!Me.HaveBuff("Seal of Command") && !Me.HaveBuff("Seal of the Crusader") && Target.IsAlive &&
+            (Target.HaveBuff("Judgement of the Crusader") || Me.ManaPercentage > _manaSavePercent || !_settings.UseSealOfTheCrusader)
             && _settings.UseSealOfCommand && SealOfCommand.KnownSpell)
             Cast(SealOfCommand);
 

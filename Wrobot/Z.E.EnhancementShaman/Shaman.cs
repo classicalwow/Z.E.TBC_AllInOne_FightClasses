@@ -191,6 +191,7 @@ public static class Shaman
         bool _isPoisoned = ToolBox.HasPoisonDebuff();
         bool _hasDisease = ToolBox.HasDiseaseDebuff();
         bool _shouldBeInterrupted = false;
+        WoWUnit Target = ObjectManager.Target;
 
         // Check Auto-Attacking
         ToolBox.CheckAutoAttack(Attack);
@@ -201,7 +202,7 @@ public static class Shaman
                                      local finish = endTimeMS / 1000 - GetTime()
                                      return finish
                                     end");
-        if (channelTimeLeft < 0 || ObjectManager.Target.CastingTimeLeft > Usefuls.Latency)
+        if (channelTimeLeft < 0 || Target.CastingTimeLeft > Usefuls.Latency)
             _shouldBeInterrupted = true;
 
         // Melee ?
@@ -214,37 +215,43 @@ public static class Shaman
         if ((_shouldBeInterrupted || _meleeTimer.ElapsedMilliseconds > 8000) && !_goInMelee)
         {
             Main.LogDebug("Going in melee range");
-            if (!_casterEnemies.Contains(ObjectManager.Target.Name))
-                _casterEnemies.Add(ObjectManager.Target.Name);
+            if (!_casterEnemies.Contains(Target.Name))
+                _casterEnemies.Add(Target.Name);
             _fightingACaster = true;
             _goInMelee = true;
             _meleeTimer.Stop();
         }
 
         // Shamanistic Rage
-        if (!_mediumMana && ((ObjectManager.Target.HealthPercent > 80 && !_settings.ShamanisticRageOnMultiOnly) || ObjectManager.GetNumberAttackPlayer() > 1))
+        if (!_mediumMana && ((Target.HealthPercent > 80 && !_settings.ShamanisticRageOnMultiOnly) || ObjectManager.GetNumberAttackPlayer() > 1))
             if (Cast(ShamanisticRage))
                 return;
 
         // Lesser Healing Wave
-        if (Me.HealthPercent < 50 && LesserHealingWave.KnownSpell)
+        if (Me.HealthPercent < 50 && LesserHealingWave.KnownSpell && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(LesserHealingWave))
                 return;
 
         // Healing Wave
-        if (Me.HealthPercent < 50 && !LesserHealingWave.KnownSpell)
+        if (Me.HealthPercent < 50 && !LesserHealingWave.KnownSpell && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(HealingWave))
                 return;
 
         // Cure Poison
         if (_isPoisoned && !_lowMana)
+        {
+            Thread.Sleep(Main._humanReflexTime);
             if (Cast(CurePoison))
                 return;
+        }
 
         // Cure Disease
         if (_hasDisease && !_lowMana)
+        {
+            Thread.Sleep(Main._humanReflexTime);
             if (Cast(CureDisease))
                 return;
+        }
 
         // Lightning Shield
         if (!_lowMana && !Me.HaveBuff("Lightning Shield") && !Me.HaveBuff("Water Shield") && _settings.UseLightningShield 
@@ -253,22 +260,24 @@ public static class Shaman
                 return;
 
         // Earth Shock Interupt Rank 1
-        if (_shouldBeInterrupted && ObjectManager.Target.GetDistance < 19f 
+        if (_shouldBeInterrupted && Target.GetDistance < 19f 
             && (_settings.InterruptWithRankOne || _lowMana))
         {
             _fightingACaster = true;
-            if (!_casterEnemies.Contains(ObjectManager.Target.Name))
-                _casterEnemies.Add(ObjectManager.Target.Name);
+            if (!_casterEnemies.Contains(Target.Name))
+                _casterEnemies.Add(Target.Name);
+            Thread.Sleep(Main._humanReflexTime);
             Lua.RunMacroText("/cast Earth Shock(Rank 1)");
                 return;
         }
 
         // Earth Shock Interupt
-        if (_shouldBeInterrupted && ObjectManager.Target.GetDistance < 19f && !_settings.InterruptWithRankOne)
+        if (_shouldBeInterrupted && Target.GetDistance < 19f && !_settings.InterruptWithRankOne)
         {
-            if (!_casterEnemies.Contains(ObjectManager.Target.Name))
-                _casterEnemies.Add(ObjectManager.Target.Name);
+            if (!_casterEnemies.Contains(Target.Name))
+                _casterEnemies.Add(Target.Name);
             _fightingACaster = true;
+            Thread.Sleep(Main._humanReflexTime);
             if (Cast(EarthShock))
                 return;
         }
@@ -280,13 +289,13 @@ public static class Shaman
                 return;
 
         // Flame Shock DPS
-        if (!_lowMana && ObjectManager.Target.GetDistance < 19f && !ObjectManager.Target.HaveBuff("Flame Shock") 
-            && ObjectManager.Target.HealthPercent > 20 && !_fightingACaster && _settings.UseFlameShock)
+        if (!_lowMana && Target.GetDistance < 19f && !Target.HaveBuff("Flame Shock") 
+            && Target.HealthPercent > 20 && !_fightingACaster && _settings.UseFlameShock)
             if (Cast(FlameShock))
                 return;
 
         // Totems
-        if (!_lowMana && ObjectManager.Target.GetDistance < 20)
+        if (!_lowMana && Target.GetDistance < 20)
             if (totemManager.CastTotems())
                 return;
 
@@ -296,14 +305,14 @@ public static class Shaman
                 return;
 
         // Earth Shock DPS
-        if (!_lowMana && ObjectManager.Target.GetDistance < 19f && !FlameShock.KnownSpell 
-            && ObjectManager.Target.HealthPercent > 25 && Me.ManaPercentage > 30)
+        if (!_lowMana && Target.GetDistance < 19f && !FlameShock.KnownSpell 
+            && Target.HealthPercent > 25 && Me.ManaPercentage > 30)
             if (Cast(EarthShock))
                 return;
 
         // Low level lightning bolt
-        if (!EarthShock.KnownSpell && Me.ManaPercentage > 30 && !_lowMana && ObjectManager.Target.GetDistance < 29f
-            && ObjectManager.Target.HealthPercent > 40)
+        if (!EarthShock.KnownSpell && Me.ManaPercentage > 30 && !_lowMana && Target.GetDistance < 29f
+            && Target.HealthPercent > 40)
             if (Cast(LightningBolt))
                 return;
     }

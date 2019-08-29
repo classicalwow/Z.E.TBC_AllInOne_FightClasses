@@ -24,6 +24,7 @@ public class ZEPaladinSettings : Settings
         UseExorcism = false;
         UseHammerOfWrath = false;
         DevoAuraOnMulti = true;
+        UseSealOfTheCrusader = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCPaladin "
@@ -90,6 +91,12 @@ public class ZEPaladinSettings : Settings
     [DisplayName("Use Seal of Command")]
     [Description("Use Seal of Command instead of Seal of Righteousness")]
     public bool UseSealOfCommand { get; set; }
+
+    [Category("Combat")]
+    [DefaultValue(true)]
+    [DisplayName("Use Seal of the Crusader")]
+    [Description("Use Seal of the Crusader when opening a fight")]
+    public bool UseSealOfTheCrusader { get; set; }
 
     [Category("Combat")]
     [DefaultValue(true)]

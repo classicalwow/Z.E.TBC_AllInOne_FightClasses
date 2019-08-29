@@ -165,12 +165,13 @@ public static class Warrior
 
     internal static void CombatRotation()
     {
+        WoWUnit Target = ObjectManager.Target;
         bool _shouldBeInterrupted = ToolBox.EnemyCasting();
-        bool _inMeleeRange = ObjectManager.Target.GetDistance < 6f;
+        bool _inMeleeRange = Target.GetDistance < 6f;
         bool _saveRage = ((Cleave.KnownSpell && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f)
             && _settings.UseCleave)
-            || (Execute.KnownSpell && ObjectManager.Target.HealthPercent < 40) 
-            || (Bloodthirst.KnownSpell && ObjectManager.Me.Rage < 40 && ObjectManager.Target.HealthPercent > 50));
+            || (Execute.KnownSpell && Target.HealthPercent < 40) 
+            || (Bloodthirst.KnownSpell && ObjectManager.Me.Rage < 40 && Target.HealthPercent > 50));
 
         // Check Auto-Attacking
         ToolBox.CheckAutoAttack(Attack);
@@ -179,8 +180,8 @@ public static class Warrior
         if (_shouldBeInterrupted)
         {
             _fightingACaster = true;
-            if (!_casterEnemies.Contains(ObjectManager.Target.Name))
-                _casterEnemies.Add(ObjectManager.Target.Name);
+            if (!_casterEnemies.Contains(Target.Name))
+                _casterEnemies.Add(Target.Name);
         }
 
         // Melee ?
@@ -219,8 +220,11 @@ public static class Warrior
 
         // Interrupt
         if (_shouldBeInterrupted && InBerserkStance())
+        {
+            Thread.Sleep(Main._humanReflexTime);
             if (Cast(Pummel))
                 return;
+        }
 
         // Victory Rush
         if (VictoryRush.KnownSpell)
@@ -233,18 +237,22 @@ public static class Warrior
                 return;
 
         // Berserker Rage
-        if (InBerserkStance() && ObjectManager.Target.HealthPercent > 70)
+        if (InBerserkStance() && Target.HealthPercent > 70)
             if (Cast(BerserkerRage))
                 return;
 
         // Execute
-        if (ObjectManager.Target.HealthPercent < 20)
+        if (Target.HealthPercent < 20)
             if (Cast(Execute))
                 return;
 
         // Overpower
-        if (Cast(Overpower))
-            return;
+        if (Overpower.IsSpellUsable)
+        {
+            Thread.Sleep(Main._humanReflexTime);
+            if (Cast(Overpower))
+                return;
+        }
 
         // Bloodthirst
         if (Cast(Bloodthirst))
@@ -273,8 +281,8 @@ public static class Warrior
                 return;
 
         // Hamstring
-        if (ObjectManager.Target.CreatureTypeTarget == "Humanoid" && _inMeleeRange && _settings.UseHamstring && ObjectManager.Target.HealthPercent < 40
-            && !ObjectManager.Target.HaveBuff("Hamstring"))
+        if (Target.CreatureTypeTarget == "Humanoid" && _inMeleeRange && _settings.UseHamstring && Target.HealthPercent < 40
+            && !Target.HaveBuff("Hamstring"))
             if (Cast(Hamstring))
                 return;
 
@@ -289,13 +297,13 @@ public static class Warrior
                 return;
 
         // Rend
-        if (!ObjectManager.Target.HaveBuff("Rend") && ToolBox.CanBleed(ObjectManager.Target) && _inMeleeRange && _settings.UseRend
-            && ObjectManager.Target.HealthPercent > 25)
+        if (!Target.HaveBuff("Rend") && ToolBox.CanBleed(Target) && _inMeleeRange && _settings.UseRend
+            && Target.HealthPercent > 25)
             if (Cast(Rend))
                 return;
 
         // Demoralizing Shout
-        if (_settings.UseDemoralizingShout && !ObjectManager.Target.HaveBuff("Demoralizing Shout") 
+        if (_settings.UseDemoralizingShout && !Target.HaveBuff("Demoralizing Shout") 
             && (ObjectManager.GetNumberAttackPlayer() > 1 || !ToolBox.CheckIfEnemiesClose(15f)) && _inMeleeRange)
             if (Cast(DemoralizingShout))
                 return;
