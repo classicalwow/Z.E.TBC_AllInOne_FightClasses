@@ -232,7 +232,7 @@ public static class Mage
                 return;
 
         // Frost Nova
-        if (Target.GetDistance < _meleeRange + 2 && Target.HealthPercent > 5 && !Target.HaveBuff("Frostbite"))
+        if (Target.GetDistance < _meleeRange + 2 && Target.HealthPercent > 10 && !Target.HaveBuff("Frostbite"))
             if (Cast(FrostNova))
                 return;
 
