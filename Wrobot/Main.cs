@@ -6,6 +6,7 @@ using System;
 using System.Drawing;
 using wManager.Events;
 using System.ComponentModel;
+using System.Threading;
 
 public class Main : ICustomClass
 {
@@ -30,7 +31,7 @@ public class Main : ICustomClass
         if (type != null)
         {
             _isLaunched = true;
-
+            
             // Fight end
             FightEvents.OnFightEnd += (ulong guid) =>
             {
@@ -61,10 +62,10 @@ public class Main : ICustomClass
     public void Dispose()
     {
         wManager.wManagerSetting.CurrentSetting.CalcuCombatRange = _saveCalcuCombatRangeSetting;
-        _isLaunched = false;
         var type = Type.GetType(wowClass);
         if (type != null)
             type.GetMethod("Dispose").Invoke(null, null);
+        _isLaunched = false;
         _talentThread.DoWork -= Talents.DoTalentPulse;
         _talentThread.Dispose();
         Talents._isRunning = false;

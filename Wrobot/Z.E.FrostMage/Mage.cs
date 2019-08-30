@@ -69,9 +69,9 @@ public static class Mage
                                 Main.LogDebug("Blink away");
                         pos = 0;
                     }
+                    _isBackingUp = false;
                 }
             }
-            _isBackingUp = false;
         };
 
         Rotation();
@@ -242,7 +242,7 @@ public static class Mage
                 return;
 
         // Cone of Cold
-        if (Target.GetDistance < 10 && _settings.UseConeOfCold && !_isBackingUp)
+        if (Target.GetDistance < 10 && _settings.UseConeOfCold && !_isBackingUp && !MovementManager.InMovement)
             if (Cast(ConeOfCold))
                 return;
 
@@ -263,7 +263,7 @@ public static class Mage
                 return;
         
         // Use Wand
-        if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _range && !_isBackingUp)
+        if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _range && !_isBackingUp && !MovementManager.InMovement)
         {
             Main.settingRange = _range;
             if (Cast(UseWand, false))
@@ -283,7 +283,7 @@ public static class Mage
     {
         if (!s.KnownSpell)
             return false;
-        
+
         Main.LogDebug("*----------- INTO CAST FOR " + s.Name);
         float _spellCD = ToolBox.GetSpellCooldown(s.Name);
         Main.LogDebug("Cooldown is " + _spellCD);
