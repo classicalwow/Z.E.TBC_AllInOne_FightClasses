@@ -62,7 +62,6 @@ public static class Mage
                     && ObjectManager.Target.GetDistance < 10f && ObjectManager.Target.IsAlive
                     && (ObjectManager.Target.HaveBuff("Frostbite") || ObjectManager.Target.HaveBuff("Frost Nova")))
                     {
-                        Main.Log("Backup loop");
                         // Wait follow path
                         Thread.Sleep(200);
                         if (_settings.BlinkWhenBackup)
@@ -70,7 +69,6 @@ public static class Mage
                                 Main.LogDebug("Blink away");
                         pos = 0;
                     }
-                    Main.Log("OUT OF Backup loop");
                 }
             }
             _isBackingUp = false;
@@ -285,8 +283,7 @@ public static class Mage
     {
         if (!s.KnownSpell)
             return false;
-
-        Main.Log(_isBackingUp.ToString());
+        
         Main.LogDebug("*----------- INTO CAST FOR " + s.Name);
         float _spellCD = ToolBox.GetSpellCooldown(s.Name);
         Main.LogDebug("Cooldown is " + _spellCD);
