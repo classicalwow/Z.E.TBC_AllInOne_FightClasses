@@ -440,12 +440,13 @@ public static class Warlock
         // Use Wand
         if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _maxRange + 2)
         {
+            Main.settingRange = _maxRange;
             if (Cast(UseWand, false))
                 return;
         }
 
         // Go in melee because nothing else to do
-        if (!_usingWand && !UseWand.IsSpellUsable && Main.settingRange != _meleeRange)
+        if (!_usingWand && !UseWand.IsSpellUsable && Main.settingRange != _meleeRange && Target.IsAlive)
         {
             Main.Log("Going in melee");
             Main.settingRange = _meleeRange;

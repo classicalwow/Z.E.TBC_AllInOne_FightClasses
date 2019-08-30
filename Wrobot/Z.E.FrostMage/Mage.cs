@@ -62,6 +62,7 @@ public static class Mage
                     && ObjectManager.Target.GetDistance < 10f && ObjectManager.Target.IsAlive
                     && (ObjectManager.Target.HaveBuff("Frostbite") || ObjectManager.Target.HaveBuff("Frost Nova")))
                     {
+                        Main.Log("Backup loop");
                         // Wait follow path
                         Thread.Sleep(200);
                         if (_settings.BlinkWhenBackup)
@@ -69,6 +70,7 @@ public static class Mage
                                 Main.LogDebug("Blink away");
                         pos = 0;
                     }
+                    Main.Log("OUT OF Backup loop");
                 }
             }
             _isBackingUp = false;
@@ -165,18 +167,18 @@ public static class Mage
                 return;
 
         // Frost Bolt
-        if (_target.GetDistance < _range + 1 && Me.Level >= 6 && (_target.HealthPercent > _settings.WandThreshold
+        if (_target.GetDistance < _range && Me.Level >= 6 && (_target.HealthPercent > _settings.WandThreshold
             || ObjectManager.GetNumberAttackPlayer() > 1 || Me.HealthPercent < 30 || !_iCanUseWand))
             if (Cast(Frostbolt))
                 return;
 
         // Low level Frost Bolt
-        if (_target.GetDistance < _range + 1 && _target.HealthPercent > 30 && Me.Level < 6)
+        if (_target.GetDistance < _range && _target.HealthPercent > 30 && Me.Level < 6)
             if (Cast(Frostbolt))
                 return;
 
         // Low level FireBall
-        if (_target.GetDistance < _range + 1 && !Frostbolt.KnownSpell && _target.HealthPercent > 30)
+        if (_target.GetDistance < _range && !Frostbolt.KnownSpell && _target.HealthPercent > 30)
             if (Cast(Fireball))
                 return;
     }
@@ -247,30 +249,31 @@ public static class Mage
                 return;
 
         // Frost Bolt
-        if (Target.GetDistance < _range + 1 && Me.Level >= 6 && (Target.HealthPercent > _settings.WandThreshold
+        if (Target.GetDistance < _range && Me.Level >= 6 && (Target.HealthPercent > _settings.WandThreshold
             || ObjectManager.GetNumberAttackPlayer() > 1 || Me.HealthPercent < 30 || !_iCanUseWand))
             if (Cast(Frostbolt, true))
                 return;
 
         // Low level Frost Bolt
-        if (Target.GetDistance < _range + 1 && Target.HealthPercent > 30 && Me.Level < 6)
+        if (Target.GetDistance < _range && Target.HealthPercent > 30 && Me.Level < 6)
             if (Cast(Frostbolt, true))
                 return;
 
         // Low level FireBall
-        if (Target.GetDistance < _range + 1 && !Frostbolt.KnownSpell && Target.HealthPercent > 30)
+        if (Target.GetDistance < _range && !Frostbolt.KnownSpell && Target.HealthPercent > 30)
             if (Cast(Fireball, true))
                 return;
         
         // Use Wand
         if (!_usingWand && _iCanUseWand && ObjectManager.Target.GetDistance <= _range && !_isBackingUp)
         {
+            Main.settingRange = _range;
             if (Cast(UseWand, false))
                 return;
         }
 
         // Go in melee because nothing else to do
-        if (!_usingWand && !UseWand.IsSpellUsable && Main.settingRange != _meleeRange && !_isBackingUp)
+        if (!_usingWand && !UseWand.IsSpellUsable && Main.settingRange != _meleeRange && !_isBackingUp && Target.IsAlive)
         {
             Main.Log("Going in melee");
             Main.settingRange = _meleeRange;
@@ -283,6 +286,7 @@ public static class Mage
         if (!s.KnownSpell)
             return false;
 
+        Main.Log(_isBackingUp.ToString());
         Main.LogDebug("*----------- INTO CAST FOR " + s.Name);
         float _spellCD = ToolBox.GetSpellCooldown(s.Name);
         Main.LogDebug("Cooldown is " + _spellCD);
