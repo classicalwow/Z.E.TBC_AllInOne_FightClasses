@@ -23,6 +23,7 @@ public class ZERogueSettings : Settings
         SprintWhenAvail = true;
         UseBlindBandage = true;
         UseGarrote = true;
+        RiposteAll = false;
 
         ConfigWinForm(
             new System.Drawing.Point(500, 400), "WholesomeTBCRogue "
@@ -90,6 +91,12 @@ public class ZERogueSettings : Settings
     [Description("Use Blind + the best bandage in your bags during combat " +
         "(If true, you should avoid using poisons and bleed effects, as they will break Blind)")]
     public bool UseBlindBandage { get; set; }
+
+    [Category("Combat")]
+    [DefaultValue(false)]
+    [DisplayName("Riposte all enemies")]
+    [Description("On some servers, only humanoids can be riposted. Set this value False if it is the case.")]
+    public bool RiposteAll { get; set; }
 
     public bool Save()
     {

@@ -207,6 +207,11 @@ public static class Mage
             if (Cast(IceBarrier))
                 return;
 
+        // Mana Shield
+        if (!Me.HaveBuff("Mana Shield") && Me.HealthPercent < 30 && Me.ManaPercentage > 50)
+            if (Cast(ManaShield))
+                return;
+
         // Cold Snap
         if (ObjectManager.GetNumberAttackPlayer() > 1 && !Me.HaveBuff("Icy Veins") && !IcyVeins.IsSpellUsable)
             if (Cast(ColdSnap))
@@ -363,4 +368,5 @@ public static class Mage
     private static Spell IceLance = new Spell("Ice Lance");
     private static Spell RemoveCurse = new Spell("Remove Curse");
     private static Spell IceArmor = new Spell("Ice Armor");
+    private static Spell ManaShield = new Spell("Mana Shield");
 }

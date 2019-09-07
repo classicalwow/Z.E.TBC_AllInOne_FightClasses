@@ -212,7 +212,7 @@ public static class Paladin
             Lua.RunMacroText("/cast Seal of Command(Rank 1)");
 
         // Holy Light / Flash of Light
-        if (Me.HealthPercent < 50)
+        if (Me.HealthPercent < 50 && (Target.HealthPercent > 15 || Me.HealthPercent < 25) && _settings.HealDuringCombat)
         {
             if (!HolyLight.IsSpellUsable)
             {

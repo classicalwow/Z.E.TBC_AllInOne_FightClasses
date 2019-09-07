@@ -25,6 +25,7 @@ public class ZEPaladinSettings : Settings
         UseHammerOfWrath = false;
         DevoAuraOnMulti = true;
         UseSealOfTheCrusader = true;
+        HealDuringCombat = true;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCPaladin "
@@ -103,6 +104,12 @@ public class ZEPaladinSettings : Settings
     [DisplayName("Devotion Aura on multi aggro")]
     [Description("Use Devotion Aura on multi aggro")]
     public bool DevoAuraOnMulti { get; set; }
+
+    [Category("Combat")]
+    [DefaultValue(true)]
+    [DisplayName("Heal during combat")]
+    [Description("Use healing spells during combat")]
+    public bool HealDuringCombat { get; set; }
 
     public bool Save()
     {

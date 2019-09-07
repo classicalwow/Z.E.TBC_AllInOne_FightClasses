@@ -352,7 +352,7 @@ public static class Rogue
                 return;
 
         // Riposte
-        if (Riposte.IsSpellUsable && Target.CreatureTypeTarget.Equals("Humanoid"))
+        if (Riposte.IsSpellUsable && (Target.CreatureTypeTarget.Equals("Humanoid") || _settings.RiposteAll))
             if (Cast(Riposte))
                 return;
 
