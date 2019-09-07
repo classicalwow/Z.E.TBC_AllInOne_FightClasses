@@ -180,6 +180,9 @@ public static class Hunter
     {
         WoWUnit Target = ObjectManager.Target;
 
+        if (Target.GetDistance < 10f && !_isBackingUp)
+            ToolBox.CheckAutoAttack(Attack);
+
         if (Target.GetDistance > 10f && !_isBackingUp)
             ReenableAutoshot();
 
@@ -198,10 +201,15 @@ public static class Hunter
             && !AspectHawk.KnownSpell)
             AspectMonkey.Launch();
 
+        // Disengage
+        if (Disengage.KnownSpell && Disengage.IsSpellUsable && ObjectManager.Pet.Target == Me.Target
+            && Target.Target == Me.Guid && Target.GetDistance < 10 && !_isBackingUp)
+            Disengage.Launch();
+
         // Bestial Wrath
         if (BestialWrath.KnownSpell && BestialWrath.IsSpellUsable && Target.GetDistance < 34f
-            && Target.HealthPercent >= 60 && Me.ManaPercentage > 10 && BestialWrath.IsSpellUsable
-            && ((_settings.BestialWrathOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !_settings.BestialWrathOnMulti))
+        && Target.HealthPercent >= 60 && Me.ManaPercentage > 10 && BestialWrath.IsSpellUsable
+        && ((_settings.BestialWrathOnMulti && ObjectManager.GetUnitAttackPlayer().Count > 1) || !_settings.BestialWrathOnMulti))
             BestialWrath.Launch();
 
         // Rapid Fire
@@ -355,4 +363,6 @@ public static class Hunter
     private static Spell FreezingTrap = new Spell("Freezing Trap");
     private static Spell SteadyShot = new Spell("Steady Shot");
     private static Spell KillCommand = new Spell("Kill Command");
+    private static Spell Disengage = new Spell("Disengage");
+    private static Spell Attack = new Spell("Attack");
 }
