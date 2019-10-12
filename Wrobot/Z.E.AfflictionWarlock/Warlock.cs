@@ -104,7 +104,7 @@ public static class Warlock
 			{
 				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    if (!Fight.InFight)
+                    if (!Me.InCombatFlagOnly)
                     {
                         BuffRotation();
                     }
@@ -305,7 +305,7 @@ public static class Warlock
         bool _overLowManaThreshold = _myManaPC > _innerManaSaveThreshold;
 
         // Multi aggro
-        if (ObjectManager.GetNumberAttackPlayer() > 1 && Fear.KnownSpell &&
+        /*if (ObjectManager.GetNumberAttackPlayer() > 1 && Fear.KnownSpell &&
             (_addCheckTimer.ElapsedMilliseconds > 3000 || _addCheckTimer.ElapsedMilliseconds <= 0))
         {
             _addCheckTimer.Restart();
@@ -334,7 +334,7 @@ public static class Warlock
                         }
                 }
             }
-        }
+        }*/
 
         // Pet attack
         if (ObjectManager.Pet.Target != ObjectManager.Me.Target)

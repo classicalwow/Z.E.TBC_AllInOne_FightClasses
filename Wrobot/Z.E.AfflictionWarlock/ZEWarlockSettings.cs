@@ -30,7 +30,7 @@ public class ZEWarlockSettings : Settings
         UseIncinerate = true;
         UseSoulShatter = true;
         NumberOfSoulShards = 4;
-        FearAdds = false;
+        //FearAdds = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCWarlock "
@@ -79,13 +79,13 @@ public class ZEWarlockSettings : Settings
     [DisplayName("Use Incinerate")]
     [Description("Use Incinerate (Use Immolate at high level must be True)")]
     public bool UseIncinerate { get; set; }
-
+    /*
     [Category("Combat Rotation")]
     [DefaultValue(false)]
     [DisplayName("Fear additional enemies")]
     [Description("Switch target and fear on multi aggro")]
     public bool FearAdds { get; set; }
-
+    */
     [Category("Combat Rotation")]
     [DefaultValue(true)]
     [DisplayName("Prioritize wanding over Shadow Bolt")]

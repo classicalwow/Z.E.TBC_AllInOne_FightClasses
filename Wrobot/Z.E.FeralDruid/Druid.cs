@@ -10,6 +10,7 @@ using wManager.Wow.ObjectManager;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using robotManager.FiniteStateMachine;
 
 public static class Druid
 {
@@ -19,6 +20,7 @@ public static class Druid
     internal static Stopwatch _pullMeleeTimer = new Stopwatch();
     internal static Stopwatch _meleeTimer = new Stopwatch();
     internal static Stopwatch _stealthApproachTimer = new Stopwatch();
+    internal static Stopwatch _taxiShapeShiftTimer = new Stopwatch();
     internal static Vector3 _fireTotemPosition = null;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     internal static ZEDruidSettings _settings;
@@ -97,6 +99,16 @@ public static class Druid
                 cancelable.Cancel = true;
         };
 
+        // Manage Shapeshift on taxi node
+        TaxiEvents.OnTakeTaxiNode += (TaxiNode taxiNode, CancelEventArgs cancelable) =>
+        {
+            _taxiShapeShiftTimer.Start();
+            if (Me.HaveBuff("Travel Form"))
+                TravelForm.Launch();
+            if (Me.HaveBuff("Cat Form"))
+                CatForm.Launch();
+        };
+
         Rotation();
     }
 
@@ -114,6 +126,9 @@ public static class Druid
 			{
                 if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
+                    if (_taxiShapeShiftTimer.ElapsedMilliseconds > 30000)
+                        _taxiShapeShiftTimer.Reset();
+
                     // Buff rotation
                     if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
                     {
@@ -205,15 +220,19 @@ public static class Druid
 
             // Travel Form
             if (!Me.HaveBuff("Travel Form") && _settings.UseTravelForm && Me.ManaPercentage > 50
-                && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent)
+                && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent 
+                && _taxiShapeShiftTimer.ElapsedMilliseconds == 0)
                 if (Cast(TravelForm))
                     return;
 
             // Cat Form
             if (!Me.HaveBuff("Cat Form") && (!_settings.UseTravelForm || Me.ManaPercentage < 50) 
-                && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent)
+                && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent
+                && _taxiShapeShiftTimer.ElapsedMilliseconds == 0)
+            {
                 if (Cast(CatForm))
                     return;
+            }
         }
     }
 
@@ -345,7 +364,7 @@ public static class Druid
         if (_settings.UseInnervate && Me.HealthPercent < 50 && Me.ManaPercentage < 10)
             if (Cast(Innervate))
                 return;
-
+        
         // Barkskin + Regrowth + Rejuvenation
         if (_settings.UseBarkskin && Barkskin.KnownSpell && Me.HealthPercent < 50 && !Me.HaveBuff("Regrowth") 
             && Me.Mana > _bigHealComboCost + ToolBox.GetSpellCost("Barkskin") && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
@@ -369,7 +388,7 @@ public static class Druid
             && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(Rejuvenation))
                 return;
-
+                
         // Healing Touch
         if (Me.HealthPercent < 30 && !Regrowth.KnownSpell && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(HealingTouch))
@@ -393,7 +412,7 @@ public static class Druid
         if (Me.HaveBuff("Cat Form"))
         {
             Main.settingRange = _meleRange;
-
+            
             // Shred (when behind)
             if (Target.HaveBuff("Pounce"))
                 if (Cast(Shred))
@@ -434,19 +453,19 @@ public static class Druid
             if (!Target.HaveBuff("Rake") && !Target.HaveBuff("Pounce"))
                 if (Cast(Rake))
                     return;
-
+                    
             // Tiger's Fury
-            if (!Me.HaveBuff("Tiger's Fury") && _settings.UseTigersFury && Me.ComboPoint < 1 && !Target.HaveBuff("Pounce"))
-                if (Cast(TigersFury))
-                    return;
-
+            if (!TigersFury.HaveBuff && _settings.UseTigersFury && Me.ComboPoint < 1 && !Target.HaveBuff("Pounce") && Me.Energy > 30
+                && TigersFury.IsSpellUsable)
+                TigersFury.Launch();
+            
             // Mangle
             if (Me.ComboPoint < 5 && !Target.HaveBuff("Pounce") && MangleCat.KnownSpell)
             {
                 Lua.RunMacroText("/cast Mangle (Cat)()");
                 return;
             }
-
+            
             // Claw
             if (Me.ComboPoint < 5 && !Target.HaveBuff("Pounce"))
                 if (Cast(Claw))

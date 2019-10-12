@@ -148,9 +148,9 @@ public static class Rogue
             PoisonWeapon();
 
             // Sprint
-            if (_settings.SprintWhenAvail && Me.HealthPercent > 80 && MovementManager.InMovement)
-                if (Cast(Sprint))
-                    return;
+            if (_settings.SprintWhenAvail && Me.HealthPercent > 80 && MovementManager.InMovement && Sprint.IsSpellUsable
+                && Sprint.KnownSpell)
+                Sprint.Launch();
         }
     }
 

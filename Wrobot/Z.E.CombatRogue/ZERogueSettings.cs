@@ -20,7 +20,7 @@ public class ZERogueSettings : Settings
         AlwaysPull = false;
         StealthApproach = true;
         StealthWhenPoisoned = false;
-        SprintWhenAvail = true;
+        SprintWhenAvail = false;
         UseBlindBandage = true;
         UseGarrote = true;
         RiposteAll = false;
@@ -80,7 +80,7 @@ public class ZERogueSettings : Settings
     public bool StealthWhenPoisoned { get; set; }
 
     [Category("Misc")]
-    [DefaultValue(true)]
+    [DefaultValue(false)]
     [DisplayName("Sprint when available")]
     [Description("Use Sprint when available")]
     public bool SprintWhenAvail { get; set; }
