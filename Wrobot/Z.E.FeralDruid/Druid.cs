@@ -217,7 +217,7 @@ public static class Druid
             if (!Me.HaveBuff("Omen of Clarity") && OmenOfClarity.IsSpellUsable)
                 if (Cast(OmenOfClarity))
                     return;
-
+            
             // Travel Form
             if (!Me.HaveBuff("Travel Form") && _settings.UseTravelForm && Me.ManaPercentage > 50
                 && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent 
@@ -228,7 +228,7 @@ public static class Druid
             // Cat Form
             if (!Me.HaveBuff("Cat Form") && (!_settings.UseTravelForm || Me.ManaPercentage < 50) 
                 && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent
-                && _taxiShapeShiftTimer.ElapsedMilliseconds == 0)
+                && _taxiShapeShiftTimer.ElapsedMilliseconds == 0 && _settings.CatFormOOC)
             {
                 if (Cast(CatForm))
                     return;
@@ -426,7 +426,7 @@ public static class Druid
             }
 
             // Rip
-            if (!Target.HaveBuff("Rip") && !Target.HaveBuff("Pounce"))
+            if (!Target.HaveBuff("Rip") && !Target.HaveBuff("Pounce") && ToolBox.CanBleed(Me.TargetObject))
             {
                 if (Me.ComboPoint >= 3 && Target.HealthPercent > 60)
                     if (Cast(Rip))

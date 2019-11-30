@@ -25,6 +25,7 @@ public class ZEDruidSettings : Settings
         UseBarkskin = true;
         UseTravelForm = false;
         UseInnervate = true;
+        CatFormOOC = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCDruid "
@@ -67,6 +68,12 @@ public class ZEDruidSettings : Settings
     [DisplayName("Use Travel Form")]
     [Description("Use Travel Form (Triggers more shapeshifts)")]
     public bool UseTravelForm { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Force Cat Form")]
+    [Description("Forces Cat Form when out of combat. Can cause problems with mining and Flights")]
+    public bool CatFormOOC { get; set; }
 
     [Category("Misc")]
     [DefaultValue(true)]

@@ -342,7 +342,7 @@ public static class Rogue
         }
 
         // Adrenaline Rush
-        if (ObjectManager.GetNumberAttackPlayer() > 1 && !Me.HaveBuff("Adrenaline Rush"))
+        if ((ObjectManager.GetNumberAttackPlayer() > 1 || Target.IsElite) && !Me.HaveBuff("Adrenaline Rush"))
             if (Cast(AdrenalineRush))
                 return;
 
@@ -373,7 +373,7 @@ public static class Rogue
                 return;
 
         // Evasion
-        if (Me.HealthPercent < 30 && !Me.HaveBuff("Evasion") && Target.HealthPercent > 50)
+        if (ObjectManager.GetNumberAttackPlayer() > 1 || (Me.HealthPercent < 30 && !Me.HaveBuff("Evasion") && Target.HealthPercent > 50))
             if (Cast(Evasion))
                 return;
 
