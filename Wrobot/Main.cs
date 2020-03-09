@@ -13,6 +13,7 @@ public class Main : ICustomClass
     public static float settingRange = 5f;
     public static int _humanReflexTime = 500;
     public static bool _isLaunched;
+    public static string version = "1.1.10";
     private static bool _debug = false;
     private static bool _saveCalcuCombatRangeSetting = wManager.wManagerSetting.CurrentSetting.CalcuCombatRange;
     private static readonly BackgroundWorker _talentThread = new BackgroundWorker();
@@ -24,6 +25,8 @@ public class Main : ICustomClass
 
     public void Initialize()
     {
+        AutoUpdater.CheckUpdate(version);
+
         Log("Started. Discovering class and finding rotation...");
         var type = Type.GetType(wowClass);
 
