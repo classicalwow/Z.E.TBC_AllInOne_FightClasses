@@ -30,6 +30,7 @@ public class ZEWarlockSettings : Settings
         UseIncinerate = true;
         UseSoulShatter = true;
         NumberOfSoulShards = 4;
+        ActivateCombatDebug = false;
         //FearAdds = false;
 
         ConfigWinForm(
@@ -145,6 +146,12 @@ public class ZEWarlockSettings : Settings
     [DisplayName("Use Soul Stone")]
     [Description("Use Soul Stone (needs a third party plugin to resurrect using the Soulstone)")]
     public bool UseSoulStone { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Combat log debug")]
+    [Description("Activate combat log debug")]
+    public bool ActivateCombatDebug { get; set; }
 
     public bool Save()
     {

@@ -31,6 +31,7 @@ public class ZEShamanSettings : Settings
         UseFlameShock = true;
         ShamanisticRageOnMultiOnly = true;
         UseWaterShield = true;
+        ActivateCombatDebug = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCShaman "
@@ -145,6 +146,12 @@ public class ZEShamanSettings : Settings
     [DisplayName("Use Earth totems")]
     [Description("Use Earth totems")]
     public bool UseEarthTotems { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Combat log debug")]
+    [Description("Activate combat log debug")]
+    public bool ActivateCombatDebug { get; set; }
 
     public bool Save()
     {

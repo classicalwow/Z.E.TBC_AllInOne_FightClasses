@@ -289,25 +289,25 @@ public static class Mage
         if (!s.KnownSpell)
             return false;
 
-        Main.LogDebug("*----------- INTO CAST FOR " + s.Name);
+        CombatDebug("*----------- INTO CAST FOR " + s.Name);
         float _spellCD = ToolBox.GetSpellCooldown(s.Name);
-        Main.LogDebug("Cooldown is " + _spellCD);
+        CombatDebug("Cooldown is " + _spellCD);
 
         if (ToolBox.GetSpellCost(s.Name) > Me.Mana)
         {
-            Main.LogDebug(s.Name + ": Not enough mana, SKIPPING");
+            CombatDebug(s.Name + ": Not enough mana, SKIPPING");
             return false;
         }
 
         if ((_usingWand && !castEvenIfWanding) || (_isBackingUp && !s.Name.Equals("Blink")))
         {
-            Main.LogDebug("Didn't cast because we were backing up or wanding");
+            CombatDebug("Didn't cast because we were backing up or wanding");
             return false;
         }
 
         if (_spellCD >= 2f)
         {
-            Main.LogDebug("Didn't cast because cd is too long");
+            CombatDebug("Didn't cast because cd is too long");
             return false;
         }
 
@@ -318,7 +318,7 @@ public static class Mage
         {
             if (ToolBox.GetSpellCastTime(s.Name) < 1f)
             {
-                Main.LogDebug(s.Name + " is instant and low CD, recycle");
+                CombatDebug(s.Name + " is instant and low CD, recycle");
                 return true;
             }
 
@@ -329,24 +329,30 @@ public static class Mage
                 t += 50;
                 if (t > 2000)
                 {
-                    Main.LogDebug(s.Name + ": waited for tool long, give up");
+                    CombatDebug(s.Name + ": waited for tool long, give up");
                     return false;
                 }
             }
             Thread.Sleep(100 + Usefuls.Latency);
-            Main.LogDebug(s.Name + ": waited " + (t + 100) + " for it to be ready");
+            CombatDebug(s.Name + ": waited " + (t + 100) + " for it to be ready");
         }
 
         if (!s.IsSpellUsable)
         {
-            Main.LogDebug("Didn't cast because spell somehow not usable");
+            CombatDebug("Didn't cast because spell somehow not usable");
             return false;
         }
 
-        Main.LogDebug("Launching");
+        CombatDebug("Launching");
         if (ObjectManager.Target.IsAlive || (!Fight.InFight && ObjectManager.Target.Guid < 1))
             s.Launch();
         return true;
+    }
+
+    private static void CombatDebug(string s)
+    {
+        if (_settings.ActivateCombatDebug)
+            Main.CombatDebug(s);
     }
 
     private static Spell FrostArmor = new Spell("Frost Armor");

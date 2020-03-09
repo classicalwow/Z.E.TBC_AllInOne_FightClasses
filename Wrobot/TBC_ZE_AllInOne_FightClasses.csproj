@@ -25,25 +25,22 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>E:\WoW\WRobot\WRobot\FightClass\</OutputPath>
+    <OutputPath>E:\WoW\WoW TBC\WRobot\WRobot\FightClass\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MemoryRobot">
-      <HintPath>E:\WoW\WRobot\WRobot\Bin\MemoryRobot.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>E:\WoW\WoW TBC\WRobot\WRobot\Bin\MemoryRobot.dll</HintPath>
     </Reference>
     <Reference Include="robotManager">
-      <HintPath>E:\WoW\WRobot\WRobot\Bin\robotManager.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>E:\WoW\WoW TBC\WRobot\WRobot\Bin\robotManager.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="wManager">
-      <HintPath>E:\WoW\WRobot\WRobot\Bin\wManager.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>E:\WoW\WoW TBC\WRobot\WRobot\Bin\wManager.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -80,6 +77,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)\$(ProjectName).dll" "$(SolutionDir)\Compiled\$(ProjectName).dll</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetDir)\$(ProjectName).dll" "$(SolutionDir)\Compiled\$(ProjectName).dll
+copy /Y "$(TargetDir)\$(ProjectName).dll" "C:\Users\Nico\Desktop\$(ProjectName).dll</PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -265,7 +265,14 @@ public static class Paladin
 
     private static void Cast(Spell s)
     {
+        CombatDebug("In cast for " + s.Name);
         if (s.IsSpellUsable && s.KnownSpell)
             s.Launch();
+    }
+
+    private static void CombatDebug(string s)
+    {
+        if (_settings.ActivateCombatDebug)
+            Main.CombatDebug(s);
     }
 }

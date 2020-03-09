@@ -25,6 +25,7 @@ public class ZEBMHunterSettings : Settings
         BestialWrathOnMulti = false;
         RapidFireOnMulti = false;
         AutoGrowl = false;
+        ActivateCombatDebug = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCHunter "
@@ -103,6 +104,12 @@ public class ZEBMHunterSettings : Settings
     [DisplayName("Auto Growl")]
     [Description("If true, will let Growl on autocast. If false, will let Z.E.Hunter manage Growl in order to save your pet's energy.")]
     public bool AutoGrowl { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Combat log debug")]
+    [Description("Activate combat log debug")]
+    public bool ActivateCombatDebug { get; set; }
 
     public bool Save()
     {

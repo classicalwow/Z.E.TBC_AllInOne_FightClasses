@@ -26,6 +26,7 @@ public class ZEPaladinSettings : Settings
         DevoAuraOnMulti = true;
         UseSealOfTheCrusader = true;
         HealDuringCombat = true;
+        ActivateCombatDebug = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCPaladin "
@@ -110,6 +111,12 @@ public class ZEPaladinSettings : Settings
     [DisplayName("Heal during combat")]
     [Description("Use healing spells during combat")]
     public bool HealDuringCombat { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Combat log debug")]
+    [Description("Activate combat log debug")]
+    public bool ActivateCombatDebug { get; set; }
 
     public bool Save()
     {

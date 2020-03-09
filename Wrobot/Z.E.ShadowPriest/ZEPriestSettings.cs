@@ -23,6 +23,7 @@ public class ZEPriestSettings : Settings
         UseDefaultTalents = true;
         AssignTalents = false;
         TalentCodes = new string[] { };
+        ActivateCombatDebug = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCPriest "
@@ -89,6 +90,12 @@ public class ZEPriestSettings : Settings
     [DisplayName("Use Inner Fire")]
     [Description("Use Inner Fire")]
     public bool UseInnerFire { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Combat log debug")]
+    [Description("Activate combat log debug")]
+    public bool ActivateCombatDebug { get; set; }
 
     public bool Save()
     {

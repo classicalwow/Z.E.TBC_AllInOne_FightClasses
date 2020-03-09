@@ -26,6 +26,7 @@ public class ZEDruidSettings : Settings
         UseTravelForm = false;
         UseInnervate = true;
         CatFormOOC = false;
+        ActivateCombatDebug = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCDruid "
@@ -110,6 +111,12 @@ public class ZEDruidSettings : Settings
     [DisplayName("Stealth engage")]
     [Description("Try to engage fights using Prowl and going behind the target (can be buggy)")]
     public bool StealthEngage { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Combat log debug")]
+    [Description("Activate combat log debug")]
+    public bool ActivateCombatDebug { get; set; }
 
     public bool Save()
     {

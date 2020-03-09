@@ -21,6 +21,7 @@ public class ZEMageSettings : Settings
         WandThreshold = 30;
         IcyVeinMultiPull = true;
         BlinkWhenBackup = true;
+        ActivateCombatDebug = false;
 
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCMage "
@@ -75,6 +76,12 @@ public class ZEMageSettings : Settings
     [DisplayName("Blink when backing up")]
     [Description("Use Blink when backing up from the target")]
     public bool BlinkWhenBackup { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Combat log debug")]
+    [Description("Activate combat log debug")]
+    public bool ActivateCombatDebug { get; set; }
 
     public bool Save()
     {

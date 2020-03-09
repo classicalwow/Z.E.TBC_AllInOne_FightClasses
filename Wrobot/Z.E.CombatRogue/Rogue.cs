@@ -116,7 +116,7 @@ public static class Rogue
                 if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
                     // Buff rotation
-                    if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
+                    if (ObjectManager.GetNumberAttackPlayer() < 1)
                     {
                         BuffRotation();
                     }
@@ -442,12 +442,18 @@ public static class Rogue
         if (!s.KnownSpell)
             return false;
 
-        Main.LogDebug("In cast for " + s.Name);
+        CombatDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || Me.IsCast)
             return false;
 
         s.Launch();
         return true;
+    }
+
+    private static void CombatDebug(string s)
+    {
+        if (_settings.ActivateCombatDebug)
+            Main.CombatDebug(s);
     }
 
     public static List<string> Bandages()

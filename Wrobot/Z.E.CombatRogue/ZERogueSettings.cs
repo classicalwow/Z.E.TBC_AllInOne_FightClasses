@@ -24,6 +24,7 @@ public class ZERogueSettings : Settings
         UseBlindBandage = true;
         UseGarrote = true;
         RiposteAll = false;
+        ActivateCombatDebug = false;
 
         ConfigWinForm(
             new System.Drawing.Point(500, 400), "WholesomeTBCRogue "
@@ -97,6 +98,12 @@ public class ZERogueSettings : Settings
     [DisplayName("Riposte all enemies")]
     [Description("On some servers, only humanoids can be riposted. Set this value False if it is the case.")]
     public bool RiposteAll { get; set; }
+
+    [Category("Misc")]
+    [DefaultValue(false)]
+    [DisplayName("Combat log debug")]
+    [Description("Activate combat log debug")]
+    public bool ActivateCombatDebug { get; set; }
 
     public bool Save()
     {

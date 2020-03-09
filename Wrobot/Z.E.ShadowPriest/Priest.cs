@@ -126,6 +126,17 @@ public static class Priest
                 }
             }
 
+            // OOC Divine Spirit
+            if (!Me.HaveBuff("Divine Spirit") && DivineSpirit.KnownSpell && DivineSpirit.IsSpellUsable)
+            {
+                Lua.RunMacroText("/target player");
+                if (Cast(DivineSpirit))
+                {
+                    Lua.RunMacroText("/cleartarget");
+                    return;
+                }
+            }
+
             // OOC Inner Fire
             if (!Me.HaveBuff("Inner Fire") && _settings.UseInnerFire)
                 if (Cast(InnerFire))
@@ -226,12 +237,12 @@ public static class Priest
                 return;
 
         // Power Word Shield
-        if (Me.HealthPercent < 70 && !Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul)
+        if (Me.HealthPercent < 60 && !Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul)
             if (Cast(PowerWordShield))
                 return;
 
         // Renew
-        if (Me.HealthPercent < 60 && !Me.HaveBuff("Renew") && !_inShadowForm
+        if (Me.HealthPercent < 90 && !Me.HaveBuff("Renew") && !_inShadowForm
              && (Target.HealthPercent > 15 || Me.HealthPercent < 25))
             if (Cast(Renew))
                 return;
@@ -428,31 +439,32 @@ public static class Priest
     private static Spell InnerFocus = new Spell("Inner Focus");
     private static Spell Shadowfiend = new Spell("Shadowfiend");
     private static Spell Silence = new Spell("Silence");
+    private static Spell DivineSpirit = new Spell("Divine Spirit");
 
     private static bool Cast(Spell s, bool castEvenIfWanding = true)
     {
         if (!s.KnownSpell)
             return false;
 
-        Main.LogDebug("*----------- INTO CAST FOR " + s.Name);
+        CombatDebug("*----------- INTO CAST FOR " + s.Name);
         float _spellCD = ToolBox.GetSpellCooldown(s.Name);
-        Main.LogDebug("Cooldown is " + _spellCD);
+        CombatDebug("Cooldown is " + _spellCD);
 
         if (ToolBox.GetSpellCost(s.Name) > Me.Mana)
         {
-            Main.LogDebug(s.Name + ": Not enough mana, SKIPPING");
+            CombatDebug(s.Name + ": Not enough mana, SKIPPING");
             return false;
         }
 
         if (_usingWand && !castEvenIfWanding)
         {
-            Main.LogDebug("Didn't cast because we were backing up or wanding");
+            CombatDebug("Didn't cast because we were backing up or wanding");
             return false;
         }
 
         if (_spellCD >= 2f)
         {
-            Main.LogDebug("Didn't cast because cd is too long");
+            CombatDebug("Didn't cast because cd is too long");
             return false;
         }
 
@@ -463,7 +475,7 @@ public static class Priest
         {
             if (ToolBox.GetSpellCastTime(s.Name) < 1f)
             {
-                Main.LogDebug(s.Name + " is instant and low CD, recycle");
+                CombatDebug(s.Name + " is instant and low CD, recycle");
                 return true;
             }
 
@@ -474,23 +486,29 @@ public static class Priest
                 t += 50;
                 if (t > 2000)
                 {
-                    Main.LogDebug(s.Name + ": waited for tool long, give up");
+                    CombatDebug(s.Name + ": waited for tool long, give up");
                     return false;
                 }
             }
             Thread.Sleep(100 + Usefuls.Latency);
-            Main.LogDebug(s.Name + ": waited " + (t + 100) + " for it to be ready");
+            CombatDebug(s.Name + ": waited " + (t + 100) + " for it to be ready");
         }
 
         if (!s.IsSpellUsable)
         {
-            Main.LogDebug("Didn't cast because spell somehow not usable");
+            CombatDebug("Didn't cast because spell somehow not usable");
             return false;
         }
 
-        Main.LogDebug("Launching");
+        CombatDebug("Launching");
         if (ObjectManager.Target.IsAlive || (!Fight.InFight && ObjectManager.Target.Guid < 1))
             s.Launch();
         return true;
+    }
+
+    private static void CombatDebug(string s)
+    {
+        if (_settings.ActivateCombatDebug)
+            Main.CombatDebug(s);
     }
 }

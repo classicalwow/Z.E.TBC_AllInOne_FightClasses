@@ -348,12 +348,18 @@ public static class Warrior
 
     internal static bool Cast(Spell s)
     {
-        Main.LogDebug("In cast for " + s.Name);
+        CombatDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;
         
         s.Launch();
         return true;
+    }
+
+    private static void CombatDebug(string s)
+    {
+        if (_settings.ActivateCombatDebug)
+            Main.CombatDebug(s);
     }
 
     private static bool HeroicStrikeOn()
