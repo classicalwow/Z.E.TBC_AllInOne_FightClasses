@@ -20,7 +20,6 @@ public static class Druid
     internal static Stopwatch _pullMeleeTimer = new Stopwatch();
     internal static Stopwatch _meleeTimer = new Stopwatch();
     internal static Stopwatch _stealthApproachTimer = new Stopwatch();
-    internal static Stopwatch _taxiShapeShiftTimer = new Stopwatch();
     internal static Vector3 _fireTotemPosition = null;
     private static WoWLocalPlayer Me = ObjectManager.Me;
     internal static ZEDruidSettings _settings;
@@ -99,16 +98,6 @@ public static class Druid
                 cancelable.Cancel = true;
         };
 
-        // Manage Shapeshift on taxi node
-        TaxiEvents.OnTakeTaxiNode += (TaxiNode taxiNode, CancelEventArgs cancelable) =>
-        {
-            _taxiShapeShiftTimer.Start();
-            if (Me.HaveBuff("Travel Form"))
-                TravelForm.Launch();
-            if (Me.HaveBuff("Cat Form"))
-                CatForm.Launch();
-        };
-
         Rotation();
     }
 
@@ -126,9 +115,6 @@ public static class Druid
 			{
                 if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    if (_taxiShapeShiftTimer.ElapsedMilliseconds > 30000)
-                        _taxiShapeShiftTimer.Reset();
-
                     // Buff rotation
                     if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
                     {
@@ -221,14 +207,14 @@ public static class Druid
             // Travel Form
             if (!Me.HaveBuff("Travel Form") && _settings.UseTravelForm && Me.ManaPercentage > 50
                 && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent 
-                && _taxiShapeShiftTimer.ElapsedMilliseconds == 0)
+                && !ObjectManager.Target.IsFlightMaster)
                 if (Cast(TravelForm))
                     return;
 
             // Cat Form
             if (!Me.HaveBuff("Cat Form") && (!_settings.UseTravelForm || Me.ManaPercentage < 50) 
                 && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent
-                && _taxiShapeShiftTimer.ElapsedMilliseconds == 0 && _settings.CatFormOOC)
+                && !ObjectManager.Target.IsFlightMaster)
             {
                 if (Cast(CatForm))
                     return;

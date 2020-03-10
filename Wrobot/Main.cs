@@ -6,6 +6,7 @@ using System;
 using System.Drawing;
 using wManager.Events;
 using System.ComponentModel;
+using System.IO;
 
 public class Main : ICustomClass
 {
@@ -13,7 +14,7 @@ public class Main : ICustomClass
     public static float settingRange = 5f;
     public static int _humanReflexTime = 500;
     public static bool _isLaunched;
-    public static string version = "1.2.1";
+    public static string version = "1.2.2"; // Must match version in Version.txt
     private static bool _debug = false;
     private static bool _saveCalcuCombatRangeSetting = wManager.wManagerSetting.CurrentSetting.CalcuCombatRange;
     private static readonly BackgroundWorker _talentThread = new BackgroundWorker();
@@ -95,7 +96,7 @@ public class Main : ICustomClass
 
     public static void Log(string message)
     {
-        Logging.Write($"[Wholesome-FC-TBC - {wowClass}]: {message}", Logging.LogType.Normal, Color.DarkOliveGreen);
+        Logging.Write($"[Wholesome-FC-TBC - {wowClass}]: {message}", Logging.LogType.Normal, Color.DarkSlateBlue);
     }
 
     public static void Log(string message, Color c)

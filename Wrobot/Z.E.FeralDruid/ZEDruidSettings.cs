@@ -23,9 +23,9 @@ public class ZEDruidSettings : Settings
         UseTigersFury = true;
         StealthEngage = true;
         UseBarkskin = true;
-        UseTravelForm = false;
+        UseTravelForm = true;
         UseInnervate = true;
-        CatFormOOC = false;
+        CatFormOOC = true;
         ActivateCombatDebug = false;
 
         ConfigWinForm(
@@ -65,13 +65,13 @@ public class ZEDruidSettings : Settings
     public bool AlwaysPull { get; set; }
 
     [Category("Misc")]
-    [DefaultValue(false)]
+    [DefaultValue(true)]
     [DisplayName("Use Travel Form")]
     [Description("Use Travel Form (Triggers more shapeshifts)")]
     public bool UseTravelForm { get; set; }
 
     [Category("Misc")]
-    [DefaultValue(false)]
+    [DefaultValue(true)]
     [DisplayName("Force Cat Form")]
     [Description("Forces Cat Form when out of combat. Can cause problems with mining and Flights")]
     public bool CatFormOOC { get; set; }
