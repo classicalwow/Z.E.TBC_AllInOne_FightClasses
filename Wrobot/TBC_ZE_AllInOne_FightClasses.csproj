@@ -33,14 +33,17 @@
   <ItemGroup>
     <Reference Include="MemoryRobot">
       <HintPath>E:\WoW\WoW TBC\WRobot\WRobot\Bin\MemoryRobot.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="robotManager">
       <HintPath>E:\WoW\WoW TBC\WRobot\WRobot\Bin\robotManager.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="wManager">
       <HintPath>E:\WoW\WoW TBC\WRobot\WRobot\Bin\wManager.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -75,10 +78,13 @@
     <Compile Include="Z.E.AfflictionWarlock\Warlock.cs" />
     <Compile Include="Z.E.AfflictionWarlock\ZEWarlockSettings.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Compiled\TBC_ZE_AllInOne_FightClasses.dll" />
+    <Content Include="Compiled\Version.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)\$(ProjectName).dll" "$(SolutionDir)\Compiled\$(ProjectName).dll
+    <PostBuildEvent>copy /Y "$(TargetDir)\$(ProjectName).dll" "$(SolutionDir)\Wrobot\Compiled\$(ProjectName).dll
 copy /Y "$(TargetDir)\$(ProjectName).dll" "C:\Users\Nico\Desktop\$(ProjectName).dll</PostBuildEvent>
   </PropertyGroup>
 </Project>
