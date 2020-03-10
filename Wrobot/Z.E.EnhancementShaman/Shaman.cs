@@ -90,7 +90,8 @@ public static class Shaman
 
                     // Ghost Wolf
                     if (Me.ManaPercentage > 50 && !Me.IsIndoors && _ghostWolfTimer.ElapsedMilliseconds > 3000
-                        && _settings.UseGhostWolf && !Me.IsMounted && !Fight.InFight && !Me.HaveBuff("Ghost Wolf"))
+                        && _settings.UseGhostWolf && !Me.IsMounted && !Fight.InFight && !Me.HaveBuff("Ghost Wolf")
+                        && !ObjectManager.Target.IsFlightMaster)
                     {
                         _ghostWolfTimer.Stop();
                         Cast(GhostWolf);
