@@ -14,10 +14,11 @@ public class Main : ICustomClass
     public static float settingRange = 5f;
     public static int _humanReflexTime = 500;
     public static bool _isLaunched;
-    public static string version = "1.2.3"; // Must match version in Version.txt
+    public static string version = "1.2.4"; // Must match version in Version.txt
     private static bool _debug = false;
     private static bool _saveCalcuCombatRangeSetting = wManager.wManagerSetting.CurrentSetting.CalcuCombatRange;
     private static readonly BackgroundWorker _talentThread = new BackgroundWorker();
+    public bool haveCheckedForUpdate = false;
 
     public float Range
 	{
