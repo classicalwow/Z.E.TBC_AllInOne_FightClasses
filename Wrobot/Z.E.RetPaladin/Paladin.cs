@@ -92,6 +92,14 @@ public static class Paladin
         if (Me.IsMounted && CrusaderAura.KnownSpell && !Me.HaveBuff("Crusader Aura") && !Fight.InFight)
             Cast(CrusaderAura);
 
+        // Sanctity Aura
+        if (!Me.HaveBuff("Sanctity Aura") && SanctityAura.KnownSpell && !Me.IsMounted)
+            Cast(SanctityAura);
+
+        // Retribution Aura
+        if (!Me.HaveBuff("Retribution Aura") && !SanctityAura.KnownSpell && RetributionAura.KnownSpell && !Me.IsMounted)
+            Cast(SanctityAura);
+
         // Blessing of Wisdom
         if (_settings.UseBlessingOfWisdom && !Me.HaveBuff("Blessing of Wisdom")
             && !Me.IsMounted && BlessingOfWisdom.IsSpellUsable)
