@@ -189,7 +189,10 @@ public static class Priest
         if (Me.HaveBuff("ShadowForm") && ObjectManager.Target.GetDistance <= _maxRange 
             && !ObjectManager.Target.HaveBuff("Vampiric Touch"))
             if (Cast(VampiricTouch))
+            {
+                Thread.Sleep(500);
                 return;
+            }
 
         // MindBlast
         if (Me.HaveBuff("ShadowForm") && ObjectManager.Target.GetDistance <= _maxRange
