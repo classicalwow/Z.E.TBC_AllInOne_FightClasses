@@ -12,7 +12,7 @@ public class Main : ICustomClass
 {
     public static string wowClass = ObjectManager.Me.WowClass.ToString();
     public static float settingRange = 5f;
-    public static int _humanReflexTime = 500;
+    public static int _humanReflexTime = 500; 
     public static bool _isLaunched;
     public static string version = "1.2.71"; // Must match version in Version.txt
     private static bool _debug = false;
