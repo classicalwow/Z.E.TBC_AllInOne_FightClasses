@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoUpdater.cs" />
+    <Compile Include="TEST.cs" />
     <Compile Include="ZETBCFCSettings.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
