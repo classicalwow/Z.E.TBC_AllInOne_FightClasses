@@ -237,8 +237,8 @@ public static class Warlock
                     return;
 
             // Use Soul Stone
-            if (!Me.HaveBuff("Soulstone Resurrection") && CreateSoulstone.KnownSpell && 
-                ToolBox.GetItemCooldown(PetAndConsumables.SoulStones()) <= 0)
+            if (!Me.HaveBuff("Soulstone Resurrection") && CreateSoulstone.KnownSpell && ToolBox.HaveOneInList(PetAndConsumables.SoulStones())
+                && ToolBox.GetItemCooldown(PetAndConsumables.SoulStones()) <= 0)
             {
                 MovementManager.StopMove();
                 Lua.RunMacroText("/target player");
