@@ -30,7 +30,7 @@ public class Main : ICustomClass
         ZETBCFCSettings.Load();
         AutoUpdater.CheckUpdate(version);
 
-        Log("Started. Discovering class and finding rotation...");
+        Log($"FC version {version}. Discovering class and finding rotation...");
         var type = Type.GetType(wowClass);
 
         if (type != null)
