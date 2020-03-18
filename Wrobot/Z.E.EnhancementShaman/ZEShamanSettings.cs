@@ -20,6 +20,7 @@ public class ZEShamanSettings : Settings
         UseStoneSkinTotem = false;
         UseLightningShield = false;
         PullRankOneLightningBolt = true;
+        PullWithLightningBolt = true;
         UseAirTotems = true;
         UseEarthTotems = true;
         UseFireTotems = true;
@@ -104,6 +105,12 @@ public class ZEShamanSettings : Settings
     [DisplayName("Use Water Shield")]
     [Description("Prioritize Water Shield over Lightning Shield")]
     public bool UseWaterShield { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(true)]
+    [DisplayName("Pull with Lightning Bolt")]
+    [Description("Use Lightning Bolt to pull enemies")]
+    public bool PullWithLightningBolt { get; set; }
 
     [Category("Combat Rotation")]
     [DefaultValue(true)]

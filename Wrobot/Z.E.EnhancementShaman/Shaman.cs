@@ -169,18 +169,23 @@ public static class Shaman
         if (ObjectManager.Target.GetDistance <= _pullRange)
         {
             bool cast = false;
+            // pull with rank one
             if (_settings.PullRankOneLightningBolt && LightningBolt.IsSpellUsable)
             {
                 MovementManager.StopMove();
                 Lua.RunMacroText("/cast Lightning Bolt(Rank 1)");
                 cast = true;
             }
-            else
+
+            // pull with max rank
+            if (_settings.PullWithLightningBolt && LightningBolt.IsSpellUsable)
                 if (Cast(LightningBolt))
                     cast = true;
-            
+
             if (cast)
                 return;
+            else
+                _goInMelee = true;
         }
     }
 
