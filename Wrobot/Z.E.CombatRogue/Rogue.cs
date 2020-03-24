@@ -255,7 +255,7 @@ public static class Rogue
                         MovementManager.StopMove();
                     if (Cast(CheapShot))
                         MovementManager.StopMove();
-                    if (Cast(SinisterStrike))
+                    if (Cast(Hemorrhage) || Cast(SinisterStrike))
                         MovementManager.StopMove();
                 }
                 else
@@ -272,7 +272,7 @@ public static class Rogue
                     }
                     else
                     {
-                        if (Cast(SinisterStrike))
+                        if (Cast(Hemorrhage) || Cast(SinisterStrike))
                             MovementManager.StopMove();
                     }
                 }
@@ -400,6 +400,20 @@ public static class Rogue
             if (Cast(Eviscerate))
                 return;
 
+        // GhostlyStrike
+        if (Me.ComboPoint < 5 && !IsTargetStunned() &&
+            (!_fightingACaster || !Kick.KnownSpell ||
+            (Me.Energy > (ToolBox.GetSpellCost("Ghostly Strike") + ToolBox.GetSpellCost("Kick")))))
+            if (Cast(GhostlyStrike))
+                return;
+
+        // Hemohrrage
+        if (Me.ComboPoint < 5 && !IsTargetStunned() &&
+            (!_fightingACaster || !Kick.KnownSpell ||
+            (Me.Energy > (ToolBox.GetSpellCost("Hemorrhage") + ToolBox.GetSpellCost("Kick")))))
+            if (Cast(Hemorrhage))
+                return;
+
         // Sinister Strike
         if (Me.ComboPoint < 5 && !IsTargetStunned() && 
             (!_fightingACaster || !Kick.KnownSpell || 
@@ -436,6 +450,8 @@ public static class Rogue
     private static Spell CloakOfShadows = new Spell("Cloak of Shadows");
     private static Spell Blind = new Spell("Blind");
     private static Spell KidneyShot = new Spell("Kidney Shot");
+    private static Spell Hemorrhage = new Spell("Hemorrhage");
+    private static Spell GhostlyStrike = new Spell("Ghostly Strike");
 
     internal static bool Cast(Spell s)
     {

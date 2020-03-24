@@ -117,9 +117,7 @@ public static class Druid
                 {
                     // Buff rotation
                     if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
-                    {
                         BuffRotation();
-                    }
 
                     // Pull & Combat rotation
                     if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable && ObjectManager.Target.IsAlive)
