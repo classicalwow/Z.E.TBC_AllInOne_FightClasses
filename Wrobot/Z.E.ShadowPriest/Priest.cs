@@ -106,7 +106,7 @@ public static class Priest
 
             // OOC Power Word Shield
             if (Me.HealthPercent < 50 && !Me.HaveBuff("Power Word: Shield") && !ToolBox.HasDebuff("Weakened Soul")
-                && ObjectManager.GetNumberAttackPlayer() > 0)
+                && ObjectManager.GetNumberAttackPlayer() > 0 && _settings.UsePowerWordShield)
                 if (Cast(PowerWordShield))
                     return;
 
@@ -181,7 +181,7 @@ public static class Priest
 
         // Power Word Shield
         if (!ToolBox.HasDebuff("Weakened Soul") && _settings.UseShieldOnPull
-            && !Me.HaveBuff("Power Word: Shield"))
+            && !Me.HaveBuff("Power Word: Shield") && _settings.UsePowerWordShield)
             if (Cast(PowerWordShield))
                 return;
 
@@ -232,12 +232,14 @@ public static class Priest
         WoWUnit Target = ObjectManager.Target;
 
         // Power Word Shield on multi aggro
-        if (!Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul && ObjectManager.GetNumberAttackPlayer() > 1)
+        if (!Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul 
+            && ObjectManager.GetNumberAttackPlayer() > 1 && _settings.UsePowerWordShield)
             if (Cast(PowerWordShield))
                 return;
 
         // Power Word Shield
-        if (Me.HealthPercent < 60 && !Me.HaveBuff("Power Word: Shield") && !_hasWeakenedSoul)
+        if (Me.HealthPercent < 60 && !Me.HaveBuff("Power Word: Shield") 
+            && !_hasWeakenedSoul && _settings.UsePowerWordShield)
             if (Cast(PowerWordShield))
                 return;
 
@@ -365,7 +367,7 @@ public static class Priest
         }
 
         // Mind Flay Range check
-        if (_inShadowForm && !MindFlay.IsDistanceGood && Me.HaveBuff("Power Word: Shield"))
+        if (_inShadowForm && !MindFlay.IsDistanceGood && (Me.HaveBuff("Power Word: Shield") || !_settings.UsePowerWordShield))
         {
             Main.LogDebug("Approaching to be in Mind Flay range");
             _goInMFRange = true;
@@ -373,7 +375,7 @@ public static class Priest
         }
 
         // Mind FLay
-        if (Me.HaveBuff("Power Word: Shield") && MindFlay.IsDistanceGood 
+        if ((Me.HaveBuff("Power Word: Shield") || !_settings.UsePowerWordShield) && MindFlay.IsDistanceGood 
             && _myManaPC > _innerManaSaveThreshold && Target.HealthPercent > _wandThreshold)
             if (Cast(MindFlay, false))
                 return;

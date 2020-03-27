@@ -20,6 +20,7 @@ public class ZEPriestSettings : Settings
         UseShadowGuard = true;
         UseShadowProtection = true;
         UseShadowWordDeath = true;
+        UsePowerWordShield = true;
         UseDefaultTalents = true;
         AssignTalents = false;
         TalentCodes = new string[] { };
@@ -60,6 +61,12 @@ public class ZEPriestSettings : Settings
     [DisplayName("Wand Threshold")]
     [Description("Enemy HP under which the wand should be used")]
     public int WandThreshold { get; set; }
+
+    [Category("Combat Rotation")]
+    [DefaultValue(true)]
+    [DisplayName("Use Power Word: Shield")]
+    [Description("Use Power Word: Shield")]
+    public bool UsePowerWordShield { get; set; }
 
     [Category("Combat Rotation")]
     [DefaultValue(true)]
