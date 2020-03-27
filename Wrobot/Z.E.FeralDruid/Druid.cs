@@ -212,7 +212,7 @@ public static class Druid
             // Cat Form
             if (!Me.HaveBuff("Cat Form") && (!_settings.UseTravelForm || Me.ManaPercentage < 50) 
                 && Me.ManaPercentage > wManager.wManagerSetting.CurrentSetting.DrinkPercent
-                && !ObjectManager.Target.IsFlightMaster)
+                && !ObjectManager.Target.IsFlightMaster && _settings.CatFormOOC)
             {
                 if (Cast(CatForm))
                     return;
