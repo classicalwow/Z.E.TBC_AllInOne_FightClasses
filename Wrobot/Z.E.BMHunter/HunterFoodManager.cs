@@ -83,7 +83,8 @@ public class HunterFoodManager
             "Soft Banana Bread",
             "Homemade Cherry Pie",
             "Mag'har Grainbread",
-            "Crusty Flatbread"
+            "Crusty Flatbread",
+            "Bladespire Bagel"
         };
     }
 
