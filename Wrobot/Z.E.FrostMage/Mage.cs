@@ -101,7 +101,7 @@ public static class Mage
             {
                 if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    if (!Fight.InFight && !ObjectManager.Me.InCombatFlagOnly)
+                    if (!Fight.InFight && !ObjectManager.Me.InCombatFlagOnly && !Me.IsMounted)
                         BuffRotation();
 
                     if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable && ObjectManager.Target.IsAlive)
