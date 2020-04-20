@@ -25,7 +25,9 @@ public class HunterFoodManager
             "Salted Venison",
             "Mead Basted Caribou",
             "Mystery Meat",
-            "R﻿ed Wolf Mea﻿﻿t"
+            "R﻿ed Wolf Mea﻿﻿t",
+            "掠食者的肉",
+            "熏烤塔布羊排"
         };
     }
 
@@ -94,17 +96,19 @@ public class HunterFoodManager
         {
             if (ItemsManager.GetItemCountByNameLUA(text) > 0)
             {
-                Lua.LuaDoString("CastSpellByName('Feed Pet')", false);
+                Lua.LuaDoString("CastSpellByName('喂养宠物')", false);
                 Lua.LuaDoString("UseItemByName('" + text + "')", false);
-                Thread.Sleep(5000);
+                break;
             }
         }
     }
 
     public void FeedPet()
     {
-        if (PetFoodType().Contains("Meat"))
+        Main.Log("Feed2");
+        if (PetFoodType().Contains("肉"))
         {
+            Main.Log("Feed3");
             FeedByType(FoodList());
         }
         if (PetFoodType().Contains("Fungus"))

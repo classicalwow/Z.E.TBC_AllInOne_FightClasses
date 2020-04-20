@@ -131,7 +131,7 @@ public static class Hunter
 
     internal static void Rotation()
 	{
-        Main.Log("Started");
+        Main.Log("hunter fightclass Started");
 		while (Main._isLaunched)
 		{
 			try
@@ -150,8 +150,8 @@ public static class Hunter
                     // Feed
                     if (Lua.LuaDoString<int>("happiness, damagePercentage, loyaltyRate = GetPetHappiness() return happiness", "") < 3 
                         && !Fight.InFight && _settings.FeedPet)
-						Feed();
-
+                            Feed();
+                    
                     // Pet attack
 					if (Fight.InFight && Me.Target > 0UL && ObjectManager.Target.IsAttackable 
                         && !ObjectManager.Pet.HaveBuff("Feed Pet Effect") && ObjectManager.Pet.Target != Me.Target)

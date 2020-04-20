@@ -28,7 +28,7 @@ public class Main : ICustomClass
     public void Initialize()
     {
         ZETBCFCSettings.Load();
-        AutoUpdater.CheckUpdate(version);
+        //AutoUpdater.CheckUpdate(version);
 
         Log($"FC version {version}. Discovering class and finding rotation...");
         var type = Type.GetType(wowClass);
