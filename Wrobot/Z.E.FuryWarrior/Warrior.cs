@@ -171,7 +171,7 @@ public static class Warrior
         bool _saveRage = ((Cleave.KnownSpell && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f)
             && _settings.UseCleave)
             || (Execute.KnownSpell && Target.HealthPercent < 40) 
-            || (Bloodthirst.KnownSpell && ObjectManager.Me.Rage < 40 && Target.HealthPercent > 50));
+            || (MortalStrike.KnownSpell && ObjectManager.Me.Rage < 40 && Target.HealthPercent > 50));
 
         // Check Auto-Attacking
         ToolBox.CheckAutoAttack(Attack);
@@ -255,7 +255,7 @@ public static class Warrior
         }
 
         // Bloodthirst
-        if (Cast(Bloodthirst))
+        if (Cast(MortalStrike))
             return;
 
         // Sweeping Strikes
@@ -338,6 +338,7 @@ public static class Warrior
     private static Spell Execute = new Spell("Execute");
     private static Spell SweepingStrikes = new Spell("Sweeping Strikes");
     private static Spell Bloodthirst = new Spell("Bloodthirst");
+    private static Spell MortalStrike = new Spell("Mortal Strike");
     private static Spell BerserkerStance = new Spell("Berserker Stance");
     private static Spell BattleStance = new Spell("Battle Stance");
     private static Spell Intercept = new Spell("Intercept");

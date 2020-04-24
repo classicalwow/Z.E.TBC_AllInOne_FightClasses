@@ -85,6 +85,6 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)\$(ProjectName).dll" "$(SolutionDir)\Wrobot\Compiled\$(ProjectName).dll
-copy /Y "$(TargetDir)\$(ProjectName).dll" "C:\Users\30962\Desktop\WRobot2.4.3 8606\FightClass\$(ProjectName)_debug.dll</PostBuildEvent>
+copy /Y "$(TargetDir)\$(ProjectName).dll" "C:\Users\30962\Desktop\WRobot2.4.3 8606\FightClass\$(ProjectName)_debug2.dll</PostBuildEvent>
   </PropertyGroup>
 </Project>

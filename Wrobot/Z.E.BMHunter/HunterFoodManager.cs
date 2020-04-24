@@ -27,7 +27,8 @@ public class HunterFoodManager
             "Mystery Meat",
             "R﻿ed Wolf Mea﻿﻿t",
             "掠食者的肉",
-            "熏烤塔布羊排"
+            "熏烤塔布羊排",
+            "烤鹌鹑"
         };
     }
 
@@ -35,6 +36,7 @@ public class HunterFoodManager
     {
         return new List<string>
         {
+            "LV Starter Fruit",
             "Raw Black Truffle"
         };
     }
@@ -105,13 +107,11 @@ public class HunterFoodManager
 
     public void FeedPet()
     {
-        Main.Log("Feed2");
         if (PetFoodType().Contains("肉"))
         {
-            Main.Log("Feed3");
             FeedByType(FoodList());
         }
-        if (PetFoodType().Contains("Fungus"))
+        if (PetFoodType().Contains("蘑"))
         {
             FeedByType(Fungus());
         }

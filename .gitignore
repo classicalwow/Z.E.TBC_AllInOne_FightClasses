@@ -11,8 +11,10 @@
 
 \.vs/Wrobot/v15/\.suo
 
-\.vs/Wrobot/v15/Server/sqlite3/db\.lock
+.vs
 
+\.vs/Wrobot/v15/Server/sqlite3/db\.lock
+Wrobot/Compiled/TBC_ZE_AllInOne_FightClasses.dll
 \.vs/Wrobot/v15/Server/sqlite3/storage\.ide
 
 \.vs/ZEEnhancementShaman/v15/\.suo
