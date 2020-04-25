@@ -15,7 +15,7 @@ public static class Warrior
 {
     private static WoWLocalPlayer Me = ObjectManager.Me;
     internal static ZEWarriorSettings _settings;
-
+    private static uint currentWeapon;
 
 
     public static void Initialize()
@@ -47,7 +47,7 @@ public static class Warrior
                 {
                     if (_settings.fightType == "pvp")
                     {
-                        
+
                         pvp();
                     }
                 }
@@ -65,22 +65,33 @@ public static class Warrior
     {
         var me = ObjectManager.Me;
         var target = ObjectManager.Target;
-        if (Fight.InFight && ObjectManager.Me.Target > 0UL )
+
+        
+
+        if (Fight.InFight && ObjectManager.Me.Target > 0UL)
         {
+
+            if(currentWeapon>0 && !me.HaveBuff("Spell Reflection"))
+            {
+                EquipItemById(currentWeapon);
+                currentWeapon = 0;
+                return;
+            }
+
             //未进入战斗
             if (ObjectManager.GetNumberAttackPlayer() < 1 && !ObjectManager.Target.InCombatFlagOnly)
             {
                 //检查怒气 如果怒气小于30 冲锋
                 if (!InBattleStance() && me.Rage <= 30)
                 {
-                    if(Cast(BattleStance))
+                    if (Cast(BattleStance))
                         return;
                 }
                 if (Cast(Charge))
                     return;
             }
-            
-               
+
+
             //自动攻击
             ToolBox.CheckAutoAttack(Attack);
 
@@ -96,17 +107,34 @@ public static class Warrior
                             if (Cast(Intercept))
                                 return;
                     }
-                   
-            }
-                    
 
-                
+            }
+
+
+
             //如果没有断筋 5-10码刺耳怒吼
-                
-            if(target.GetDistance >=5f && target.GetDistance <= 10f && !target.HaveBuff("Piercing Howl") && !target.HaveBuff("Hamstring"))
+
+            if (target.GetDistance >= 5f && target.GetDistance <= 10f && !target.HaveBuff("Piercing Howl") && !target.HaveBuff("Hamstring"))
             {
                 if (Cast(PiercingHowl))
                     return;
+            }
+
+            //如果被冰环且有人寒冰箭就自动换上盾 且防御姿态 盾反
+            
+            if (_settings.shield > 0 && _settings.oneHandedWeapon > 0 && me.Rage >=25 && spellCoolDown("法术反射") && me.HaveBuff("Frost Nova") && target.GetDistance > 5f && target.CastingSpell.Name == "Frostbolt" && ObjectManager.Target.CastingTimeLeft > Usefuls.Latency)
+            {
+                
+                currentWeapon = me.GetEquipedItemBySlot(wManager.Wow.Enums.InventorySlot.INVSLOT_MAINHAND);
+                EquipItemById(_settings.oneHandedWeapon);
+                EquipItemById(_settings.shield);
+                if (!InDefensiveStance())
+                {
+                   
+                    Cast(DefensiveStance);
+                }
+                Cast(SpellReflection);
+                return;
             }
 
             //检查对方是否有断筋
@@ -130,7 +158,6 @@ public static class Warrior
             //压制,如果压制好了看怒气 如果小于30切战斗姿态 释放压制
             if (Overpower.IsSpellUsable)
             {
-                Thread.Sleep(Main._humanReflexTime);
                 if (InBattleStance())
                     if (Cast(Overpower))
                         return;
@@ -138,35 +165,45 @@ public static class Warrior
                     if (Cast(BattleStance))
                         if (Cast(Overpower))
                             return;
-                    
+
             }
 
+           
             
-
-
 
             //致死打击
             if (Cast(MortalStrike))
                 return;
 
-            if (InBerserkStance() && Cast(Whirlwind))
+            if (InBerserkStance() && target.GetDistance <= 8f && Cast(Whirlwind))
                 return;
 
-
-            //缴械
-            if (me.Rage >= 20 && me.Rage < 60 && new List<string> { "Warrior", "Rogue","Paladin" }.Contains(target.WowClass.ToString()) && spellCoolDown("缴械"))
+            if (target.HealthPercent > 50)
             {
-                if (!InDefensiveStance())
+                //挫志怒吼 判断10码内是否有物理职业 而且他们有人没有挫志buff
+                if (physicals.Contains(target.WowClass.ToString()) && !target.HaveBuff("Demoralizing Shout"))
                 {
-                    Cast(DefensiveStance);
+                    if (Cast(DemoralizingShout))
+                        return;
                 }
-                if (Cast(Disarm) && Cast(BerserkerStance))
-                    return;
+
+
+                //缴械
+                if (me.Rage >= 20 && me.Rage < 60 && new List<string> { "Warrior", "Rogue", "Paladin" }.Contains(target.WowClass.ToString()) && spellCoolDown("缴械"))
+                {
+                    if (!InDefensiveStance())
+                    {
+                        Cast(DefensiveStance);
+                    }
+                    if (Cast(Disarm) && Cast(BerserkerStance))
+                        return;
+                }
             }
 
 
+
             //血腥狂暴
-            if (Me.HealthPercent > 90)
+            if (Me.HealthPercent > 70)
                 if (Cast(BloodRage))
                     return;
 
@@ -181,8 +218,8 @@ public static class Warrior
 
             }
 
-               
 
+            //狂暴姿态
             if (!InBerserkStance() && Me.Rage < 30)
                 if (Cast(BerserkerStance))
                     return;
@@ -194,7 +231,7 @@ public static class Warrior
                     return;
             }
 
-                
+
 
             //如果被恐惧了 用狂暴之怒解恐惧
             if (me.HaveBuff("Fear"))
@@ -205,7 +242,7 @@ public static class Warrior
                     return;
             }
             //如果怒气大于60泄怒
-            if (!HeroicStrikeOn() && Me.Rage > 60)
+            if (!HeroicStrikeOn() && Me.Rage > 80)
                 if (Cast(HeroicStrike))
                     return;
 
@@ -213,25 +250,20 @@ public static class Warrior
             if (!Me.HaveBuff("Battle Shout") && Cast(BattleShout))
                 return;
 
-            
-
-            //挫志怒吼 判断10码内是否有物理职业 而且他们有人没有挫志buff
-            if (ObjectManager.GetWoWUnitAttackables(10).Any(t => physicals.Contains(t.WowClass.ToString()) && target.HaveBuff("Demoralizing Shout")))
-            {
-                if (Cast(DemoralizingShout))
-                    return;
-            }
 
 
 
-            
-            
+
+
+
+
         }
     }
 
-
-
-
+    private static void EquipItemById(uint id)
+    {
+        ItemsManager.EquipItemByName(ItemsManager.GetNameById(id));
+    }
 
     public static void ShowConfiguration()
     {
@@ -307,7 +339,11 @@ public static class Warrior
 
     //旋风斩
     private static Spell Whirlwind = new Spell("Whirlwind");
-    
+
+    //法术反射
+
+    private static Spell SpellReflection = new Spell("Spell Reflection");
+
 
 
     private static bool spellCoolDown(string spellName)
@@ -336,7 +372,8 @@ public static class Warrior
         {
             "Warrior",
             "Rogue",
-            "Hunter"
+            "Hunter",
+            "Puladin"
         };
 
     private static bool HeroicStrikeOn()

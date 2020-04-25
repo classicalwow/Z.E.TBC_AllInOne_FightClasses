@@ -12,10 +12,15 @@ public class ZEWarriorSettings : Settings
 {
     public static ZEWarriorSettings CurrentSetting { get; set; }
 
+
+
+
+
     private ZEWarriorSettings()
     {
         fightType = "pvp";
-
+        oneHandedWeapon = 0;
+        shield = 0;
         ConfigWinForm(
             new System.Drawing.Point(400, 400), "WholesomeTBCWarrior "
             + Translate.Get("Settings")
@@ -23,12 +28,26 @@ public class ZEWarriorSettings : Settings
     }
 
     [Category("Performance")]
-    [DefaultValue(10)]
+    [DefaultValue("pvp")]
     [DisplayName("战斗类型")]
     [Description("pvp pve 拉怪")]
     public string fightType { get; set; }
 
+    [Category("Performance")]
+    [DefaultValue(0)]
+    [DisplayName("单手武器")]
+    [Description("写id 用于切盾换武器的时候")]
+    public uint oneHandedWeapon { get; set; }
 
+    [Category("Performance")]
+    [DefaultValue(0)]
+    [DisplayName("盾")]
+    [Description("写id 用于切盾换武器的时候")]
+    public uint shield { get; set; }
+
+
+
+    
 
 
     public bool Save()
