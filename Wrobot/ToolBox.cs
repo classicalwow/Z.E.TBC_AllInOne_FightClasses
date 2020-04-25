@@ -52,7 +52,7 @@ public class ToolBox
     // Reactivates auto attack if it's off. Must pass the Attack spell as argument
     public static void CheckAutoAttack(Spell attack)
     {
-        bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('Attack') then isAutoRepeat = true end", "isAutoRepeat");
+        bool _autoAttacking = Lua.LuaDoString<bool>("isAutoRepeat = false; if IsCurrentSpell('攻击') then isAutoRepeat = true end", "isAutoRepeat");
         if (!_autoAttacking && ObjectManager.Target.IsAlive)
         {
             Main.LogDebug("Re-activating attack");

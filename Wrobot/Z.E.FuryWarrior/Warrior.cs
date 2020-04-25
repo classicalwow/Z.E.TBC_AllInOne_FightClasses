@@ -8,34 +8,24 @@ using wManager.Wow.Class;
 using wManager.Wow.Helpers;
 using wManager.Wow.ObjectManager;
 using System.Collections.Generic;
-using wManager.Wow.Bot.Tasks;
+using System.Linq;
+
 
 public static class Warrior
 {
-    private static float _meleRange = Main.settingRange;
-    private static float _pullRange = 25f;
-    internal static Stopwatch _pullMeleeTimer = new Stopwatch();
-    internal static Stopwatch _meleeTimer = new Stopwatch();
     private static WoWLocalPlayer Me = ObjectManager.Me;
     internal static ZEWarriorSettings _settings;
-    private static bool _fightingACaster = false;
-    private static List<string> _casterEnemies = new List<string>();
-    private static bool _pullFromAfar = false;
+
+
 
     public static void Initialize()
     {
         Main.Log("Initialized");
         ZEWarriorSettings.Load();
         _settings = ZEWarriorSettings.CurrentSetting;
-        Talents.InitTalents(_settings.AssignTalents, _settings.UseDefaultTalents, _settings.TalentCodes);
-
         FightEvents.OnFightEnd += (ulong guid) =>
         {
-            _fightingACaster = false;
-            _meleeTimer.Reset();
-            _pullMeleeTimer.Reset();
-            _pullFromAfar = false;
-            Main.settingRange = _meleRange;
+
         };
 
         Rotation();
@@ -47,272 +37,201 @@ public static class Warrior
     }
 
     internal static void Rotation()
-	{
+    {
         Main.Log("Started");
-		while (Main._isLaunched)
-		{
-			try
-			{
-				if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
+        while (Main._isLaunched)
+        {
+            try
+            {
+                if (!Products.InPause && !ObjectManager.Me.IsDeadMe)
                 {
-                    // Buff rotation
-                    if (!Fight.InFight && ObjectManager.GetNumberAttackPlayer() < 1)
+                    if (_settings.fightType == "pvp")
                     {
-                        BuffRotation();
-                    }
-
-                    // Pull & Combat rotation
-                    if (Fight.InFight && ObjectManager.Me.Target > 0UL && ObjectManager.Target.IsAttackable && ObjectManager.Target.IsAlive)
-                    {
-                        if (ObjectManager.GetNumberAttackPlayer() < 1 && !ObjectManager.Target.InCombatFlagOnly)
-                            Pull();
-                        else
-                            CombatRotation();
+                        
+                        pvp();
                     }
                 }
-			}
-			catch (Exception arg)
-			{
-				Logging.WriteError("ERROR: " + arg, true);
-			}
-			Thread.Sleep(ToolBox.GetLatency() + _settings.ThreadSleepCycle);
-		}
+            }
+            catch (Exception arg)
+            {
+                Logging.WriteError("ERROR: " + arg, true);
+            }
+            Thread.Sleep(ToolBox.GetLatency() + 10);
+        }
         Main.Log("Stopped.");
     }
 
-    internal static void BuffRotation()
+    private static void pvp()
     {
-        if (!Me.IsMounted && !Me.IsCast)
+        var me = ObjectManager.Me;
+        var target = ObjectManager.Target;
+        if (Fight.InFight && ObjectManager.Me.Target > 0UL )
         {
-            // Battle Shout
-            if (!Me.HaveBuff("Battle Shout") && BattleShout.IsSpellUsable && 
-                (!_settings.UseCommandingShout || !CommandingShout.KnownSpell))
-                if (Cast(BattleShout))
+            //未进入战斗
+            if (ObjectManager.GetNumberAttackPlayer() < 1 && !ObjectManager.Target.InCombatFlagOnly)
+            {
+                //检查怒气 如果怒气小于30 冲锋
+                if (!InBattleStance() && me.Rage <= 30)
+                {
+                    if(Cast(BattleStance))
+                        return;
+                }
+                if (Cast(Charge))
+                    return;
+            }
+            
+               
+            //自动攻击
+            ToolBox.CheckAutoAttack(Attack);
+
+            //拦截
+            if (ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f)
+            {
+                if (InBerserkStance())
+                    if (Cast(Intercept))
+                        return;
+                    else if (me.Rage < 30)
+                    {
+                        if (Cast(BerserkerStance))
+                            if (Cast(Intercept))
+                                return;
+                    }
+                   
+            }
+                    
+
+                
+            //如果没有断筋 5-10码刺耳怒吼
+                
+            if(target.GetDistance >=5f && target.GetDistance <= 10f && !target.HaveBuff("Piercing Howl") && !target.HaveBuff("Hamstring"))
+            {
+                if (Cast(PiercingHowl))
+                    return;
+            }
+
+            //检查对方是否有断筋
+            if (!target.HaveBuff("Hamstring"))
+            {
+                if (Cast(Hamstring))
+                    return;
+            }
+
+            //斩杀
+            if (target.HealthPercent < 20)
+                if (Cast(Execute))
                     return;
 
-            // Commanding Shout
-            if (!Me.HaveBuff("Commanding Shout") && (_settings.UseCommandingShout && CommandingShout.KnownSpell))
-                if (Cast(CommandingShout))
+
+            //乘胜追击
+            if (VictoryRush.KnownSpell)
+                if (Cast(VictoryRush))
                     return;
-        }
-    }
 
-    internal static void Pull()
-    {
-        // Check if surrounding enemies
-        if (ObjectManager.Target.GetDistance < _pullRange && !_pullFromAfar)
-            _pullFromAfar = ToolBox.CheckIfEnemiesOnPull(ObjectManager.Target, _pullRange);
-
-        // Check stance
-        if (!InBattleStance() && ObjectManager.Me.Rage < 10 && !_pullFromAfar && !_settings.AlwaysPull)
-            Cast(BattleStance);
-
-        // Pull from afar
-        if ((_pullFromAfar && _pullMeleeTimer.ElapsedMilliseconds < 5000) || _settings.AlwaysPull
-            && ObjectManager.Target.GetDistance < 24f)
-        {
-            Spell pullMethod = null;
-
-            if (Shoot.IsSpellUsable && Shoot.KnownSpell)
-                pullMethod = Shoot;
-
-            if (Throw.IsSpellUsable && Throw.KnownSpell)
-                pullMethod = Throw;
-
-            if (pullMethod == null)
+            //压制,如果压制好了看怒气 如果小于30切战斗姿态 释放压制
+            if (Overpower.IsSpellUsable)
             {
-                Main.Log("Can't pull from distance. Please equip a ranged weapon in order to Throw or Shoot.");
-                _pullFromAfar = false;
+                Thread.Sleep(Main._humanReflexTime);
+                if (InBattleStance())
+                    if (Cast(Overpower))
+                        return;
+                if (!InBattleStance() && me.Rage <= 30)
+                    if (Cast(BattleStance))
+                        if (Cast(Overpower))
+                            return;
+                    
             }
-            else
+
+            
+
+
+
+            //致死打击
+            if (Cast(MortalStrike))
+                return;
+
+            if (InBerserkStance() && Cast(Whirlwind))
+                return;
+
+
+            //缴械
+            if (me.Rage >= 20 && me.Rage < 60 && new List<string> { "Warrior", "Rogue","Paladin" }.Contains(target.WowClass.ToString()) && spellCoolDown("缴械"))
             {
-                if (Me.IsMounted)
-                    MountTask.DismountMount();
-
-                Main.settingRange = _pullRange;
-                if (Cast(pullMethod))
-                    Thread.Sleep(2000);
+                if (!InDefensiveStance())
+                {
+                    Cast(DefensiveStance);
+                }
+                if (Cast(Disarm) && Cast(BerserkerStance))
+                    return;
             }
-        }
 
-        // Melee ?
-        if (_pullMeleeTimer.ElapsedMilliseconds <= 0 && ObjectManager.Target.GetDistance <= _pullRange + 3)
-            _pullMeleeTimer.Start();
 
-        if (_pullMeleeTimer.ElapsedMilliseconds > 5000)
-        {
-            Main.LogDebug("Going in Melee range");
-            Main.settingRange = _meleRange;
-            _pullMeleeTimer.Reset();
-        }
+            //血腥狂暴
+            if (Me.HealthPercent > 90)
+                if (Cast(BloodRage))
+                    return;
 
-        // Check if caster in list
-        if (_casterEnemies.Contains(ObjectManager.Target.Name))
-            _fightingACaster = true;
+            //如果在战斗姿态 怒气大于30 用撕裂和英勇泄怒
+            if (InBattleStance() && me.Rage > 30)
+            {
+                if (!target.HaveBuff("Rend") && target.HealthPercent > 25)
+                    if (Cast(Rend))
+                        return;
+                if (!HeroicStrikeOn() && Cast(HeroicStrike))
+                    return;
 
-        // Charge Battle Stance
-        if (InBattleStance() && ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f 
-            && !_pullFromAfar)
-            if (Cast(Charge))
+            }
+
+               
+
+            if (!InBerserkStance() && Me.Rage < 30)
+                if (Cast(BerserkerStance))
+                    return;
+
+            //在狂暴姿态下打断施法
+            if (InBerserkStance() && ToolBox.EnemyCasting())
+            {
+                if (Cast(Pummel))
+                    return;
+            }
+
+                
+
+            //如果被恐惧了 用狂暴之怒解恐惧
+            if (me.HaveBuff("Fear"))
+            {
+                if (Cast(BerserkerRage))
+                    return;
+                if (Cast(DeathWish))
+                    return;
+            }
+            //如果怒气大于60泄怒
+            if (!HeroicStrikeOn() && Me.Rage > 60)
+                if (Cast(HeroicStrike))
+                    return;
+
+            //战斗怒吼
+            if (!Me.HaveBuff("Battle Shout") && Cast(BattleShout))
                 return;
 
-        // Charge Berserker Stance
-        if (InBerserkStance() && ObjectManager.Target.GetDistance > 9f && ObjectManager.Target.GetDistance < 24f 
-            && !_pullFromAfar)
-            if (Cast(Intercept))
-                return;
+            
+
+            //挫志怒吼 判断10码内是否有物理职业 而且他们有人没有挫志buff
+            if (ObjectManager.GetWoWUnitAttackables(10).Any(t => physicals.Contains(t.WowClass.ToString()) && target.HaveBuff("Demoralizing Shout")))
+            {
+                if (Cast(DemoralizingShout))
+                    return;
+            }
+
+
+
+            
+            
+        }
     }
 
-    internal static void CombatRotation()
-    {
-        WoWUnit Target = ObjectManager.Target;
-        bool _shouldBeInterrupted = ToolBox.EnemyCasting();
-        bool _inMeleeRange = Target.GetDistance < 6f;
-        bool _saveRage = ((Cleave.KnownSpell && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f)
-            && _settings.UseCleave)
-            || (Execute.KnownSpell && Target.HealthPercent < 40) 
-            || (MortalStrike.KnownSpell && ObjectManager.Me.Rage < 40 && Target.HealthPercent > 50));
 
-        // Check Auto-Attacking
-        ToolBox.CheckAutoAttack(Attack);
 
-        // Check if we need to interrupt
-        if (_shouldBeInterrupted)
-        {
-            _fightingACaster = true;
-            if (!_casterEnemies.Contains(Target.Name))
-                _casterEnemies.Add(Target.Name);
-        }
 
-        // Melee ?
-        if (_pullMeleeTimer.ElapsedMilliseconds > 0)
-            _pullMeleeTimer.Reset();
-
-        if (_meleeTimer.ElapsedMilliseconds <= 0 && _pullFromAfar)
-            _meleeTimer.Start();
-
-        if ((_shouldBeInterrupted || _meleeTimer.ElapsedMilliseconds > 5000) && Main.settingRange != _meleRange)
-        {
-            Main.LogDebug("Going in Melee range 2");
-            Main.settingRange = _meleRange;
-            _meleeTimer.Stop();
-        }
-
-        // Battle stance
-        if (InBerserkStance() && Me.Rage < 10 && (!_settings.PrioritizeBerserkStance || ObjectManager.GetNumberAttackPlayer() > 1) 
-            && !_fightingACaster)
-            if (Cast(BattleStance))
-                return;
-
-        // Berserker stance
-        if (_settings.PrioritizeBerserkStance && !InBerserkStance() && BerserkerStance.KnownSpell && Me.Rage < 15
-            && ObjectManager.GetNumberAttackPlayer() < 2)
-            if (Cast(BerserkerStance))
-                return;
-
-        // Fighting a caster
-        if (_fightingACaster && !InBerserkStance() && BerserkerStance.KnownSpell && Me.Rage < 20
-            && ObjectManager.GetNumberAttackPlayer() < 2)
-        {
-            if (Cast(BerserkerStance))
-                return;
-        }
-
-        // Interrupt
-        if (_shouldBeInterrupted && InBerserkStance())
-        {
-            Thread.Sleep(Main._humanReflexTime);
-            if (Cast(Pummel))
-                return;
-        }
-
-        // Victory Rush
-        if (VictoryRush.KnownSpell)
-            if (Cast(VictoryRush))
-                return;
-
-        // Rampage
-        if (Rampage.KnownSpell && (!Me.HaveBuff("Rampage") || (Me.HaveBuff("Rampage") && ToolBox.BuffTimeLeft("Rampage") < 10)))
-            if (Cast(Rampage))
-                return;
-
-        // Berserker Rage
-        if (InBerserkStance() && Target.HealthPercent > 70)
-            if (Cast(BerserkerRage))
-                return;
-
-        // Execute
-        if (Target.HealthPercent < 20)
-            if (Cast(Execute))
-                return;
-
-        // Overpower
-        if (Overpower.IsSpellUsable)
-        {
-            Thread.Sleep(Main._humanReflexTime);
-            if (Cast(Overpower))
-                return;
-        }
-
-        // Bloodthirst
-        if (Cast(MortalStrike))
-            return;
-
-        // Sweeping Strikes
-        if (_inMeleeRange && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f))
-            if (Cast(SweepingStrikes))
-                return;
-
-        // Retaliation
-        if (_inMeleeRange && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f))
-            if (Cast(Retaliation) && (!SweepingStrikes.IsSpellUsable || !SweepingStrikes.KnownSpell))
-                return;
-
-        // Cleave
-        if (_inMeleeRange && ObjectManager.GetNumberAttackPlayer() > 1 && ToolBox.CheckIfEnemiesClose(15f) && 
-            (!SweepingStrikes.IsSpellUsable || !SweepingStrikes.KnownSpell) && ObjectManager.Me.Rage > 40
-            && _settings.UseCleave)
-            if (Cast(Cleave))
-                return;
-
-        // Blood Rage
-        if (_settings.UseBloodRage && Me.HealthPercent > 90)
-            if (Cast(BloodRage))
-                return;
-
-        // Hamstring
-        if (Target.CreatureTypeTarget == "Humanoid" && _inMeleeRange && _settings.UseHamstring && Target.HealthPercent < 40
-            && !Target.HaveBuff("Hamstring"))
-            if (Cast(Hamstring))
-                return;
-
-        // Commanding Shout
-        if (!Me.HaveBuff("Commanding Shout") && (_settings.UseCommandingShout && CommandingShout.KnownSpell))
-            if (Cast(CommandingShout))
-                return;
-
-        // Battle Shout
-        if (!Me.HaveBuff("Battle Shout") && (!_settings.UseCommandingShout || !CommandingShout.KnownSpell))
-            if (Cast(BattleShout))
-                return;
-
-        // Rend
-        if (!Target.HaveBuff("Rend") && ToolBox.CanBleed(Target) && _inMeleeRange && _settings.UseRend
-            && Target.HealthPercent > 25)
-            if (Cast(Rend))
-                return;
-
-        // Demoralizing Shout
-        if (_settings.UseDemoralizingShout && !Target.HaveBuff("Demoralizing Shout") 
-            && (ObjectManager.GetNumberAttackPlayer() > 1 || !ToolBox.CheckIfEnemiesClose(15f)) && _inMeleeRange)
-            if (Cast(DemoralizingShout))
-                return;
-        
-        // Heroic Strike
-        if (_inMeleeRange && !HeroicStrikeOn() && (!_saveRage || Me.Rage > 60))
-            if (Cast(HeroicStrike))
-                return;
-    }
 
     public static void ShowConfiguration()
     {
@@ -321,56 +240,118 @@ public static class Warrior
         ZEWarriorSettings.CurrentSetting.Save();
     }
 
+    //攻击
     private static Spell Attack = new Spell("Attack");
+    //英勇打击
     private static Spell HeroicStrike = new Spell("Heroic Strike");
+    //战斗怒吼
     private static Spell BattleShout = new Spell("Battle Shout");
+    //命令怒吼
     private static Spell CommandingShout = new Spell("Commanding Shout");
+    //冲锋
     private static Spell Charge = new Spell("Charge");
+    //撕裂
     private static Spell Rend = new Spell("Rend");
+    //断筋
     private static Spell Hamstring = new Spell("Hamstring");
+    //血性狂暴
     private static Spell BloodRage = new Spell("Bloodrage");
+    //压制
     private static Spell Overpower = new Spell("Overpower");
+    //挫志怒吼
     private static Spell DemoralizingShout = new Spell("Demoralizing Shout");
+    //投掷
     private static Spell Throw = new Spell("Throw");
+    //射击
     private static Spell Shoot = new Spell("Shoot");
+    //反击风暴
     private static Spell Retaliation = new Spell("Retaliation");
+    //顺劈斩
     private static Spell Cleave = new Spell("Cleave");
+    //斩杀
     private static Spell Execute = new Spell("Execute");
+    //横扫
     private static Spell SweepingStrikes = new Spell("Sweeping Strikes");
+    //嗜血
     private static Spell Bloodthirst = new Spell("Bloodthirst");
+    //致死打击
     private static Spell MortalStrike = new Spell("Mortal Strike");
+    //狂暴姿态
     private static Spell BerserkerStance = new Spell("Berserker Stance");
+    //战斗姿态
     private static Spell BattleStance = new Spell("Battle Stance");
+    
+    //防御姿态
+    private static Spell DefensiveStance = new Spell("Defensive Stance");
+    //拦截
     private static Spell Intercept = new Spell("Intercept");
+    //拳击
     private static Spell Pummel = new Spell("Pummel");
+    //狂暴之怒
     private static Spell BerserkerRage = new Spell("Berserker Rage");
+    //暴怒
     private static Spell Rampage = new Spell("Rampage");
+
+    //乘胜追击
     private static Spell VictoryRush = new Spell("Victory Rush");
+
+    //刺耳怒吼
+    private static Spell PiercingHowl = new Spell("Piercing Howl");
+
+    //死亡之愿
+    private static Spell DeathWish = new Spell("Death Wish");
+
+    //缴械
+    private static Spell Disarm = new Spell("Disarm");
+
+
+    //旋风斩
+    private static Spell Whirlwind = new Spell("Whirlwind");
+    
+
+
+    private static bool spellCoolDown(string spellName)
+    {
+        return Lua.LuaDoString<bool>("cooldown = false;local time = GetSpellCooldown('"+ spellName + "');if time == 0 then cooldown = true end", "cooldown");
+    }
+
 
     internal static bool Cast(Spell s)
     {
         CombatDebug("In cast for " + s.Name);
         if (!s.IsSpellUsable || !s.KnownSpell || Me.IsCast)
             return false;
-        
+
         s.Launch();
         return true;
     }
 
     private static void CombatDebug(string s)
     {
-        if (_settings.ActivateCombatDebug)
-            Main.CombatDebug(s);
+        //Main.Log(s);
     }
+
+    //是否是物理输出职业
+    private static List<String> physicals = new List<string>
+        {
+            "Warrior",
+            "Rogue",
+            "Hunter"
+        };
 
     private static bool HeroicStrikeOn()
     {
-        return Lua.LuaDoString<bool>("hson = false; if IsCurrentSpell('Heroic Strike') then hson = true end", "hson");
+        return Lua.LuaDoString<bool>("hson = false; if IsCurrentSpell('英勇打击') then hson = true end", "hson");
     }
 
     private static bool InBattleStance()
     {
         return Lua.LuaDoString<bool>("bs = false; if GetShapeshiftForm() == 1 then bs = true end", "bs");
+    }
+
+    private static bool InDefensiveStance()
+    {
+        return Lua.LuaDoString<bool>("bs = false; if GetShapeshiftForm() == 2 then bs = true end", "bs");
     }
 
     private static bool InBerserkStance()
