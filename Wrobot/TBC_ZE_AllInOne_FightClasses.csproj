@@ -41,6 +41,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="wManager">
       <HintPath>E:\WoW\WoW TBC\WRobot\WRobot\Bin\wManager.dll</HintPath>
       <Private>False</Private>
@@ -50,6 +51,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="keyboardlistener.cs" />
     <Compile Include="ZETBCFCSettings.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
